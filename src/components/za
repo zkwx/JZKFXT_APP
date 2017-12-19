@@ -1,0 +1,16 @@
+// Vision_BlindList:[{key: 0, value: '白内障复明手术'},{key: 1, value: '辅助器具适配及服务'},{key: 2, value: '定向行走及适应训练'},{key: 3, value: '支持性服务'}],
+      // Vision_LowVisionList:[{key: 0, value: '辅助器具适配及服务'},{key: 1, value: '视功能训练'}],
+
+      // Hearing_06ChildrenList:[{key: 0, value: '人工耳蜗植入手术'},{key: 1, value: '辅助器具适配及服务'},{key: 2, value: '听觉言语功能训练'},{key: 3, value: '支持性服务'}],
+      // Hearing_717ChildrenList:[{key: 0, value: '辅助器具适配及服务'},{key: 1, value: '支持性服务'}],
+      // Hearing_AdultList:[{key: 0, value: '辅助器具适配及适应训练'}],
+
+      // Body_06ChildrenList:[{key: 0, value: '矫治手术'},{key: 1, value: '运动及适应训练'},{key: 2, value: '辅助器具适配及服务'},{key: 3, value: '支持性服务'}],
+      // Body_717ChildrenList:[{key: 0, value: '康复治疗及训练'},{key: 1, value: '辅助器具适配及服务'},{key: 2, value: '支持性服务'}],
+
+      // Intelligence_06ChildrenList:[{key: 0, value: '认知及适应训练'},{key: 1, value: '支持性服务'}],
+      // Intelligence_717ChildrenList:[{key: 0, value: '认知及适应训练'},{key: 1, value: '支持性服务'}],
+
+      // Spirit_06ChildrenList:[{key: 0, value: '沟通及适应训练'},{key: 1, value: '支持性服务'}],
+      // Spirit_717ChildrenList:[{key: 0, value: '沟通及适应训练'},{key: 1, value: '支持性服务'}],
+      // Spirit_AdultList:[{key: 0, value: '精神疾病药物治疗'},{key: 1, value: '精神障碍作业疗法训练'},{key: 2, value: '支持性服务'}],
