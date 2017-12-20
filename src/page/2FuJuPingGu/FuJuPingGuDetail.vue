@@ -150,12 +150,14 @@ export default {
       if(this.disabledInfo.ID!=null){
         this.getDisabledInfo(this.disabledInfo.ID)
       }
+      
       if(this.done){
-        let answers = await this.$api.GetAnswers("?ExamID="+this.ExamID+"&DisabledInfoID="+this.disabledInfo.ID)
-        for (let i = 0; i < r.length; i++) {
-          let Answers = r[i].OptionIDs.split(',')
-          this.Exam.Questions[r[i].QuestionNo].Answers=Answers
-          this.Exam.Questions[r[i].QuestionNo].show=true
+        await this.initQuestions()
+        let answers = await this.$api.GetAnswers("?ExamID="+this.Exam.ID+"&DisabledInfoID="+this.disabledInfo.ID)
+        for (let i = 0; i < answers.length; i++) {
+          let Answers = answers[i].OptionIDs.split(',')
+          this.Exam.Questions[answers[i].QuestionNo].Answers=Answers
+          this.Exam.Questions[answers[i].QuestionNo].show=true
         }
       }
     },

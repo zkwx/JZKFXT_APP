@@ -230,10 +230,7 @@ export default {
         }
       }
       if(msg!=""){
-        this.$vux.alert.show({
-                title: '保存失败',
-                content: msg
-            })
+        this.$utils.Alert('保存失败',msg)
         return
       }
       }
@@ -249,18 +246,14 @@ export default {
         this.$http.post('DisabledInfoes', this.disabledInfo).then(r => {
             let result = r;
             console.log(r);
-            _this.$vux.alert.show({
-                title: '保存成功'
-            })
+            _this.$utils.Alert('保存成功')
             _this.$router.push('/KangFuRuHuHome')
         })
       }else{
         this.$http.put('DisabledInfoes/'+ID, this.disabledInfo).then(r => {
             var result = r;
             console.log(r);
-            _this.$vux.alert.show({
-                title: '保存成功'
-            })
+            _this.$utils.Alert('保存成功')
             _this.$router.push('/KangFuRuHuHome')
         })
       }
