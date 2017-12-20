@@ -142,7 +142,7 @@ export default {
       this.disabledInfo.ID = this.$route.params.id
       this.Exam.Name = this.$route.params.targetExamName
       this.done = this.$route.params.done==="true"
-      //填充选项列表
+      //填充选项列表123
       this.Categories = await this.$api.GetCategories()
       this.DisabilityReasons = await this.$api.GetDisabilityReasons(2)
       this.Degrees = await this.$api.GetDegrees()
