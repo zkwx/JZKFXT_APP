@@ -150,6 +150,14 @@ export default {
       if(this.disabledInfo.ID!=null){
         this.getDisabledInfo(this.disabledInfo.ID)
       }
+      if(this.done){
+        let answers = await this.$api.GetAnswers("?ExamID="+this.ExamID+"&DisabledInfoID="+this.disabledInfo.ID)
+        for (let i = 0; i < r.length; i++) {
+          let Answers = r[i].OptionIDs.split(',')
+          this.Exam.Questions[r[i].QuestionNo].Answers=Answers
+          this.Exam.Questions[r[i].QuestionNo].show=true
+        }
+      }
     },
     async getDisabledInfo (ID) {
       this.disabledInfo = await this.$api.GetDisabledInfo(ID)
@@ -162,31 +170,18 @@ export default {
       if(!this.Exam.ID){
         this.Exam = await this.$api.GetExam(this.Exam.Name)
       }
-      if(!this.done){
-        this.Answers=[]
-        this.Exam.QuestionsFlow=[]
-        for (var key in this.Exam.Questions) {
-          if(this.Exam.Questions[key].IsFirst){
-            this.Exam.Questions[key].show=true
-            this.Exam.QuestionsFlow.push(key)
-          }else{
-            this.Exam.Questions[key].show=false
-          }
+      this.Answers=[]
+      this.Exam.QuestionsFlow=[]
+      for (var key in this.Exam.Questions) {
+        if(this.Exam.Questions[key].IsFirst){
+          this.Exam.Questions[key].show=true
+          this.Exam.QuestionsFlow.push(key)
+        }else{
+          this.Exam.Questions[key].show=false
         }
-        this.CurrentQuestionIndex=0
-      }else{
-        let _this=this
-        this.$api.GetAnswers("?ExamID="+this.ExamID+"&DisabledInfoID="+this.disabledInfo.ID).then(r => {
-          for (let i = 0; i < r.length; i++) {
-            let Answers = r[i].OptionIDs.split(',')
-            _this.Exam.Questions[r[i].QuestionID].Answers=Answers
-            _this.Exam.Questions[r[i].QuestionID].show=true
-          }
-        })
       }
+      this.CurrentQuestionIndex=0
     },
-    
-
     optionChange(optionID,lable){
       if (optionID.length===1&&!this.done) {
         var option =this.Exam.Questions[this.Exam.QuestionsFlow[this.CurrentQuestionIndex]].QueryOptions[optionID]
@@ -221,7 +216,7 @@ export default {
           }
         }
       }
-        if(NextQuestionNo){
+      if(NextQuestionNo){
         this.Exam.QuestionsFlow.push(NextQuestionNo)
         this.Exam.Questions[this.Exam.QuestionsFlow[this.CurrentQuestionIndex++]].show=false
         this.Exam.Questions[NextQuestionNo].show=true
@@ -262,30 +257,31 @@ export default {
       for (let i = 0; i < this.Exam.QuestionsFlow.length; i++) {
         let answer = this.Exam.Questions[this.Exam.QuestionsFlow[i]].Answers;
         Answers.push({
-          ExamID:this.ExamID,
+          ExamID:this.Exam.ID,
           QuestionID:this.Exam.Questions[this.Exam.QuestionsFlow[i]].ID,
           OptionIDs:answer.join(','),
           DisabledInfoID:this.disabledInfo.ID
         })
       }
+      let assistiveDevices=[]
+      let assistiveDevicesFormart=[]
       for (let i = 0; i < this.Exam.QuestionsFlow.length; i++) {
         let currentChecklist = this.$refs["checklist"+this.Exam.QuestionsFlow[i]][0]
         for (let j = 0; j < currentChecklist.value.length; j++) {
           let optionID = currentChecklist.value[j];
           let option =this.Exam.Questions[this.Exam.QuestionsFlow[i]].QueryOptions[optionID]
           if(option.AssistiveDeviceName){
-            this.AssistiveDevices.push(option.AssistiveDeviceName);
+            assistiveDevices.push(option.AssistiveDeviceName);
           }
         }
       }
-      let AssistiveDevices=[]
-      this.AssistiveDevices.forEach(v=>{
-        AssistiveDevices=AssistiveDevices.concat(v.split(','))
+      assistiveDevices.forEach(v=>{
+        assistiveDevicesFormart=assistiveDevicesFormart.concat(v.split(','))
       })
-      AssistiveDevices=AssistiveDevices.join('<br>')
+      assistiveDevicesFormart=assistiveDevicesFormart.join('<br>')
       this.$http.post('Answers/SaveAnswers', Answers).then(r => {
-          this.$utils.Alert('适配成功，适配结果为：',AssistiveDevices)
-          this.$router.push('/FuJuPingGuHome')
+          this.$utils.Alert('适配成功，适配结果为：',assistiveDevicesFormart)
+          //this.$router.push('/FuJuPingGuHome')
       })
     }
   },
