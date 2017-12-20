@@ -2,7 +2,7 @@
   <div>
     <x-header
     style="width:100%;position:absolute;left:0;top:0;z-index:100;">
-      {{ targetExamName }}评估适配系统
+      {{ Exam.Name }}评估适配系统
     </x-header>
     <group title="个人信息" label-width="6em" label-margin-right="1em" v-if="showQuestion===false">
       <x-input title="姓名" v-model="disabledInfo.Name" required :disabled="IsView"></x-input>
@@ -44,9 +44,9 @@
     </group>
     <div v-if="showQuestion||IsView">
       <div >
-        <div v-for="(question,key) in Questions" :key="question.ID" v-show="question.show" >
-          <b><p style="font-size:20px;padding:0.8em;"><span style="color:#428bca;">{{question.Multiple?"多选题":"单选题"}}</span><br>{{question.QuestionNo}}.{{question.QuestionText}}</p></b>
-          <checklist v-model="Questions[key].Answers" required :options="question.Options" :ref="'checklist'+key" label-position="left" :max="question.Multiple?10:1" @on-change="optionChange" :disabled="IsView"></checklist>
+        <div v-for="(question,key) in Exam.Questions" :key="question.QuestionNo" v-show="question.show" >
+          <b><p style="font-size:20px;padding:0.8em;"><span style="color:#428bca;">{{question.Multiple?"多选题":"单选题"}}</span><br>{{key}}.{{question.QuestionText}}</p></b>
+          <checklist v-model="Exam.Questions[key].Answers" required :options="question.Options" :ref="'checklist'+key" label-position="left" :max="question.Multiple?10:1" @on-change="optionChange" :disabled="IsView"></checklist>
         </div>
       </div>
       <div v-if="!IsView">
@@ -94,8 +94,11 @@ export default {
   },
   data () {
     return {
-      targetExamName:"",
-      done:false,
+      Exam:{
+        ID:null,
+        Name:"",
+        Questions:null
+      },
       done:false,
       Sexlist: [{key: 1, value: '男'}, {key: 2, value: '女'}],
       RelationshipList:[{key: 1, value: '父母'},{key: 2, value: '配偶'},{key: 3, value: '兄弟姐妹'},{key: 4, value: '祖父母'},{key: 5, value: '其他'}],
@@ -110,9 +113,7 @@ export default {
       Questions:{},
       QuestionsFlow:[],
       CurrentQuestionIndex:null,
-      NextQuestionID:null,
-      Answers:[],
-      AssistiveDevices:[],
+      NextQuestionNo:null,
       disabledInfo:{
         ID:null,
         Name:"",
@@ -137,37 +138,39 @@ export default {
     this.initData()
   },
   methods: {
-    initData(){
-      let _this=this
+    async initData(){
       this.disabledInfo.ID = this.$route.params.id
-      this.targetExamName = this.$route.params.targetExamName
+      this.Exam.Name = this.$route.params.targetExamName
       this.done = this.$route.params.done==="true"
+      //填充选项列表
+      this.Categories = await this.$api.GetCategories()
+      this.DisabilityReasons = await this.$api.GetDisabilityReasons(2)
+      this.Degrees = await this.$api.GetDegrees()
+
       if(this.disabledInfo.ID!=null){
         this.getDisabledInfo(this.disabledInfo.ID)
       }
-      //填充选项列表
-      this.$api.GetCategories().then(r => { _this.Categories = r })
-      this.$api.GetDisabilityReasons(2).then(r => { _this.DisabilityReasons = r })
-      this.$api.GetDegrees().then(r => { _this.Degrees = r })
     },
-    getQuestions(){
-      this.$api.GetExam(this.targetExamName).then(r => { 
-        this.ExamID=r.ID
-        this.targetExamName=r.Name
-        this.Questions=r.Questions
-        this.initQuestions()
-      })
+    async getDisabledInfo (ID) {
+      this.disabledInfo = await this.$api.GetDisabledInfo(ID)
+      this.disabledInfo.DisabledInfo_Details=null
+      if(this.disabledInfo.Address){
+        this.Addresses = [this.disabledInfo.Address.slice(0,2)+"0000",this.disabledInfo.Address.slice(0,4)+"00",this.disabledInfo.Address]
+      }
     },
-    initQuestions(){
+    async initQuestions(){
+      if(!this.Exam.ID){
+        this.Exam = await this.$api.GetExam(this.Exam.Name)
+      }
       if(!this.done){
         this.Answers=[]
-        this.QuestionsFlow=[]
-        for (var key in this.Questions) {
-          if(this.Questions[key].IsFirst){
-            this.Questions[key].show=true
-            this.QuestionsFlow.push(this.Questions[key].ID)
+        this.Exam.QuestionsFlow=[]
+        for (var key in this.Exam.Questions) {
+          if(this.Exam.Questions[key].IsFirst){
+            this.Exam.Questions[key].show=true
+            this.Exam.QuestionsFlow.push(key)
           }else{
-            this.Questions[key].show=false
+            this.Exam.Questions[key].show=false
           }
         }
         this.CurrentQuestionIndex=0
@@ -176,60 +179,52 @@ export default {
         this.$api.GetAnswers("?ExamID="+this.ExamID+"&DisabledInfoID="+this.disabledInfo.ID).then(r => {
           for (let i = 0; i < r.length; i++) {
             let Answers = r[i].OptionIDs.split(',')
-            _this.Questions[r[i].QuestionID].Answers=Answers
-            _this.Questions[r[i].QuestionID].show=true
+            _this.Exam.Questions[r[i].QuestionID].Answers=Answers
+            _this.Exam.Questions[r[i].QuestionID].show=true
           }
         })
       }
     },
-    getDisabledInfo (ID) {
-      var _this=this
-      this.$api.GetDisabledInfo(ID).then(r => {
-        _this.disabledInfo=r
-        _this.disabledInfo.DisabledInfo_Details=null
-        if(this.disabledInfo.Address)
-          this.Addresses = [this.disabledInfo.Address.slice(0,2)+"0000",this.disabledInfo.Address.slice(0,4)+"00",this.disabledInfo.Address]
-      })
-    },
+    
 
     optionChange(optionID,lable){
       if (optionID.length===1&&!this.done) {
-        var option =this.Questions[this.QuestionsFlow[this.CurrentQuestionIndex]].QueryOptions[optionID]
-        if(option.NextQuestionID!=null){
-          var NextQuestionID = option.NextQuestionID
-          if(!this.Questions[this.QuestionsFlow[this.CurrentQuestionIndex]].Multiple){
+        var option =this.Exam.Questions[this.Exam.QuestionsFlow[this.CurrentQuestionIndex]].QueryOptions[optionID]
+        if(option.NextQuestionNo!=null){
+          var NextQuestionNo = option.NextQuestionNo
+          if(!this.Exam.Questions[this.Exam.QuestionsFlow[this.CurrentQuestionIndex]].Multiple){
             //跳到下一题
-            this.ToNext(NextQuestionID)
+            this.ToNext(NextQuestionNo)
           }
         }
       }
     },
     Previous(){
-      this.Questions[this.QuestionsFlow[this.CurrentQuestionIndex]].show=false
-      this.QuestionsFlow.pop()
+      this.Exam.Questions[this.Exam.QuestionsFlow[this.CurrentQuestionIndex]].show=false
+      this.Exam.QuestionsFlow.pop()
       this.CurrentQuestionIndex--
-      let PreviousQuestion = this.Questions[this.QuestionsFlow[this.CurrentQuestionIndex]]
+      let PreviousQuestion = this.Exam.Questions[this.Exam.QuestionsFlow[this.CurrentQuestionIndex]]
       PreviousQuestion.show=true
 
     },
     Next(){
       this.ToNext()
     },
-    ToNext(NextQuestionID){
-      if(!NextQuestionID){
-        let currentChecklist = this.$refs["checklist"+this.QuestionsFlow[this.CurrentQuestionIndex]][0]
+    ToNext(NextQuestionNo){
+      if(!NextQuestionNo){
+        let currentChecklist = this.$refs["checklist"+this.Exam.QuestionsFlow[this.CurrentQuestionIndex]][0]
         for (let i = 0; i < currentChecklist.value.length; i++) {
           let optionID = currentChecklist.value[i];
-          let option =this.Questions[this.QuestionsFlow[this.CurrentQuestionIndex]].QueryOptions[optionID]
-          if(option.NextQuestionID){
-            NextQuestionID = option.NextQuestionID
+          let option =this.Exam.Questions[this.Exam.QuestionsFlow[this.CurrentQuestionIndex]].QueryOptions[optionID]
+          if(option.NextQuestionNo){
+            NextQuestionNo = option.NextQuestionNo
           }
         }
       }
-        if(NextQuestionID){
-        this.QuestionsFlow.push(NextQuestionID)
-        this.Questions[this.QuestionsFlow[this.CurrentQuestionIndex++]].show=false
-        this.Questions[NextQuestionID].show=true
+        if(NextQuestionNo){
+        this.Exam.QuestionsFlow.push(NextQuestionNo)
+        this.Exam.Questions[this.Exam.QuestionsFlow[this.CurrentQuestionIndex++]].show=false
+        this.Exam.Questions[NextQuestionNo].show=true
       }
     },
     Reset(){
@@ -251,33 +246,33 @@ export default {
             }
             _this.targetExamName=_this.Categories[_this.disabledInfo.CategoryID-1].value
           }
-          _this.getQuestions()
+          _this.initQuestions()
           _this.showScrollBox=true
         })
       }else{
         this.$http.put('DisabledInfoes/'+this.disabledInfo.ID, this.disabledInfo).then(r => {
             let result = r;
-            _this.getQuestions()
+            _this.initQuestions()
             _this.showScrollBox=true
         })
       }
     },
     SubmitAnswers(){
       let Answers=[]
-      for (let i = 0; i < this.QuestionsFlow.length; i++) {
-        let answer = this.Questions[this.QuestionsFlow[i]].Answers;
+      for (let i = 0; i < this.Exam.QuestionsFlow.length; i++) {
+        let answer = this.Exam.Questions[this.Exam.QuestionsFlow[i]].Answers;
         Answers.push({
           ExamID:this.ExamID,
-          QuestionID:this.Questions[this.QuestionsFlow[i]].ID,
+          QuestionID:this.Exam.Questions[this.Exam.QuestionsFlow[i]].ID,
           OptionIDs:answer.join(','),
           DisabledInfoID:this.disabledInfo.ID
         })
       }
-      for (let i = 0; i < this.QuestionsFlow.length; i++) {
-        let currentChecklist = this.$refs["checklist"+this.QuestionsFlow[i]][0]
+      for (let i = 0; i < this.Exam.QuestionsFlow.length; i++) {
+        let currentChecklist = this.$refs["checklist"+this.Exam.QuestionsFlow[i]][0]
         for (let j = 0; j < currentChecklist.value.length; j++) {
           let optionID = currentChecklist.value[j];
-          let option =this.Questions[this.QuestionsFlow[i]].QueryOptions[optionID]
+          let option =this.Exam.Questions[this.Exam.QuestionsFlow[i]].QueryOptions[optionID]
           if(option.AssistiveDeviceName){
             this.AssistiveDevices.push(option.AssistiveDeviceName);
           }
@@ -301,8 +296,8 @@ export default {
       return age
     },
     canNext(){
-      if(this.QuestionsFlow.length>0){
-        let question = this.Questions[this.QuestionsFlow[this.CurrentQuestionIndex]]
+      if(this.Exam.QuestionsFlow.length>0){
+        let question = this.Exam.Questions[this.Exam.QuestionsFlow[this.CurrentQuestionIndex]]
         if(question.Answers.length>0){
           return true
         }else{
@@ -313,13 +308,13 @@ export default {
       }
     },
     canSubmitAnswers(){
-      if(this.QuestionsFlow.length>0){
-        if(this.Questions[this.QuestionsFlow[this.CurrentQuestionIndex]].Answers.length>0){
-          let currentChecklist = this.$refs["checklist"+this.QuestionsFlow[this.CurrentQuestionIndex]][0]
+      if(this.Exam.QuestionsFlow.length>0){
+        if(this.Exam.Questions[this.Exam.QuestionsFlow[this.CurrentQuestionIndex]].Answers.length>0){
+          let currentChecklist = this.$refs["checklist"+this.Exam.QuestionsFlow[this.CurrentQuestionIndex]][0]
           for (let i = 0; i < currentChecklist.value.length; i++) {
             let optionID = currentChecklist.value[i];
-            let option =this.Questions[this.QuestionsFlow[this.CurrentQuestionIndex]].QueryOptions[optionID]
-            if(option.NextQuestionID){
+            let option =this.Exam.Questions[this.Exam.QuestionsFlow[this.CurrentQuestionIndex]].QueryOptions[optionID]
+            if(option.NextQuestionNo){
               return false;
             }
           }
