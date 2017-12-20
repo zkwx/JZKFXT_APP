@@ -4,7 +4,7 @@
       <img :src="item.sex===1?avatar.male:avatar.female" alt="" class="weui-media-box__thumb">
     </div>
     <div class="weui-media-box__bd">
-      <span class="weui-media-box__title">{{item.name}}<img class="icon" :src="item.sex===1?sex.male:sex.female"></img></span>
+      <span class="weui-media-box__title">{{item.name}}<img class="icon" :src="item.sex===1?sex.male:sex.female"/></span>
       <p class="weui-media-box__desc">{{item.category}}-{{item.degree}}<br></p>
     </div>
     <span v-if="isLink || !!link" class="weui-cell__ft"></span>
