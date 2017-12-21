@@ -9,18 +9,18 @@ axios.defaults.baseURL = process.env.BASE_API
     // 配置默认发送类型
 axios.defaults.headers.post['Content-Type'] = 'application/x-www-form-urlencoded';
 //发送前拦截
-axios.interceptors.request.use(config => {
-        // loading
-        // 若是有做鉴权token , 就给头部带上token
-        // if (localStorage.token) {
-        //     config.headers.Authorization = localStorage.token;
-        //   }
-        return config
-    }, error => {
-        return Promise.reject(error.data.error.message)
-    })
-    //接受前拦截
-    // axios.interceptors.response.use(response => {
+// axios.interceptors.request.use(config => {
+//         // loading
+//         // 若是有做鉴权token , 就给头部带上token
+//         // if (localStorage.token) {
+//         //     config.headers.Authorization = localStorage.token;
+//         //   }
+//         return config
+//     }, error => {
+//         return Promise.reject(error.data.error.message)
+//     })
+//接受前拦截
+// axios.interceptors.response.use(response => {
 
 //     return response;
 // }, error => {

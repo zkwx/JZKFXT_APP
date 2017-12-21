@@ -64,11 +64,24 @@
         </flexbox>
       </div>
     </div>
+    <div v-if="showAssistiveDevicesTable || IsView">
+      <div class="weui-cells__title">辅具列表</div>
+      <x-table :cell-bordered="false" style="background-color:#fff;" >
+        <thead>
+            <tr>
+              <th style="width:20%;">编号</th>
+              <th>辅具</th>
+            </tr>
+          </thead>
+          <tbody id='assistiveDevicesTable'>
+          </tbody>
+      </x-table>
+    </div>
   </div>
 </template>
 
 <script>
-import { XHeader,Group, XInput, Checklist, Selector,XSwitch,XButton,PopupPicker,Datetime,XAddress,ChinaAddressV4Data,CheckIcon,XDialog,TransferDomDirective as TransferDom,Divider,Flexbox, FlexboxItem     } from 'vux'
+import { XHeader,Group, XInput, Checklist, Selector,XSwitch,XButton,PopupPicker,Datetime,XAddress,ChinaAddressV4Data,CheckIcon,XDialog,TransferDomDirective as TransferDom,Divider,Flexbox, FlexboxItem,XTable     } from 'vux'
 export default {
   name: 'FuJuPingGuDetail',
   directives: {
@@ -90,7 +103,8 @@ export default {
     XDialog,
     Divider,
     Flexbox, 
-    FlexboxItem
+    FlexboxItem,
+    XTable
   },
   data () {
     return {
@@ -107,13 +121,15 @@ export default {
       DisabilityReasons:[],
       addressData: ChinaAddressV4Data,
       Addresses:[],
-      showScrollBox:false,
       Agree:false,
+      showScrollBox:false,
+      showAssistiveDevicesTable:false,
       showQuestion:false,
       Questions:{},
       QuestionsFlow:[],
       CurrentQuestionIndex:null,
       NextQuestionNo:null,
+      assistiveDevices:[],
       disabledInfo:{
         ID:null,
         Name:"",
@@ -153,12 +169,7 @@ export default {
       
       if(this.done){
         await this.initQuestions()
-        let answers = await this.$api.GetAnswers("?ExamID="+this.Exam.ID+"&DisabledInfoID="+this.disabledInfo.ID)
-        for (let i = 0; i < answers.length; i++) {
-          let Answers = answers[i].OptionIDs.split(',')
-          this.Exam.Questions[answers[i].QuestionNo].Answers=Answers
-          this.Exam.Questions[answers[i].QuestionNo].show=true
-        }
+        this.loadAssistiveDevices()
       }
     },
     async getDisabledInfo (ID) {
@@ -181,7 +192,9 @@ export default {
         }else{
           this.Exam.Questions[key].show=false
         }
+        this.Exam.Questions[key].Answers=[]
       }
+      this.assistiveDevices=[]
       this.CurrentQuestionIndex=0
     },
     optionChange(optionID,lable){
@@ -254,36 +267,50 @@ export default {
         })
       }
     },
-    SubmitAnswers(){
-      let Answers=[]
-      for (let i = 0; i < this.Exam.QuestionsFlow.length; i++) {
-        let answer = this.Exam.Questions[this.Exam.QuestionsFlow[i]].Answers;
-        Answers.push({
-          ExamID:this.Exam.ID,
-          QuestionID:this.Exam.Questions[this.Exam.QuestionsFlow[i]].ID,
-          OptionIDs:answer.join(','),
-          DisabledInfoID:this.disabledInfo.ID
-        })
+    async loadAssistiveDevices(answers){
+      this.assistiveDevices=[]
+      if(!answers){
+        answers = await this.$api.GetAnswers("?ExamID="+this.Exam.ID+"&DisabledInfoID="+this.disabledInfo.ID)
       }
-      let assistiveDevices=[]
-      let assistiveDevicesFormart=[]
-      for (let i = 0; i < this.Exam.QuestionsFlow.length; i++) {
-        let currentChecklist = this.$refs["checklist"+this.Exam.QuestionsFlow[i]][0]
-        for (let j = 0; j < currentChecklist.value.length; j++) {
-          let optionID = currentChecklist.value[j];
-          let option =this.Exam.Questions[this.Exam.QuestionsFlow[i]].QueryOptions[optionID]
-          if(option.AssistiveDeviceName){
-            assistiveDevices.push(option.AssistiveDeviceName);
+      for (const key in answers) {
+        let optionIDs = answers[key].OptionIDs.split(',')
+        this.Exam.Questions[answers[key].QuestionNo].Answers=optionIDs
+        this.Exam.Questions[answers[key].QuestionNo].show=true
+
+        for (const k in optionIDs) {
+            const optionID = optionIDs[k];
+            const option = this.Exam.Questions[answers[key].QuestionNo].QueryOptions[optionID]
+            if(option.AssistiveDeviceName){
+            this.assistiveDevices.push(option.AssistiveDeviceName);
           }
         }
       }
-      assistiveDevices.forEach(v=>{
-        assistiveDevicesFormart=assistiveDevicesFormart.concat(v.split(','))
-      })
-      assistiveDevicesFormart=assistiveDevicesFormart.join('<br>')
+      let html=[]
+      for (const key in this.assistiveDevices) {
+        const value = this.assistiveDevices[key];
+        html.push(['<tr><td>',key,'</td><td>',value,'</td></tr>'].join(''))
+      }
+      let table = document.getElementById("assistiveDevicesTable")
+      table.innerHTML=html.join('')
+      this.showAssistiveDevicesTable=true
+    },
+    SubmitAnswers(){
+      let Answers=[]
+      for (let i = 0; i < this.Exam.QuestionsFlow.length; i++) {
+        let question = this.Exam.Questions[this.Exam.QuestionsFlow[i]]
+        Answers.push({
+          ExamID:this.Exam.ID,
+          QuestionID:question.ID,
+          QuestionNo:question.QuestionNo,
+          OptionIDs:question.Answers.join(','),
+          DisabledInfoID:this.disabledInfo.ID
+        })
+      }
       this.$http.post('Answers/SaveAnswers', Answers).then(r => {
-          this.$utils.Alert('适配成功，适配结果为：',assistiveDevicesFormart)
-          //this.$router.push('/FuJuPingGuHome')
+        this.$utils.Alert('适配成功')
+        this.done=true
+        this.loadAssistiveDevices(Answers)
+        //this.$router.push('/FuJuPingGuHome')
       })
     }
   },
