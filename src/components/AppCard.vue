@@ -1,35 +1,22 @@
 <template>
-  <view-box body-padding-top="10px" body-padding-bottom="55px">
-  <card v-for="(item,index) in list" :key="index">
-    <div slot="content">
-        <app-panel-item :item="item" :isLink="isLink" :link="link"></app-panel-item>
-        <cell v-for="(detial,index) in item.detials" :key="index" :title="detial.category+'-'+detial.degree" is-link :link="'/FuJuPingGuDetail/'+item.id+'/'+detial.targetExamName+'/'+detial.done">
-          <div>
-            <h4 v-if="detial.done" style="color: #09BB07">已评估</h4>
-            <h4 v-if="!detial.done" style="color: #5bc0de">待评估</h4>
-          </div>
-        </cell>
+  <div class="weui-panel weui-panel_access">
+    <div class="weui-panel__bd">
+      <app-panel-item v-for="(item,index) in list" :key="index" :item="item" isLink :link="'/'+link+'/'+item.id+'/'+item.currentExam.ExamID+'/'+item.currentExam.Done"></app-panel-item>
     </div> 
-  </card>
-  </view-box>
+  </div>
 </template>
 <script>
   import AppPanelItem from '@/components/AppPanelItem'
-
-  import { Panel,Card,Cell,ViewBox } from 'vux'
+  import { Panel } from 'vux'
   export default {
-    name: 'AppCard',
+    name: 'AppPanelExam',
     components: {
       Panel,
-      Card,
-      Cell,
-      ViewBox,
       AppPanelItem
     },
     props: {
-      isLink:Boolean,
-      link:String,
       list: Array,
+      link:String,
     },
     data(){
       return{

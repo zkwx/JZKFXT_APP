@@ -7,6 +7,10 @@
       <span class="weui-media-box__title">{{item.name}}<img class="icon" :src="item.sex===1?sex.male:sex.female"/></span>
       <p class="weui-media-box__desc">{{item.category}}-{{item.degree}}<br></p>
     </div>
+    <div v-if="item.currentExam">
+      <h4 v-if="item.currentExam.done" style="color: #09BB07">已评估</h4>
+      <h4 v-if="!item.currentExam.done" style="color: #5bc0de">待评估</h4>
+    </div>
     <span v-if="isLink || !!link" class="weui-cell__ft"></span>
   </div>
 </template>
@@ -21,6 +25,7 @@
       isLink:Boolean,
       link:String,
       item: Object,
+
     },
     data(){
       return{

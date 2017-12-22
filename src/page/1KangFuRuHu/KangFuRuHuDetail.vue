@@ -151,6 +151,7 @@ export default {
         FirstSign:"",
         SecondSign:"",
         DisabledInfo_Details:[],
+        TargetExamName:""
       },
     }
   },

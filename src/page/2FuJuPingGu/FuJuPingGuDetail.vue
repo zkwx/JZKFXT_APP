@@ -2,7 +2,7 @@
   <div>
     <x-header
     style="width:100%;position:absolute;left:0;top:0;z-index:100;">
-      {{ Exam.Name }}评估适配系统
+    评估适配系统
     </x-header>
     <group title="个人信息" label-width="6em" label-margin-right="1em" v-if="showQuestion===false">
       <x-input title="姓名" v-model="disabledInfo.Name" required :disabled="IsView"></x-input>

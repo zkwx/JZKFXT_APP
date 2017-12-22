@@ -2,7 +2,7 @@
   <div style="height:100%">
     <x-header :left-options="{backText: ''}" style="width:100%;position:absolute;left:0;top:0;z-index:100;" >
       辅具上门评估适配
-      <router-link slot="right" to="/FuJuPingGuDetail"><i class="fa fa-plus fa-lg"></i></i></router-link>
+      <router-link slot="right" to="/FuJuPingGuDetail"><i class="fa fa-plus fa-lg"></i></router-link>
     </x-header>
     <sticky scroll-box="vux_view_box_body" :check-sticky-support="false" :offset="46">
       <tab v-model="index" @on-before-index-change="switchTabItem">
@@ -13,7 +13,7 @@
     </sticky>
     <swiper v-model="index" ref="swiper" :height="clientHeight" :show-dots="false">
       <swiper-item>
-        <app-card :list="fuJuShangMenList" ></app-card>
+        <app-card :list="fuJuShangMenList" :link="link"></app-card>
       </swiper-item>
       <swiper-item>
       </swiper-item>
@@ -41,6 +41,7 @@ export default {
   },
   data () {
     return {
+      link:"FuJuPingGuDetail",
       clientHeight:"",
       fuJuShangMenList:[],
       index:0,
@@ -54,7 +55,7 @@ export default {
   },
   methods: {
     initData () {
-      this.$api.GetDisabledInfoes({forListType:'评估',examName:'上门'}).then(res => { this.fuJuShangMenList = res })
+      this.$api.GetDisabledInfoes({examType:'辅具上门评估'}).then(res => { this.fuJuShangMenList = res })
     },
     switchTabItem (index) {
       
