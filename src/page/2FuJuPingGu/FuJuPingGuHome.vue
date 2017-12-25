@@ -1,65 +1,49 @@
 <template>
-  <div style="height:100%">
-    <x-header :left-options="{backText: ''}" style="width:100%;position:absolute;left:0;top:0;z-index:100;" >
-      辅具上门评估适配
-      <router-link slot="right" to="/FuJuPingGuDetail"><i class="fa fa-plus fa-lg"></i></router-link>
-    </x-header>
-    <sticky scroll-box="vux_view_box_body" :check-sticky-support="false" :offset="46">
-      <tab v-model="index" @on-before-index-change="switchTabItem">
-        <tab-item selected>辅具上门评估</tab-item>
-        <tab-item>假肢矫形器</tab-item>
-        <tab-item>无障碍改造</tab-item>
-      </tab>
-    </sticky>
-    <swiper v-model="index" ref="swiper" :height="clientHeight" :show-dots="false">
-      <swiper-item>
-        <app-card :list="fuJuShangMenList" :link="link"></app-card>
-      </swiper-item>
-      <swiper-item>
-      </swiper-item>
-      <swiper-item>
-      </swiper-item>
-    </swiper>
+  <div>
+    <group title="辅具上门评估适配">
+      <cell v-for="(item,key) in menus" :key="key" :title="item.title" :isLink="item.isLink" :link="item.link">
+        <img slot="icon" :src="item.img" class="cell-icon">
+      </cell>
+    </group>
   </div>
 </template>
-
 <script>
-import AppCard from '@/components/AppCard'
-
-import {XHeader,Tab,TabItem,Swiper,SwiperItem,Sticky,Group} from 'vux'
+import {Group,Cell} from 'vux'
 export default {
   name: 'FuJuPingGuHome',
     components: {
-      XHeader,
-      Tab,
-      TabItem,
-      Swiper,
-      SwiperItem,
-      Sticky,
       Group,
-      AppCard,
+      Cell,
   },
   data () {
     return {
-      link:"FuJuPingGuDetail",
-      clientHeight:"",
-      fuJuShangMenList:[],
-      index:0,
+      menus:[
+        {
+          title:'辅具评估',
+          isLink:true,
+          link:'/ExamList/type/FuJuPingGu/2',
+          img:require('../../assets/icon/i1.png')
+        },
+        {
+          title:'假肢矫形器',
+          isLink:true,
+          link:'/FuJuShenHeHome',
+          img:require('../../assets/icon/i2.png')
+        },
+        {
+          title:'无障碍审核',
+          isLink:true,
+          link:'/FuJuShenHeHome',
+          img:require('../../assets/icon/i3.png')
+        },
+      ]
     }
   },
   created () {
-    this.initData()
-  },
-  mounted(){
-       this.clientHeight = `${(window.innerHeight || document.documentElement.clientHeight || document.body.clientHeight)-92}px`;
+    
   },
   methods: {
-    initData () {
-      this.$api.GetDisabledInfoes({examType:'辅具上门评估'}).then(res => { this.fuJuShangMenList = res })
-    },
-    switchTabItem (index) {
-      
-    },
+    
   },
   computed:{
     
@@ -70,7 +54,6 @@ export default {
 }
 </script>
 
-<!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
 
 </style>

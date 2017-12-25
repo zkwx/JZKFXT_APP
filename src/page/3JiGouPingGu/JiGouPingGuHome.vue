@@ -1,9 +1,6 @@
 <template>
   <div>
-    <x-header :left-options="{backText: ''}" style="width:100%;position:absolute;left:0;top:0;z-index:100;" >
-      机构评估与审核
-    </x-header>
-    <group>
+    <group title="机构评估与审核">
       <cell title="辅具审核" is-link link="/FuJuShenHeHome">
         <img slot="icon" src="../../assets/icon/i1.png" class="cell-icon">
       </cell>

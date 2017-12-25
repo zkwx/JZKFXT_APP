@@ -18,6 +18,17 @@ export default new Router({
             path: '/sign',
             component: resolve => require(['page/sign'], resolve),
         }, {
+            path: '/ExamList/:examBy/:name/:displayType',
+            component: resolve => require(['page/ExamList'], resolve),
+            props: true
+        }, {
+            path: '/ExamDetail',
+            component: resolve => require(['page/ExamDetail'], resolve),
+        }, {
+            path: '/ExamDetail/:disabledID/:examID/:state',
+            component: resolve => require(['page/ExamDetail'], resolve),
+            props: true
+        }, {
             //康复入户
             path: '/KangFuRuHuHome',
             component: resolve => require(['KangFuRuHu/KangFuRuHuHome'], resolve),

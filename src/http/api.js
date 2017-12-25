@@ -24,8 +24,8 @@ export default {
     async GetQuestions() {
         return await http.get('Questions?loadQuestions=true')
     },
-    async GetExam(targetExamName) {
-        return await http.get('Exams?targetExamName=' + targetExamName)
+    async GetExam(examID) {
+        return await http.get('Exams/' + examID)
     },
     async GetAnswers(param) {
         return await http.get('Answers' + param)

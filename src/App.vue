@@ -1,9 +1,11 @@
 <template>
   <div id="app"  style="height:100%;">
-    <view-box ref="viewBox" body-padding-top="46px" body-padding-bottom="55px">
-      <router-view slot="default" class="router-view"></router-view>
-      <app-footer slot="bottom" v-if="$route.meta.navShow"></app-footer>
-    </view-box>
+    <keep-alive>
+      <view-box ref="viewBox">
+        <router-view slot="default" class="router-view"></router-view>
+        <app-footer slot="bottom" v-if="$route.meta.navShow"></app-footer>
+      </view-box>
+    </keep-alive>
   </div>
 </template>
 
@@ -50,6 +52,6 @@ html, body {
   width: 24px;
   height: 24px;
   margin-right: 10px;
-  display:block;
+  vertical-align: text-bottom;
 }
 </style>
