@@ -1,36 +1,39 @@
 import http from '@/http/http.js'
 export default {
-    async GetCategories() {
+    async getCategories() {
         return await http.get('Categories')
     },
-    async GetDegrees() {
+    async getDegrees() {
         return await http.get('Degrees')
     },
-    async GetNexts() {
+    async getNexts() {
         return await http.get('Nexts')
     },
-    async GetRehabilitationData() {
+    async getRehabilitationData() {
         return await http.get('Rehabilitations?group=true')
     },
-    async GetDisableds(param) {
+    async getDisableds(param) {
         return await http.get('Disableds', param)
     },
-    async GetDisabled(ID) {
+    async getDisabled(ID) {
         return await http.get('Disableds/' + ID)
     },
-    async GetDisabilityReasons(categoryID) {
+    async getDisabilityReasons(categoryID) {
         return await http.get('DisabilityReasons?categoryID=' + categoryID)
     },
-    async GetQuestions() {
+    async getQuestions() {
         return await http.get('Questions?loadQuestions=true')
     },
-    async GetExam(examID) {
+    async getExam(examID) {
         return await http.get('Exams/' + examID)
     },
-    async GetAnswers(param) {
+    async getAnswers(param) {
         return await http.get('Answers' + param)
     },
-    async GetRoles() {
+    async getExamRecords(param) {
+        return await http.get('ExamRecords', param)
+    },
+    async getRoles() {
         return await http.get('Roles')
     },
 

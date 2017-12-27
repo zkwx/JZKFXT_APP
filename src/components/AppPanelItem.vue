@@ -4,13 +4,13 @@
       <img :src="item.Sex===1?avatar.male:avatar.female" alt="" class="weui-media-box__thumb">
     </div>
     <div class="weui-media-box__bd">
-      <span class="weui-media-box__title">{{item.Name}}<img class="icon" :src="item.Sex===1?sex.male:sex.female"/></span>
-      <p class="weui-media-box__desc">{{item.Category}}-{{item.Degree}}<br></p>
+      <span class="weui-media-box__title">{{item.name}}<img class="icon" :src="item.sex===1?sex.male:sex.female"/></span>
+      <p class="weui-media-box__desc">{{item.category}}-{{item.degree}}<br></p>
     </div>
     <div v-if="type==='exam'">
-      <span><img class="cell-icon" :src="exam"/>{{item.CurrentExam.Exam.Name}}</span>
-      <span v-if="item.CurrentExam.Done" style="color: #09BB07">已评估</span>
-      <span v-if="!item.CurrentExam.Done" style="color: #5bc0de">待评估</span>
+      <span><img class="cell-icon" :src="exam"/>{{item.exam.Name}}</span>
+      <span v-if="item.state==='0'" style="color: #5bc0de">待评估</span>
+      <span v-if="item.state==='1'" style="color: #09BB07">已评估</span>
     </div>
     <span v-if="isLink || !!link" class="weui-cell__ft"></span>
   </div>

@@ -37,7 +37,8 @@ export default {
   data () {
     return {
       tabs:[],
-      categoryTabs:[{name:'视力'},{name:'听力'},{name:'肢体'},{name:'脑瘫'},{name:'偏瘫'},{name:'脊髓损伤'}],
+      //categoryTabs:[{name:'视力'},{name:'听力'},{name:'肢体'},{name:'脑瘫'},{name:'偏瘫'},{name:'脊髓损伤'}],
+      categoryTabs:[{name:'假肢'},{name:'无障碍'},{name:'视力'},{name:'听力'},{name:'肢体'},{name:'脑瘫'},{name:'偏瘫'},{name:'脊髓损伤'}],
       jiaZhiJiaoXingQiTabs:[{name:'长江新里程'},{name:'其它假肢'},{name:'矫形器'}],
       wuZhangAiTabs:[{name:'无障碍改造'}],
       list:{},
@@ -67,11 +68,11 @@ export default {
         default:
           break;
       }
-      let res = await this.$api.GetDisabledInfoes({examby:this.examBy,name:this.name}) 
+      let res = await this.$api.getExamRecords({examby:this.examBy,name:this.name}) 
       let list={}
       for (const key in res) {
         const element = res[key];
-        let name = element[0].CurrentExam.Exam.Name
+        let name = element[0].exam.Name
         list[name]=element
       }
       this.list = list

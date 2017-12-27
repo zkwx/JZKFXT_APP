@@ -165,17 +165,17 @@ export default {
         this.disabled.Disabled_Details = this.DefaultDetails
       }
       //填充选项列表
-      this.$api.GetCategories().then(r => { 
+      this.$api.getCategories().then(r => { 
         r.pop()
         this.Categories = r
       })
-      this.$api.GetDegrees().then(r => { this.Degrees = r })
-      this.$api.GetRehabilitationData().then(r => { this.Lists = r })
-      this.$api.GetNexts().then(r => { this.Nexts = r })
+      this.$api.getDegrees().then(r => { this.Degrees = r })
+      this.$api.getRehabilitationData().then(r => { this.Lists = r })
+      this.$api.getNexts().then(r => { this.Nexts = r })
     },
     getDisabled (id) {
       var _this=this
-      this.$api.GetDisabled(id).then(r => {
+      this.$api.getDisabled(id).then(r => {
         let details=this.DefaultDetails.slice() 
         r.Categories=[]
         r.Disabled_Details.forEach(function(item,i) {

@@ -23,7 +23,7 @@ export default {
   },
   methods: {
     initData () {
-      this.$api.GetDisableds().then(res => { this.list = res })
+      this.$api.getDisableds().then(res => { this.list = res })
     },
   }
 }

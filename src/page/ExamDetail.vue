@@ -1,21 +1,21 @@
 <template>
   <div>
     <group title="评估适配系统" label-width="6em" label-margin-right="1em" v-if="showQuestion===false">
-      <x-input title="姓名" v-model="disabledInfo.Name" required :disabled="IsView"></x-input>
-      <selector title="性别" v-model="disabledInfo.Sex" required :options="Sexlist" :readonly="IsView"></selector>
-      <x-switch title="有无残疾证" v-model="disabledInfo.HasCertificate" :disabled="IsView"></x-switch>
-      <x-input title="残疾证号" v-model="disabledInfo.Certificate" required :min="20" :max="21" v-if="disabledInfo.HasCertificate" :disabled="IsView"></x-input>
-      <x-input title="身份证号" v-model="disabledInfo.IDNumber" required :min="18" :max="18" v-if="!disabledInfo.HasCertificate" :disabled="IsView"></x-input>
+      <x-input title="姓名" v-model="disabled.Name" required :disabled="IsView"></x-input>
+      <selector title="性别" v-model="disabled.Sex" required :options="Sexlist" :readonly="IsView"></selector>
+      <x-switch title="有无残疾证" v-model="disabled.HasCertificate" :disabled="IsView"></x-switch>
+      <x-input title="残疾证号" v-model="disabled.Certificate" required :min="20" :max="21" v-if="disabled.HasCertificate" :disabled="IsView"></x-input>
+      <x-input title="身份证号" v-model="disabled.IDNumber" required :min="18" :max="18" v-if="!disabled.HasCertificate" :disabled="IsView"></x-input>
       <x-input title="年龄" :value="age" disabled></x-input>
-      <datetime title="致残时间" v-model="disabledInfo.data" value-text-align="left" :disabled="IsView" :readonly="IsView"></datetime>
-      <selector title="致残原因" v-model="disabledInfo.DisabilityReason" required :options="DisabilityReasons" :readonly="IsView"></selector>
-      <selector title="残疾类别" v-model="disabledInfo.CategoryID" required :options="Categories" :readonly="IsView"></selector>
-      <selector title="残疾等级" v-model="disabledInfo.DegreeID" required :options="Degrees" direction="right" :readonly="IsView"></selector>
-      <x-input title="民族" v-model="disabledInfo.Nation" :disabled="IsView"></x-input>
-      <x-input title="身高" v-model="disabledInfo.Height" :disabled="IsView"></x-input>
-      <x-input title="体重" v-model="disabledInfo.Weight" :disabled="IsView"></x-input>
-      <x-input title="联系电话" v-model="disabledInfo.Tel" :disabled="IsView"></x-input>
-      <x-input title="Email" v-model="disabledInfo.Email" :disabled="IsView"></x-input>
+      <datetime title="致残时间" v-model="disabled.data" value-text-align="left" :disabled="IsView" :readonly="IsView"></datetime>
+      <selector title="致残原因" v-model="disabled.DisabilityReason" required :options="DisabilityReasons" :readonly="IsView"></selector>
+      <selector title="残疾类别" v-model="disabled.CategoryID" required :options="Categories" :readonly="IsView"></selector>
+      <selector title="残疾等级" v-model="disabled.DegreeID" required :options="Degrees" direction="right" :readonly="IsView"></selector>
+      <x-input title="民族" v-model="disabled.Nation" :disabled="IsView"></x-input>
+      <x-input title="身高" v-model="disabled.Height" :disabled="IsView"></x-input>
+      <x-input title="体重" v-model="disabled.Weight" :disabled="IsView"></x-input>
+      <x-input title="联系电话" v-model="disabled.Tel" :disabled="IsView"></x-input>
+      <x-input title="Email" v-model="disabled.Email" :disabled="IsView"></x-input>
       <x-address title="地址" v-model="Addresses" :list="addressData" placeholder="请选择地址" value-text-align="left" :readonly="IsView"></x-address>
       <x-button v-if="!IsView" type="primary" @click.native="submit">评估</x-button>
       <div v-transfer-dom>
@@ -42,7 +42,8 @@
       <div >
         <div v-for="(question,key) in Exam.Questions" :key="question.QuestionNo" v-show="question.show" >
           <b><p style="font-size:20px;padding:0.8em;"><span style="color:#428bca;">{{question.Multiple?"多选题":"单选题"}}</span><br>{{key}}.{{question.QuestionText}}</p></b>
-          <checklist v-model="Exam.Questions[key].Answers" required :options="question.Options" :ref="'checklist'+key" label-position="left" :max="question.Multiple?10:1" @on-change="optionChange" :disabled="IsView"></checklist>
+          <app-checklist v-model="Exam.Questions[key].Answers" required :options="question.Options" :ref="'checklist'+key" label-position="left" :max="question.Multiple?10:1" @on-change="optionChange" :disabled="IsView"></app-checklist>
+          <!-- <checklist v-model="Exam.Questions[key].Answers" required :options="question.Options" :ref="'checklist'+key" label-position="left" :max="question.Multiple?10:1" @on-change="optionChange" :disabled="IsView"></checklist> -->
         </div>
       </div>
       <div v-if="!IsView">
@@ -77,6 +78,7 @@
 </template>
 
 <script>
+import AppChecklist from '@/components/AppChecklist'
 import { XHeader,Group, XInput, Checklist, Selector,XSwitch,XButton,PopupPicker,Datetime,XAddress,ChinaAddressV4Data,CheckIcon,XDialog,TransferDomDirective as TransferDom,Divider,Flexbox, FlexboxItem,XTable     } from 'vux'
 export default {
   name: 'FuJuPingGuDetail',
@@ -100,7 +102,8 @@ export default {
     Divider,
     Flexbox, 
     FlexboxItem,
-    XTable
+    XTable,
+    AppChecklist
   },
   props:{
     disabledID:String,
@@ -109,10 +112,13 @@ export default {
   },
   data () {
     return {
+      showQuestion:true,
+      State:this.state,
       Exam:{
         ID:null,
         Name:"",
-        Questions:null
+        Questions:null,
+        QuestionsFlow:[]
       },
       Sexlist: [{key: 1, value: '男'}, {key: 2, value: '女'}],
       RelationshipList:[{key: 1, value: '父母'},{key: 2, value: '配偶'},{key: 3, value: '兄弟姐妹'},{key: 4, value: '祖父母'},{key: 5, value: '其他'}],
@@ -124,13 +130,12 @@ export default {
       Agree:false,
       showScrollBox:false,
       showAssistiveDevicesTable:false,
-      showQuestion:false,
       Questions:{},
       QuestionsFlow:[],
       CurrentQuestionIndex:null,
       NextQuestionNo:null,
       assistiveDevices:[],
-      disabledInfo:{
+      disabled:{
         ID:null,
         Name:"",
         Sex:null,
@@ -146,7 +151,7 @@ export default {
         Weight:null,
         Email:"",
         Address:null,
-        DisabledInfo_Details:[],
+        disabled_Details:[],
       }
     }
   },
@@ -155,48 +160,44 @@ export default {
   },
   methods: {
     async initData(){
-      this.disabledInfo.ID = this.disabledID
+      this.disabled.ID = this.disabledID
       //填充选项列表
-      this.Categories = await this.$api.GetCategories()
-      this.DisabilityReasons = await this.$api.GetDisabilityReasons(2)
-      this.Degrees = await this.$api.GetDegrees()
+      this.Categories = await this.$api.getCategories()
+      this.DisabilityReasons = await this.$api.getDisabilityReasons(2)
+      this.Degrees = await this.$api.getDegrees()
 
-      if(this.disabledInfo.ID!=null){
-        this.getDisabledInfo(this.disabledInfo.ID)
+      if(this.disabled.ID!=null){
+        this.getDisabled(this.disabled.ID)
       }
-      
-      if(this.Done){
-        await this.initQuestions()
+      await this.initQuestions()
+      if(this.IsView){
         this.loadAssistiveDevices()
       }
     },
-    async getDisabledInfo (ID) {
-      this.disabledInfo = await this.$api.GetDisabledInfo(ID)
-      this.disabledInfo.DisabledInfo_Details=null
-      if(this.disabledInfo.Address){
-        this.Addresses = [this.disabledInfo.Address.slice(0,2)+"0000",this.disabledInfo.Address.slice(0,4)+"00",this.disabledInfo.Address]
+    async getDisabled (ID) {
+      this.disabled = await this.$api.getDisabled(ID)
+      this.disabled.disabled_Details=null
+      if(this.disabled.Address){
+        this.Addresses = [this.disabled.Address.slice(0,2)+"0000",this.disabled.Address.slice(0,4)+"00",this.disabled.Address]
       }
     },
     async initQuestions(){
       if(!this.Exam.Name){
-        this.Exam = await this.$api.GetExam(this.examID)
+        this.Exam = await this.$api.getExam(this.examID)
       }
-      this.Answers=[]
-      this.Exam.QuestionsFlow=[]
-      for (var key in this.Exam.Questions) {
-        if(this.Exam.Questions[key].IsFirst){
-          this.Exam.Questions[key].show=true
-          this.Exam.QuestionsFlow.push(key)
-        }else{
-          this.Exam.Questions[key].show=false
+      if(this.Exam.QuestionsFlow.length>0){
+        for (const key in this.Exam.Questions) {
+          this.Exam.Questions[key].show=false;
+          this.Exam.Questions[key].Answers=[];
         }
-        this.Exam.Questions[key].Answers=[]
       }
+      this.Exam.QuestionsFlow=['1']
+      this.Exam.Questions['1'].show=true
       this.assistiveDevices=[]
       this.CurrentQuestionIndex=0
     },
     optionChange(optionID,lable){
-      if (optionID.length===1) {
+      if (optionID.length===1&&this.State==='0') {
         var option =this.Exam.Questions[this.Exam.QuestionsFlow[this.CurrentQuestionIndex]].QueryOptions[optionID]
         if(option.NextQuestionNo!=null){
           var NextQuestionNo = option.NextQuestionNo
@@ -243,22 +244,22 @@ export default {
     },
     submit() {
       var _this=this
-      this.disabledInfo.Address=this.Addresses[2]
-      if(!this.disabledInfo.ID){
-        this.$http.post('DisabledInfoes', this.disabledInfo).then(r => {
+      this.disabled.Address=this.Addresses[2]
+      if(!this.disabled.ID){
+        this.$http.post('disableds', this.disabled).then(r => {
           let result = r;
           if(!_this.targetExamName){
-            if(!_this.disabledInfo.CategoryID){
+            if(!_this.disabled.CategoryID){
               $utils.Alert('评估出错','残疾类型有误')
               return
             }
-            _this.targetExamName=_this.Categories[_this.disabledInfo.CategoryID-1].value
+            _this.targetExamName=_this.Categories[_this.disabled.CategoryID-1].value
           }
           _this.initQuestions()
           _this.showScrollBox=true
         })
       }else{
-        this.$http.put('DisabledInfoes/'+this.disabledInfo.ID, this.disabledInfo).then(r => {
+        this.$http.put('disableds/'+this.disabled.ID, this.disabled).then(r => {
             let result = r;
             _this.initQuestions()
             _this.showScrollBox=true
@@ -268,7 +269,7 @@ export default {
     async loadAssistiveDevices(answers){
       this.assistiveDevices=[]
       if(!answers){
-        answers = await this.$api.GetAnswers("?ExamID="+this.Exam.ID+"&DisabledInfoID="+this.disabledInfo.ID)
+        answers = await this.$api.getAnswers("?ExamID="+this.Exam.ID+"&disabledID="+this.disabled.ID)
       }
       for (const key in answers) {
         let optionIDs = answers[key].OptionIDs.split(',')
@@ -288,10 +289,9 @@ export default {
         const value = this.assistiveDevices[key];
         html.push(['<tr><td>',key,'</td><td>',value,'</td></tr>'].join(''))
       }
+      this.showAssistiveDevicesTable=true
       let table = document.getElementById("assistiveDevicesTable")
       table.innerHTML=html.join('')
-      debugger
-      this.showAssistiveDevicesTable=true
     },
     SubmitAnswers(){
       let Answers=[]
@@ -302,12 +302,12 @@ export default {
           QuestionID:question.ID,
           QuestionNo:question.QuestionNo,
           OptionIDs:question.Answers.join(','),
-          DisabledInfoID:this.disabledInfo.ID
+          disabledID:this.disabled.ID
         })
       }
       this.$http.post('Answers/SaveAnswers', Answers).then(r => {
         this.$utils.Alert('适配成功')
-        this.state==="已评估"
+        this.State="1"
         this.loadAssistiveDevices(Answers)
         //this.$router.push('/FuJuPingGuHome')
       })
@@ -316,7 +316,7 @@ export default {
   computed:{
     //年龄计算
     age(){
-      let age = this.$utils.CalcAge(this.disabledInfo.HasCertificate,this.disabledInfo.Certificate,this.disabledInfo.IDNumber)
+      let age = this.$utils.CalcAge(this.disabled.HasCertificate,this.disabled.Certificate,this.disabled.IDNumber)
       return age
     },
     canNext(){
@@ -346,25 +346,22 @@ export default {
         }
       }
     },
-    Done(){
-      return this.state==="已评估"
-    },
     IsView(){
-      if(this.Done){
+      if(this.State==="1"){
         return true
       }
     }
   },
   watch:{
-    'disabledInfo.Certificate'() {
-      if(this.disabledInfo.Certificate.length<20)return
-      let a = this.$utils.CalcCategoryDegree(this.disabledInfo.Certificate)
+    'disabled.Certificate'() {
+      if(this.disabled.Certificate.length<20)return
+      let a = this.$utils.CalcCategoryDegree(this.disabled.Certificate)
       if(a!=null){
-        this.disabledInfo.CategoryID=a.category
-        this.disabledInfo.DegreeID=a.degree
+        this.disabled.CategoryID=a.category
+        this.disabled.DegreeID=a.degree
       }else{
-        this.disabledInfo.CategoryID=null
-        this.disabledInfo.DegreeID=null
+        this.disabled.CategoryID=null
+        this.disabled.DegreeID=null
       }
     },
   }
