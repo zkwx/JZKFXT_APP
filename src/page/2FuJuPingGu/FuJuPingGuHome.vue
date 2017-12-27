@@ -1,6 +1,6 @@
 <template>
   <div>
-    <group title="辅具上门评估适配">
+    <group :title="title">
       <cell v-for="(item,key) in menus" :key="key" :title="item.title" :isLink="item.isLink" :link="item.link">
         <img slot="icon" :src="item.img" class="cell-icon">
       </cell>
@@ -10,30 +10,30 @@
 <script>
 import {Group,Cell} from 'vux'
 export default {
-  name: 'FuJuPingGuHome',
     components: {
       Group,
       Cell,
   },
   data () {
     return {
+      title:"辅具上门评估适配",
       menus:[
         {
           title:'辅具评估',
           isLink:true,
-          link:'/ExamList/type/FuJuPingGu/2',
+          link:'/ExamList/type/FuJuPingGu/categoryTabs',
           img:require('../../assets/icon/i1.png')
         },
         {
           title:'假肢矫形器',
           isLink:true,
-          link:'/FuJuShenHeHome',
+          link:'/ExamList/type/JiaZhiJiaoXingQi/jiaZhiJiaoXingQiTabs',
           img:require('../../assets/icon/i2.png')
         },
         {
-          title:'无障碍审核',
+          title:'无障碍改造',
           isLink:true,
-          link:'/FuJuShenHeHome',
+          link:'/ExamList/name/WuZhangAiGaiZao/wuZhangAiTabs',
           img:require('../../assets/icon/i3.png')
         },
       ]

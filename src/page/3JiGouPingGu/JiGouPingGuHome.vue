@@ -1,33 +1,48 @@
 <template>
   <div>
-    <group title="机构评估与审核">
-      <cell title="辅具审核" is-link link="/FuJuShenHeHome">
-        <img slot="icon" src="../../assets/icon/i1.png" class="cell-icon">
-      </cell>
-      <cell title="假肢矫形器" is-link link="">
-        <img slot="icon" src="../../assets/icon/i2.png" class="cell-icon">
-      </cell>
-      <cell title="无障碍审核" is-link link="">
-        <img slot="icon" src="../../assets/icon/i3.png" class="cell-icon">
-      </cell>
-      <cell title="机构评估" is-link link="">
-        <img slot="icon" src="../../assets/icon/i4.png" class="cell-icon">
+    <group :title="title">
+      <cell v-for="(item,key) in menus" :key="key" :title="item.title" :isLink="item.isLink" :link="item.link">
+        <img slot="icon" :src="item.img" class="cell-icon">
       </cell>
     </group>
   </div>
 </template>
 <script>
-import {XHeader,Group,Cell} from 'vux'
+import {Group,Cell} from 'vux'
 export default {
-  name: 'FuJuPingGuHome',
     components: {
-      XHeader,
       Group,
       Cell,
   },
   data () {
     return {
-
+      title:"机构评估与审核",
+      menus:[
+        {
+          title:'辅具审核',
+          isLink:true,
+          link:'/ExamList/type/FuJuShenHe/categoryTabs',
+          img:require('../../assets/icon/i1.png')
+        },
+        {
+          title:'假肢矫形器审核',
+          isLink:true,
+          link:'/ExamList/type/JiaZhiJiaoXingQiShenHe/jiaZhiJiaoXingQiTabs',
+          img:require('../../assets/icon/i2.png')
+        },
+        {
+          title:'无障碍审核',
+          isLink:true,
+          link:'/ExamList/name/WuZhangAiShenHe/wuZhangAiTabs',
+          img:require('../../assets/icon/i3.png')
+        },
+        {
+          title:'机构评估',
+          isLink:true,
+          link:'/ExamList/type/JiGouPingGu/categoryTabs',
+          img:require('../../assets/icon/i3.png')
+        },
+      ],
     }
   },
   created () {
@@ -45,7 +60,6 @@ export default {
 }
 </script>
 
-<!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
 
 </style>

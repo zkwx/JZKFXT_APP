@@ -42,7 +42,10 @@ html, body {
   font-weight: bold;
 
 }
-
+.container {
+  width: 100%;
+  height: 100%;
+}
 .icon{
   width: 1em;
   height: 1em;

@@ -16,7 +16,7 @@ export default new Router({
             component: resolve => require(['page/login'], resolve)
         }, {
             path: '/sign',
-            component: resolve => require(['page/sign'], resolve),
+            component: resolve => require(['@/components/AppSign'], resolve),
         }, {
             path: '/ExamList/:examBy/:name/:displayType',
             component: resolve => require(['page/ExamList'], resolve),
@@ -37,50 +37,28 @@ export default new Router({
             path: '/KangFuRuHuDetail',
             component: resolve => require(['KangFuRuHu/KangFuRuHuDetail'], resolve),
         }, {
-            path: '/KangFuRuHuDetail/:id',
+            path: '/KangFuRuHuDetail/:disabledID',
             component: resolve => require(['KangFuRuHu/KangFuRuHuDetail'], resolve),
+            props: true
         }, {
             //辅具评估
             path: '/FuJuPingGuHome',
             component: resolve => require(['FuJuPingGu/FuJuPingGuHome'], resolve),
             meta: { navShow: true },
         }, {
-            path: '/FuJuPingGuDetail',
-            component: resolve => require(['FuJuPingGu/FuJuPingGuDetail'], resolve),
-        }, {
-            path: '/FuJuPingGuDetail/:id/:targetExamName/:done',
-            component: resolve => require(['FuJuPingGu/FuJuPingGuDetail'], resolve),
-        }, {
             //机构评估
             path: '/JiGouPingGuHome',
             component: resolve => require(['JiGouPingGu/JiGouPingGuHome'], resolve),
             meta: { navShow: true },
-        }, {
-            path: '/FuJuShenHeHome',
-            component: resolve => require(['JiGouPingGu/FuJuShenHeHome'], resolve),
         }, {
             //综合康复
             path: '/ZongHeKangFuHome',
             component: resolve => require(['ZongHeKangFu/ZongHeKangFuHome'], resolve),
             meta: { navShow: true },
         }, {
-            path: '/FuJuFuWuHome',
-            component: resolve => require(['ZongHeKangFu/FuJuFuWuHome'], resolve),
-        }, {
-            path: '/KangFuFuWuHome',
-            component: resolve => require(['ZongHeKangFu/KangFuFuWuHome'], resolve),
-        }, {
             //服务回访
             path: '/FuWuHuiFangHome',
             component: resolve => require(['FuWuHuiFang/FuWuHuiFangHome'], resolve),
-            meta: { navShow: true },
-        }, {
-            path: '/FuJuFuWuHuiFangHome',
-            component: resolve => require(['FuWuHuiFang/FuJuFuWuHuiFangHome'], resolve),
-            meta: { navShow: true },
-        }, {
-            path: '/KangFuFuWuHuiFangHome',
-            component: resolve => require(['FuWuHuiFang/KangFuFuWuHuiFangHome'], resolve),
             meta: { navShow: true },
         }, {
             //我

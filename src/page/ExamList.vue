@@ -1,9 +1,5 @@
 <template>
   <div style="height:100%">
-    <!-- <x-header :left-options="{backText: ''}" style="width:100%;position:absolute;left:0;top:0;z-index:100;" >
-      辅具上门评估适配
-      <router-link slot="right" to="/FuJuPingGuDetail"><i class="fa fa-plus fa-lg"></i></router-link>
-    </x-header> -->
     <sticky scroll-box="vux_view_box_body" :check-sticky-support="false">
       <tab v-model="index" @on-before-index-change="switchTabItem">
         <tab-item v-for="(value,key) in tabs" :key="key" :selected="key===0">{{value.name}}</tab-item>
@@ -11,7 +7,7 @@
     </sticky>
     <swiper v-model="index" ref="swiper" :height="clientHeight" :show-dots="false">
       <swiper-item v-for="(value,key) in tabs" :key="key">
-        <app-panel :list="list[value.name]" :link="link" type="exam"></app-panel>
+        <app-panel :title="value.name+'患者列表'" :list="list[value.name]" :link="link" type="exam" canAdd></app-panel>
       </swiper-item>
     </swiper>
   </div>
@@ -40,11 +36,14 @@ export default {
   },
   data () {
     return {
-      tabs:[{name:'视力'},{name:'听力'},{name:'肢体'},{name:'脑瘫'},{name:'偏瘫'},{name:'脊髓损伤'}],
+      tabs:[],
+      categoryTabs:[{name:'视力'},{name:'听力'},{name:'肢体'},{name:'脑瘫'},{name:'偏瘫'},{name:'脊髓损伤'}],
+      jiaZhiJiaoXingQiTabs:[{name:'长江新里程'},{name:'其它假肢'},{name:'矫形器'}],
+      wuZhangAiTabs:[{name:'无障碍改造'}],
       list:{},
       link:"ExamDetail",
       clientHeight:"",
-      index:null,
+      index:0
     }
   },
   created () {
@@ -55,14 +54,27 @@ export default {
   },
   methods: {
     async initData () {
+      switch (this.displayType) {
+        case 'categoryTabs':
+          this.tabs=this.categoryTabs
+          break;
+        case 'jiaZhiJiaoXingQiTabs':
+          this.tabs=this.jiaZhiJiaoXingQiTabs
+          break;
+        case 'wuZhangAiTabs':
+        this.tabs=this.wuZhangAiTabs
+          break;
+        default:
+          break;
+      }
       let res = await this.$api.GetDisabledInfoes({examby:this.examBy,name:this.name}) 
+      let list={}
       for (const key in res) {
         const element = res[key];
         let name = element[0].CurrentExam.Exam.Name
-        this.list[name]=element
+        list[name]=element
       }
-      this.index=1
-      this.index=0
+      this.list = list
     },
     switchTabItem (index) {
       

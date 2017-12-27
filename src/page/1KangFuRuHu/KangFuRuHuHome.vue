@@ -1,6 +1,6 @@
 <template>
   <div>
-    <app-panel :title="title" :list="list" :link="link" type="info"></app-panel>
+    <app-panel :title="title" :list="list" :link="link" type="info" canAdd></app-panel>
   </div>
 </template>
 <script>
@@ -15,6 +15,7 @@ export default {
       title:"精准康复入户患者列表",
       link:"KangFuRuHuDetail",
       list: [],
+      canAdd:true
     }
   },
   created () {
@@ -22,7 +23,7 @@ export default {
   },
   methods: {
     initData () {
-      this.$api.GetDisabledInfoes().then(res => { this.list = res })
+      this.$api.GetDisableds().then(res => { this.list = res })
     },
   }
 }

@@ -1,32 +1,30 @@
 <template>
   <div>
-    <x-header :left-options="{showBack: false}" style="width:100%;position:absolute;left:0;top:0;z-index:100;">
-      个人中心
-      <span mini slot="right" type="primary" @click="submit">保存</span>
-    </x-header>
 		<div class="me">
-      <transition>
 			<group class="infos" gutter=0>
-          <div class="avatar" @click.stop="imageChoose">
+          <div class="avatar" @click="imageChoose">
             <img :src="user.img">
             <img class="imageUpload" src="../assets/icon/imageUpload.png">
           </div>
+          <p>{{user.name}}</p>
+          <div class="paddingbottom"></div>
           <input type="file" accept="image" @change="imageChange" v-show="false" ref="file">
 			</group>
-      </transition>
-      
-        <group title="个人信息">
-          <x-input title="姓名" v-model="user.name" text-align="right"></x-input>
-          <x-input title="手机" v-model="user.phone" text-align="right"></x-input>
-        </group>
-        <group title="角色与区域">
-          <cell title="角色">管理员</cell>
-          <cell title="区域">江苏省-徐州市-铜山区</cell>
-        </group>
-        <group title="参与者权限">
-          <checklist v-model="user.Roles" :options="Roles" label-position="left"></checklist>
-        </group>
+      <group title="个人信息">
+        <x-input title="姓名" v-model="user.name" text-align="right"></x-input>
+        <x-input title="手机" v-model="user.phone" text-align="right"></x-input>
+      </group>
+      <group title="角色与区域">
+        <cell title="角色">管理员</cell>
+        <cell title="区域">江苏省-徐州市-铜山区</cell>
+      </group>
+      <group title="参与者权限">
+        <checklist v-model="user.Roles" :options="Roles" label-position="left"></checklist>
+      </group>
 		</div>
+    <div style="padding: 15px;">
+      <x-button type="primary" @click.native="submit">保存</x-button>
+    </div>
   </div>
 </template>
 
@@ -50,7 +48,7 @@ export default {
 				name:'张三',
         phone:'1320000000',
         Roles:[1,2],
-        img:'/static/img/avatar.png'
+        img:require('@/assets/icon/avatar-male.png')
 				},
       fuJuShangMenList:[],
       index:0,
@@ -72,15 +70,14 @@ export default {
       if (!$target.files.length) return;
       let file = $target.files[0]
       let url = this.getObjectURL(file);
-      
       this.imageUpload(file).then((data) => {
           this.user.img=url;
         })
     },
     imageUpload(file){
-      let formdata = new FormData();
-      formdata.append('file',file);
-      return this.$http.post('File',formdata)
+      let formData = new FormData();
+      formData.append('file',file);
+      return this.$http.post('File',formData)
     },
     getObjectURL (file) {  
       var url = null ;   
@@ -111,6 +108,9 @@ export default {
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
+.paddingbottom{
+  padding-bottom: 20px;
+}
 .me .infos {
     text-align: center;
     font-size: 17px;

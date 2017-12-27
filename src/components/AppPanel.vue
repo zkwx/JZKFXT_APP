@@ -8,7 +8,7 @@
     @on-cancel="onCancel"
     @on-submit="onSubmit"
     ref="search">
-      <router-link slot="right" :to="link" class="weui-search-bar__add-btn">新增</router-link>
+      <router-link v-if="canAdd" slot="right" :to="link" class="weui-search-bar__add-btn">新增</router-link>
     </search>
   <div v-if="title" class="weui-cells__title">{{title}}</div>
   <div class="weui-panel weui-panel_access">    
@@ -34,6 +34,7 @@
       type: String,
       isLink: Boolean,
       link: String,
+      canAdd: Boolean
     },
     data(){
       return{

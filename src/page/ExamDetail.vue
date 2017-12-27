@@ -1,10 +1,6 @@
 <template>
   <div>
-    <x-header
-    style="width:100%;position:absolute;left:0;top:0;z-index:100;">
-    评估适配系统
-    </x-header>
-    <group title="个人信息" label-width="6em" label-margin-right="1em" v-if="showQuestion===false">
+    <group title="评估适配系统" label-width="6em" label-margin-right="1em" v-if="showQuestion===false">
       <x-input title="姓名" v-model="disabledInfo.Name" required :disabled="IsView"></x-input>
       <selector title="性别" v-model="disabledInfo.Sex" required :options="Sexlist" :readonly="IsView"></selector>
       <x-switch title="有无残疾证" v-model="disabledInfo.HasCertificate" :disabled="IsView"></x-switch>

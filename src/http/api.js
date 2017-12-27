@@ -12,11 +12,11 @@ export default {
     async GetRehabilitationData() {
         return await http.get('Rehabilitations?group=true')
     },
-    async GetDisabledInfoes(param) {
-        return await http.get('DisabledInfoes', param)
+    async GetDisableds(param) {
+        return await http.get('Disableds', param)
     },
-    async GetDisabledInfo(ID) {
-        return await http.get('DisabledInfoes/' + ID)
+    async GetDisabled(ID) {
+        return await http.get('Disableds/' + ID)
     },
     async GetDisabilityReasons(categoryID) {
         return await http.get('DisabilityReasons?categoryID=' + categoryID)
