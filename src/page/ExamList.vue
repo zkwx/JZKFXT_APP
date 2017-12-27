@@ -68,11 +68,11 @@ export default {
         default:
           break;
       }
-      let res = await this.$api.getExamRecords({examby:this.examBy,name:this.name}) 
+      let res = await this.$api.getExamRecords({examby:this.examBy,name:this.name})
       let list={}
       for (const key in res) {
         const element = res[key];
-        let name = element[0].exam.Name
+        let name = element[0].Exam.Name
         list[name]=element
       }
       this.list = list

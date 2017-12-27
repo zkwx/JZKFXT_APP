@@ -6,10 +6,6 @@ export const getKey = function(item) {
     return typeof item === 'object' ? item.key : item
 }
 
-export const getInlineDesc = function(item) {
-    return typeof item === 'object' ? item.inlineDesc : ''
-}
-
 export const getLabel = function(list = [], value) {
     if (!list.length) {
         return value

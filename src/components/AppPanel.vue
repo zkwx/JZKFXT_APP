@@ -48,15 +48,15 @@
     },
     methods:{
       getLink(item){
-        let clink=clink='/'+this.link+'/'+item.id
+        let clink=clink='/'+this.link+'/'+item.ID
         if (this.type==='exam') {
-          clink += '/'+item.exam.ID+'/'+item.state
+          clink += '/'+item.Exam.ID+'/'+item.State
         }
         return clink
       },
       onSearchChange (val) {
         this.filterList = this.list.filter(v => {
-          return v.name.indexOf(val) > -1
+          return v.Name.indexOf(val) > -1
         })
       },
       onFocus () {
