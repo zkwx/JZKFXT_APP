@@ -1,29 +1,83 @@
 <template>
-  <div :class="disabled ? 'vux-checklist-disabled' : ''">
-    <div v-show="title" class="weui-cells__title">{{ title }}</div>
-    <slot name="after-title"></slot>
-    <div class="weui-cells weui-cells_checkbox">
-      <label class="weui-cell weui-check_label" :class="{'vux-checklist-label-left': labelPosition === 'left'}" :for="`checkbox_${uuid}_${index}`" v-for="(one, index) in currentOptions" :key="index">
-        <div class="weui-cell__hd">
-          <input type="checkbox" class="weui-check" :name="`vux-checkbox-${uuid}`" :value="getKey(one)" v-model="currentValue" :id="disabled ? '' : `checkbox_${uuid}_${index}`" :disabled="isDisabled(getKey(one))">
-          <i class="weui-icon-checked vux-checklist-icon-checked"></i>
+  <div>
+    <b><p style="font-size:20px;padding:0.8em;"><span style="color:#428bca;" v-text="getQuestionDesc(question.Type)"></span><br>{{question.QuestionNo}}.{{question.QuestionText}}</p></b>
+    <div :class="disabled ? 'vux-checklist-disabled' : ''">
+      <!--单选和多选-->
+      <div v-if="question.Type<=2" class="weui-cells weui-cells_checkbox">
+        <label class="weui-cell weui-check_label" :class="{'vux-checklist-label-left': labelPosition === 'left'}" :for="`checkbox_${uuid}_${index}`" v-for="(one, index) in currentOptions" :key="index">
+          <div class="weui-cell__hd">
+            <input type="checkbox" class="weui-check" :name="`vux-checkbox-${uuid}`" :value="getKey(one)" v-model="currentValue" :id="disabled ? '' : `checkbox_${uuid}_${index}`" :disabled="isDisabled(getKey(one))">
+            <i class="weui-icon-checked vux-checklist-icon-checked"></i>
+          </div>
+          <div class="weui-cell__bd">
+            <p v-html="getValue(one)"></p>
+          </div>
+        </label>
+      </div>
+      <!--选择下的选择-->
+      <div v-if="question.Type>2 && question.Type<=5" class="weui-cells weui-cells_checkbox">
+        <div v-for="(one, index) in currentOptions" :key="index">
+          <label class="weui-cell weui-check_label" :class="{'vux-checklist-label-left': labelPosition === 'left'}" :for="`checkbox_${uuid}_${index}`" >
+            <div class="weui-cell__hd">
+              <input type="checkbox" class="weui-check" :name="`vux-checkbox-${uuid}`" :value="getKey(one)" v-model="currentValue" :id="disabled ? '' : `checkbox_${uuid}_${index}`" :disabled="isDisabled(getKey(one))">
+              <i class="weui-icon-checked vux-checklist-icon-checked" ></i>
+            </div>
+            <div class="weui-cell__bd">
+            <p v-html="getValue(one)"></p>
+            </div>
+          </label>
+          
+          <div v-if="currentValue.indexOf(getKey(one))>-1">
+            
+            <div v-if="question.Type===3 || question.Type===4">
+            <label class="weui-cell weui-check_label" :class="{'vux-checklist-label-left': labelPosition === 'left'}" :for="`checkbox_${uuid}_${indexTwo}`" v-for="(two, indexTwo) in getOptions(question,one)" :key="indexTwo">
+            <div class="weui-cell__hd">
+              <input type="checkbox" class="weui-check" :name="`vux-checkbox-${uuid}`" :value="getKey(two)" v-model="currentValue" :id="disabled ? '' : `checkbox_${uuid}_${indexTwo}`" :disabled="isDisabled(getKey(two))">
+              <i class="weui-icon-checked vux-checklist-icon-checked" ></i>
+            </div>
+            <div class="weui-cell__bd">
+            <p v-html="getValue(two)"></p>
+            </div>
+            </label>
+          </div>
+            <!--填空题-->
+          <div v-if="question.Type===5">
+            <label class="weui-cell weui-check_label" :class="{'vux-checklist-label-left': labelPosition === 'left'}" :for="`checkbox_${uuid}_${indexTwo}`" v-for="(two, indexTwo) in getOptions(question,one)" :key="indexTwo">
+            <div class="weui-cell__hd">
+              <input type="checkbox" class="weui-check" :name="`vux-checkbox-${uuid}`" :value="getKey(two)" v-model="currentValue" :id="disabled ? '' : `checkbox_${uuid}_${indexTwo}`" :disabled="isDisabled(getKey(two))">
+              <i class="weui-icon-checked vux-checklist-icon-checked" ></i>
+            </div>
+            <div class="weui-cell__bd">
+            <p v-html="getValue(two)"></p>
+            </div>
+            </label>
+          </div>
+
+          </div>
         </div>
-        <div class="weui-cell__bd">
-          <p v-html="getValue(one)"></p>
-        </div>
-      </label>
+
+      </div>
+       
+      <!--身体部分选择-->
+      <div v-if="question.Type===6">
+      </div>
+      <!--上传图片-->
+      <div v-if="question.Type===7">
+      </div>
+      
     </div>
-    <slot name="footer"></slot>
+
   </div>
+ 
 </template>
 
 <script>
-import uuidMixin from './mixin_uuid'
-import { getValue, getLabels, getKey } from './object-filter'
-import { Tip, Icon } from 'vux'
+import uuidMixin from "./mixin_uuid";
+import { getValue, getLabels, getKey } from "./object-filter";
+import { Tip, Icon } from "vux";
 
 export default {
-  name: 'checklist',
+  name: "checklist",
   components: {
     Tip,
     Icon
@@ -41,6 +95,8 @@ export default {
       type: Boolean,
       default: false
     },
+    question: Object,
+    questions: Object,
     options: {
       type: Array,
       required: true
@@ -59,150 +115,178 @@ export default {
     },
     labelPosition: {
       type: String,
-      default: 'right'
+      default: "right"
     },
     disabled: Boolean
   },
-  data () {
+  data() {
     return {
       currentValue: [],
       currentOptions: this.options,
-      tempValue: '' // used only for radio mode
-    }
+      tempValue: "" // used only for radio mode
+    };
   },
-  beforeUpdate () {
+  beforeUpdate() {
     if (this.isRadio) {
-      const length = this.currentValue.length
+      const length = this.currentValue.length;
       if (length > 1) {
-        this.currentValue = [this.currentValue[length - 1]]
+        this.currentValue = [this.currentValue[length - 1]];
       }
-      const val = pure(this.currentValue)
-      this.tempValue = val.length ? val[0] : ''
+      const val = pure(this.currentValue);
+      this.tempValue = val.length ? val[0] : "";
     }
   },
-  created () {
-    this.handleChangeEvent = true
+  created() {
+    this.handleChangeEvent = true;
     if (this.value) {
-      this.currentValue = this.value
+      this.currentValue = this.value;
       if (this.isRadio) {
-        this.tempValue = this.isRadio ? this.value[0] : this.value
+        this.tempValue = this.isRadio ? this.value[0] : this.value;
       }
     }
-    this.currentOptions = this.options
+    this.currentOptions = this.options;
   },
   methods: {
     getValue,
     getKey,
-    getFullValue () {
-      const labels = getLabels(this.options, this.value)
+    getOptions(question,one){
+      let questionNo = question.QueryOptions[getKey(one)].NextQuestionNo
+      let options = this.questions[questionNo].Options
+      return options
+    },
+    getFullValue() {
+      const labels = getLabels(this.options, this.value);
       return this.currentValue.map((one, index) => {
         return {
           value: one,
           label: labels[index]
-        }
-      })
+        };
+      });
     },
-    isDisabled (key) {
+    isDisabled(key) {
       if (!this.checkDisabled) {
-        return false
+        return false;
       }
       if (this._max > 1) {
-        return this.currentValue.indexOf(key) === -1 && this.currentValue.length === this._max
+        return (
+          this.currentValue.indexOf(key) === -1 &&
+          this.currentValue.length === this._max
+        );
       }
-      return false
+      return false;
+    },
+    getQuestionDesc(type) {
+      let desc = "";
+      switch (type) {
+        case 1:
+          desc = "单选题";
+          break;
+        case 2:
+          desc = "多选题";
+          break;
+        default:
+          break;
+      }
+      return desc;
     }
   },
   computed: {
-    isRadio () {
-      if (typeof this.max === 'undefined') {
-        return false
+    isRadio() {
+      if (typeof this.max === "undefined") {
+        return false;
       } else {
-        return this.max === 1
+        return this.max === 1;
       }
     },
-    _total () {
-      return this.fillMode ? (this.options.length + 1) : this.options.length
+    _total() {
+      return this.fillMode ? this.options.length + 1 : this.options.length;
     },
-    _min () {
+    _min() {
       if (!this.required && !this.min) {
-        return 0
+        return 0;
       }
       if (!this.required && this.min) {
-        return Math.min(this._total, this.min)
+        return Math.min(this._total, this.min);
       }
       if (this.required) {
         if (this.min) {
-          let max = Math.max(1, this.min)
-          return Math.min(this._total, max)
+          let max = Math.max(1, this.min);
+          return Math.min(this._total, max);
         } else {
-          return 1
+          return 1;
         }
       }
     },
-    _max () {
+    _max() {
       if (!this.required && !this.max) {
-        return this._total
+        return this._total;
       }
       if (this.max) {
         if (this.max > this._total) {
-          return this._total
+          return this._total;
         }
-        return this.max
+        return this.max;
       } else {
-        return this._total
+        return this._total;
       }
     },
-    valid () {
-      return this.currentValue.length >= this._min && this.currentValue.length <= this._max
+    valid() {
+      return (
+        this.currentValue.length >= this._min &&
+        this.currentValue.length <= this._max
+      );
     }
   },
   watch: {
-    tempValue (val) {
-      const _val = val ? [val] : []
-      this.$emit('input', _val)
-      this.$emit('on-change', _val, getLabels(this.options, _val))
+    tempValue(val) {
+      const _val = val ? [val] : [];
+      this.$emit("input", _val);
+      this.$emit("on-change", _val, getLabels(this.options, _val));
     },
-    value (newVal) {
+    value(newVal) {
       if (JSON.stringify(newVal) !== JSON.stringify(this.currentValue)) {
-        this.currentValue = newVal
+        this.currentValue = newVal;
       }
     },
-    options (val) {
-      this.currentOptions = val
+    options(val) {
+      this.currentOptions = val;
     },
-    currentValue (newVal) {
-      const val = pure(newVal)
+    currentValue(newVal) {
+      const val = pure(newVal);
 
       if (!this.isRadio) {
-        this.$emit('input', val)
-        this.$emit('on-change', val, getLabels(this.options, val))
-        let err = {}
+        this.$emit("input", val);
+        this.$emit("on-change", val, getLabels(this.options, val));
+        let err = {};
         if (this._min) {
           if (this.required) {
             if (this.currentValue.length < this._min) {
               err = {
                 min: this._min
-              }
+              };
             }
           } else {
-            if (this.currentValue.length && this.currentValue.length < this._min) {
+            if (
+              this.currentValue.length &&
+              this.currentValue.length < this._min
+            ) {
               err = {
                 min: this._min
-              }
+              };
             }
           }
         }
         if (!this.valid && this.dirty && Object.keys(err).length) {
-          this.$emit('on-error', err)
+          this.$emit("on-error", err);
         } else {
-          this.$emit('on-clear-error')
+          this.$emit("on-clear-error");
         }
       }
     }
   }
-}
-function pure (obj) {
-  return JSON.parse(JSON.stringify(obj))
+};
+function pure(obj) {
+  return JSON.parse(JSON.stringify(obj));
 }
 </script>
 
@@ -215,13 +299,13 @@ function pure (obj) {
 //   color: @checklist-icon-active-color;
 // }
 
-// .weui-cells_checkbox > label > * {
-//   pointer-events: none;
-// }
-// .vux-checklist-disabled .vux-checklist-icon-checked:before {
-//   opacity: 0.5;
-// }
-// .vux-checklist-label-left {
-//   flex-direction: row-reverse;
-// }
+.weui-cells_checkbox > div > label > * {
+  pointer-events: none;
+}
+.vux-checklist-disabled .vux-checklist-icon-checked:before {
+  opacity: 0.5;
+}
+.vux-checklist-label-left {
+  flex-direction: row-reverse;
+}
 </style>
