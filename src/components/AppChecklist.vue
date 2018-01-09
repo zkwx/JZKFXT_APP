@@ -1,6 +1,6 @@
 <template>
   <div>
-    <b><p style="font-size:20px;padding:0.8em;"><span style="color:#428bca;" v-text="getQuestionDesc(question.Type)"></span><br>{{question.QuestionNo}}.{{question.QuestionText}}</p></b>
+    <b><p style="font-size:20px;padding:0.8em;"><span style="color:#428bca;" v-text="getQuestionDesc()"></span><br>{{question.QuestionNo}}.{{question.QuestionText}}</p></b>
     <div :class="disabled ? 'vux-checklist-disabled' : ''">
       <!--单选和多选-->
       <div v-if="question.Type<=2" class="weui-cells weui-cells_checkbox">
@@ -14,56 +14,60 @@
           </div>
         </label>
       </div>
-      <!--选择下的选择-->
-      <div v-if="question.Type>2 && question.Type<=5" class="weui-cells weui-cells_checkbox">
+      <!--单选和多选end-->
+      <!--选择后的下拉-->
+      <div v-if="question.Type>2 && question.Type<5" class="weui-cells weui-cells_checkbox">
         <div v-for="(one, index) in currentOptions" :key="index">
           <label class="weui-cell weui-check_label" :class="{'vux-checklist-label-left': labelPosition === 'left'}" :for="`checkbox_${uuid}_${index}`" >
             <div class="weui-cell__hd">
               <input type="checkbox" class="weui-check" :name="`vux-checkbox-${uuid}`" :value="getKey(one)" v-model="currentValue" :id="disabled ? '' : `checkbox_${uuid}_${index}`" :disabled="isDisabled(getKey(one))">
-              <i class="weui-icon-checked vux-checklist-icon-checked" ></i>
+              <i class="weui-icon-checked vux-checklist-icon-checked"></i>
             </div>
             <div class="weui-cell__bd">
-            <p v-html="getValue(one)"></p>
+              <p v-html="getValue(one)"></p>
             </div>
           </label>
-          
+           <!--下拉选项-->
           <div v-if="currentValue.indexOf(getKey(one))>-1">
-            
-            <div v-if="question.Type===3 || question.Type===4">
-            <label class="weui-cell weui-check_label" :class="{'vux-checklist-label-left': labelPosition === 'left'}" :for="`checkbox_${uuid}_${indexTwo}`" v-for="(two, indexTwo) in getOptions(question,one)" :key="indexTwo">
-            <div class="weui-cell__hd">
-              <input type="checkbox" class="weui-check" :name="`vux-checkbox-${uuid}`" :value="getKey(two)" v-model="currentValue" :id="disabled ? '' : `checkbox_${uuid}_${indexTwo}`" :disabled="isDisabled(getKey(two))">
-              <i class="weui-icon-checked vux-checklist-icon-checked" ></i>
+            <!-- 填空 -->
+            <div v-if="getType(one) === 5">
+              <label class="weui-cell vux-x-textarea">
+                <div class="weui-cell__hd">{{questions[question.QueryOptions[getKey(one)].NextQuestionNo].QuestionText}}</div> 
+                <div class="weui-cell__bd">
+                  <group>
+                    <x-textarea :max="100" v-model="messages" placeholder="填空" :readonly="disabled"></x-textarea>
+                  </group>
+                </div>
+              </label>
             </div>
-            <div class="weui-cell__bd">
-            <p v-html="getValue(two)"></p>
-            </div>
+          <!-- 填空end -->
+          <!-- 选择 -->
+            <div v-else class="weui-cells weui-cells_checkbox tab">
+              <label class="weui-cell weui-check_label" :class="{'vux-checklist-label-left': labelPosition === 'left'}" :for="`checkbox_${uuid}_${getKey(two)}`" v-for="(two, indexTwo) in getNextOptions(one)" :key="indexTwo">
+                <div class="weui-cell__hd">
+                  <input type="checkbox" class="weui-check" :name="`vux-checkbox-${uuid}`" :value="getKey(two)" @click="subCheck(one)" v-model="currentSubValue" :id="disabled ? '' : `checkbox_${uuid}_${getKey(two)}`" :disabled="isDisabled(getKey(two))">
+                  <i class="weui-icon-checked vux-checklist-icon-checked"></i>
+                </div>
+                <div class="weui-cell__bd">
+                <p v-html="getValue(two)"></p>
+              </div>
             </label>
           </div>
-            <!--填空题-->
-          <div v-if="question.Type===5">
-            <label class="weui-cell weui-check_label" :class="{'vux-checklist-label-left': labelPosition === 'left'}" :for="`checkbox_${uuid}_${indexTwo}`" v-for="(two, indexTwo) in getOptions(question,one)" :key="indexTwo">
-            <div class="weui-cell__hd">
-              <input type="checkbox" class="weui-check" :name="`vux-checkbox-${uuid}`" :value="getKey(two)" v-model="currentValue" :id="disabled ? '' : `checkbox_${uuid}_${indexTwo}`" :disabled="isDisabled(getKey(two))">
-              <i class="weui-icon-checked vux-checklist-icon-checked" ></i>
-            </div>
-            <div class="weui-cell__bd">
-            <p v-html="getValue(two)"></p>
-            </div>
-            </label>
-          </div>
-
-          </div>
+          <!-- 选择end -->
         </div>
-
+           <!--下拉选项end--> 
+        </div>
       </div>
-       
+       <!--选择后的下拉end-->
+
       <!--身体部分选择-->
       <div v-if="question.Type===6">
       </div>
+      <!--身体部分选择end-->
       <!--上传图片-->
       <div v-if="question.Type===7">
       </div>
+      <!--上传图片end-->
       
     </div>
 
@@ -74,13 +78,15 @@
 <script>
 import uuidMixin from "./mixin_uuid";
 import { getValue, getLabels, getKey } from "./object-filter";
-import { Tip, Icon } from "vux";
+import { Tip, Icon, Group, XTextarea } from "vux";
 
 export default {
-  name: "checklist",
+  name: "app-checklist",
   components: {
     Tip,
-    Icon
+    Icon,
+    Group,
+    XTextarea
   },
   filters: {
     getValue,
@@ -95,6 +101,7 @@ export default {
       type: Boolean,
       default: false
     },
+    examID: String,
     question: Object,
     questions: Object,
     options: {
@@ -122,8 +129,11 @@ export default {
   data() {
     return {
       currentValue: [],
+      currentSubValue: [],
+      messages: "",
       currentOptions: this.options,
-      tempValue: "" // used only for radio mode
+      tempValue: "", // used only for radio mode
+      tempSubValue: "" // used only for radio mode
     };
   },
   beforeUpdate() {
@@ -149,10 +159,26 @@ export default {
   methods: {
     getValue,
     getKey,
-    getOptions(question,one){
-      let questionNo = question.QueryOptions[getKey(one)].NextQuestionNo
-      let options = this.questions[questionNo].Options
-      return options
+    //获取下一题
+    getNextQuestionNo(one) {
+      let questionNo = this.question.QueryOptions[getKey(one)].NextQuestionNo;
+      return questionNo;
+    },
+    //获取下一题的选项
+    getNextOptions(one) {
+      let questionNo = this.question.QueryOptions[getKey(one)].NextQuestionNo;
+      let options = this.questions[questionNo].Options;
+      return options;
+    },
+    //获取下一题的类型
+    getType(one) {
+      let questionNo = this.question.QueryOptions[getKey(one)].NextQuestionNo;
+      let types = this.questions[questionNo].Type;
+      return types;
+    },
+    subCheck(one) {
+      let questionNo = this.question.QueryOptions[getKey(one)].NextQuestionNo;
+      this.tempSubValue = questionNo;
     },
     getFullValue() {
       const labels = getLabels(this.options, this.value);
@@ -175,7 +201,9 @@ export default {
       }
       return false;
     },
-    getQuestionDesc(type) {
+
+    getQuestionDesc() {
+      const type = this.question.Type;
       let desc = "";
       switch (type) {
         case 1:
@@ -241,7 +269,14 @@ export default {
     tempValue(val) {
       const _val = val ? [val] : [];
       this.$emit("input", _val);
-      this.$emit("on-change", _val, getLabels(this.options, _val));
+      this.$emit(
+        "on-change",
+        this.examID,
+        this.question.QuestionNo,
+        _val,
+        this.question.Type,
+        this.messages
+      );
     },
     value(newVal) {
       if (JSON.stringify(newVal) !== JSON.stringify(this.currentValue)) {
@@ -253,10 +288,16 @@ export default {
     },
     currentValue(newVal) {
       const val = pure(newVal);
-
       if (!this.isRadio) {
         this.$emit("input", val);
-        this.$emit("on-change", val, getLabels(this.options, val));
+        this.$emit(
+          "on-change",
+          this.examID,
+          this.question.QuestionNo,
+          val,
+          this.question.Type,
+          this.messages
+        );
         let err = {};
         if (this._min) {
           if (this.required) {
@@ -282,6 +323,17 @@ export default {
           this.$emit("on-clear-error");
         }
       }
+    },
+    currentSubValue(newVal) {
+      const val = pure(newVal);
+      this.$emit(
+        "on-change",
+        this.examID,
+        this.tempSubValue,
+        val,
+        this.question.Type,
+        this.messages
+      );
     }
   }
 };
@@ -298,6 +350,14 @@ function pure(obj) {
 // .weui-cells_checkbox .weui-check:checked + .vux-checklist-icon-checked:before {
 //   color: @checklist-icon-active-color;
 // }
+
+.tab {
+  padding-left: 25px;
+}
+
+.weui-cells .vux-no-group-title {
+  margin: auto;
+}
 
 .weui-cells_checkbox > div > label > * {
   pointer-events: none;
