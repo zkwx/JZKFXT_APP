@@ -135,6 +135,7 @@ export default {
       exams: {}, //{examID,questions}
       questionManager: {
         questionsFlow: [], //{examID,questionNo,options}
+        questionLast: [], //{examID,questionNo,options}  存放跳转试卷后原试卷剩下的题
         currentQuestionsFlowIndex: 0
       },
       //answers: [], //{examID,questionNo,options}
@@ -217,11 +218,16 @@ export default {
     },
     //初始化问题
     async initQuestions() {
-      const exam = await this.$api.getExam(this.examID);
+      await this.bindExams(this.examID);
 
-      let exams = {};
-      exams[this.examID] = exam.Questions;
-      this.exams = exams;
+      //重新答题时，遍历答过的题目，清空选项
+      if (this.questionManager.questionsFlow.length > 1) {
+        for (const question of this.questionManager.questionsFlow) {
+          const currentChecklist =
+            "checklist" + this.examID + question.questionNo;
+          this.$refs[currentChecklist][0].currentValue = [];
+        }
+      }
 
       this.questionManager.questionsFlow = [];
       this.questionManager.questionsFlow.push({
@@ -266,7 +272,8 @@ export default {
             const question = this.getCurrentQuestion();
             if (
               question.QueryOptions[checked.currentValue[0]].NextQuestionNo !=
-              null
+                null ||
+              this.questionManager.questionLast.length > 0
             ) {
               this.ToNext();
             }
@@ -330,19 +337,68 @@ export default {
       questionPrevious.show = true;
     },
     //下一题
-    ToNext() {
+    async ToNext() {
+      const exam = this.getCurrentExam();
       const checklist = this.getCurrentChecklist();
       const question = this.getCurrentQuestion();
       for (const optionID of checklist.currentValue) {
         const option = question.QueryOptions[optionID];
         const NextQuestionNo = option.NextQuestionNo;
+        //从一张试卷跳到另一张试卷
+        if (option.NextExamID != 0) {
+          if (option.NextExamID != parseInt(exam.examID)) {
+            //当前试卷试题
+            const questions = this.exams[exam.examID];
+
+            //原试卷剩余的问题
+            for (const i in questions) {
+              if (questions[i].QuestionNo > question.QuestionNo) {
+                this.questionManager.questionLast.push({
+                  examID: exam.examID,
+                  questionNo: questions[i].QuestionNo,
+                  messages: checklist.messages
+                });
+              }
+            }
+            question.show = false;
+            //根据试卷ID查找问题
+            await this.bindExams(option.NextExamID);
+            //新试卷的第一题
+            const first = this.exams[option.NextExamID][1];
+            //跳转到新试卷的第一题
+            NextQuestionNo = first.QuestionNo;
+          }
+        }
+        if (question.Type != 4 && NextQuestionNo === null) {
+          if (this.State === "0") {
+            if (this.questionManager.questionLast.length > 0) {
+              option.NextExamID = parseInt(this.examID);
+              NextQuestionNo = this.questionManager.questionLast[0].questionNo;
+            }
+          }
+        }
         if (question.Type != 4 && NextQuestionNo) {
           if (this.State === "0") {
-            this.questionManager.questionsFlow.push({
-              examID: checklist.examID,
-              questionNo: NextQuestionNo,
-              messages: checklist.messages
-            });
+            //多选题两个选项跳同一个题目时
+            if (
+              this.questionManager.questionsFlow[
+                this.questionManager.questionsFlow.length - 1
+              ].questionNo != NextQuestionNo
+            ) {
+              if (option.NextExamID != 0) {
+                this.questionManager.questionsFlow.push({
+                  examID: option.NextExamID.toString(),
+                  questionNo: NextQuestionNo,
+                  messages: checklist.messages
+                });
+              } else {
+                this.questionManager.questionsFlow.push({
+                  examID: checklist.examID,
+                  questionNo: NextQuestionNo,
+                  messages: checklist.messages
+                });
+              }
+            }
           }
         }
       }
@@ -350,22 +406,31 @@ export default {
         this.questionManager.currentQuestionsFlowIndex
       ];
 
-      if (question.Type === 4 && this.State === "0") {
-        examQuestion.options = checklist.currentValue.concat(
-          checklist.currentSubValue
-        );
-      } else {
-        examQuestion.options = checklist.currentValue;
+      if (this.State === "0") {
+        if (question.Type === 4) {
+          examQuestion.options = checklist.currentValue.concat(
+            checklist.currentSubValue
+          );
+        } else {
+          examQuestion.options = checklist.currentValue;
+        }
       }
 
       examQuestion.messages = checklist.messages;
 
       question.show = false;
+
       this.questionManager.currentQuestionsFlowIndex++;
       const questionNext = this.getCurrentQuestion();
       if (questionNext) {
         questionNext.show = true;
       }
+    },
+    async bindExams(ExamID) {
+      const Exam = await this.$api.getExam(ExamID);
+      let exams = this.pure(this.exams);
+      exams[ExamID] = Exam.Questions;
+      this.exams = exams;
     },
     //重新答题
     Reset() {
@@ -423,86 +488,117 @@ export default {
         const questionKey = [];
         //子选项数组
         const twoOptionIDs = [];
-        //做完之后直接查看
         if (!this.IsView) {
+          //做完之后直接查看
           exam = this.questionManager.questionsFlow[key];
           questions = this.exams[exam.examID];
           question = questions[exam.questionNo];
+          //辅具查询(答案选项，答案记录数据，问题集合)
+          await this.assistiveList(optionIDs, exam, questions);
+          //数组转换
+          this.arrayChange(questionKey, question, optionIDs, twoOptionIDs);
+          //问题选择的选项
+          this.answerOptions(
+            exam,
+            optionIDs,
+            question,
+            questions,
+            twoOptionIDs
+          );
           question.show = true;
         } else {
           //从数据库查询
           exam = answers[key];
           questions = this.exams[exam.ExamID];
           question = questions[exam.QuestionNo];
-          //辅具查询
-          for (const p in optionIDs) {
-            const opid = optionIDs[p];
-            const op = questions[answers[key].QuestionNo].QueryOptions[opid];
-            if (op.AssistiveDeviceName) {
-              this.assistiveDevices.push(op.AssistiveDeviceName);
-            }
-          }
 
-          //遍历题目选项
-          for (const one of question.Options) {
-            questionKey.push(one.key);
-          }
-          //判断当前选项是否为二级选项
-          for (let i = 0; i < optionIDs.length; i++) {
-            if (questionKey.indexOf(parseInt(optionIDs[i])) === -1) {
-              twoOptionIDs.push(parseInt(optionIDs[i]));
-              optionIDs.splice(i, 1);
-            }
-          }
-          //字符串数组转int数组
-          for (let i = 0; i < optionIDs.length; i++) {
-            optionIDs[i] = parseInt(optionIDs[i]);
-          }
-
-          let currentChecklist = "checklist" + exam.ExamID + exam.QuestionNo;
-          this.$refs[currentChecklist][0].currentValue = optionIDs;
+          //辅具查询(答案选项，答案记录数据，问题集合)
+          await this.assistiveList(optionIDs, exam, questions);
+          //数组转换
+          this.arrayChange(questionKey, question, optionIDs, twoOptionIDs);
+          //问题选择的选项
+          this.answerOptions(
+            exam,
+            optionIDs,
+            question,
+            questions,
+            twoOptionIDs
+          );
 
           question.show = true;
+        }
+      }
 
-          if (question.Type === 4) {
-            for (const id of optionIDs) {
-              let questionNo = question.QueryOptions[id].NextQuestionNo;
-              const nextQuestion = questions[questionNo];
-              this.$refs[currentChecklist][0].currentSubValue = twoOptionIDs;
-              this.$refs[currentChecklist][0].messages = exam.Other;
+      if (this.assistiveDevices.length > 1) {
+        let html = [];
+        for (const id in this.assistiveDevices) {
+          const value = this.assistiveDevices[id].Name;
+          html.push(
+            ["<tr><td>", id, "</td><td>", value, "</td></tr>"].join("")
+          );
+        }
+        this.showAssistiveDevicesTable = true;
+        let table = document.getElementById("assistiveDevicesTable");
+        table.innerHTML = html.join("");
+      }
+    },
+    //查看答案时数组转换
+    arrayChange(questionKey, question, optionIDs, twoOptionIDs) {
+      //遍历题目选项
+      for (const one of question.Options) {
+        questionKey.push(one.key);
+      }
+      //判断当前选项是否为二级选项
+      for (let i = 0; i < optionIDs.length; i++) {
+        if (questionKey.indexOf(parseInt(optionIDs[i])) === -1) {
+          twoOptionIDs.push(parseInt(optionIDs[i]));
+          optionIDs.splice(i, 1);
+        }
+      }
+      //字符串数组转int数组
+      for (let i = 0; i < optionIDs.length; i++) {
+        optionIDs[i] = parseInt(optionIDs[i]);
+      }
+    },
+    //查看答案时问题选择的选项
+    answerOptions(exam, optionIDs, question, questions, twoOptionIDs) {
+      let currentChecklist = "checklist" + exam.ExamID + exam.QuestionNo;
+      this.$refs[currentChecklist][0].currentValue = optionIDs;
+
+      if (question.Type === 4) {
+        for (const id of optionIDs) {
+          let questionNo = question.QueryOptions[id].NextQuestionNo;
+          const nextQuestion = questions[questionNo];
+          this.$refs[currentChecklist][0].currentSubValue = twoOptionIDs;
+          this.$refs[currentChecklist][0].messages = exam.Other;
+        }
+      }
+    },
+    //查看答案时辅具查询(答案选项，答案记录数据，问题集合)
+    async assistiveList(optionIDs, answer, questions) {
+      for (const i in optionIDs) {
+        const optionId = optionIDs[i];
+        let option = questions[answer.QuestionNo].QueryOptions[optionId];
+        if (option === undefined) {
+          for (const j in questions) {
+            if (questions[j].QueryOptions[optionId] != undefined) {
+              option = questions[j].QueryOptions[optionId];
+              break;
+            }
+          }
+        }
+        if (option.AssistiveDevices != "") {
+          let assistives = option.AssistiveDevices.split(",");
+          for (const assistive of assistives) {
+            const assistiveDevice = await this.$api.getAssistiveDevice(
+              parseInt(assistive)
+            );
+            if (this.assistiveDevices.indexOf(assistiveDevice) === -1) {
+              this.assistiveDevices.push(assistiveDevice);
             }
           }
         }
       }
-
-      //辅具列表
-
-      // this.assistiveDevices = [];
-      // if (!answers) {
-      //   answers = await this.$api.getAnswers(
-      //     "?ExamID=" + this.examID + "&disabledID=" + this.disabled.ID
-      //   );
-      // }
-      // for (const key in answers) {
-
-      //   for (const k in optionIDs) {
-      //     const optionID = optionIDs[k];
-      //     const option = this.questions[answers[key].QuestionNo].QueryOptions[
-      //       optionID
-      //     ];
-      //     if (option.AssistiveDeviceName) {
-      //       this.assistiveDevices.push(option.AssistiveDeviceName);
-      //     }
-      //   }
-      // }
-      // let html = [];
-      // for (const key in this.assistiveDevices) {
-      //   const value = this.assistiveDevices[key];
-      //   html.push(["<tr><td>", key, "</td><td>", value, "</td></tr>"].join(""));
-      // }
-      // this.showAssistiveDevicesTable = true;
-      // let table = document.getElementById("assistiveDevicesTable");
-      // table.innerHTML = html.join("");
     },
     //试卷提交
     SubmitAnswers() {
@@ -537,6 +633,10 @@ export default {
         this.loadAssistiveDevices(Answers);
         //this.$router.push('/FuJuPingGuHome')
       });
+      this.questionManager.questionLast = [];
+    },
+    pure(obj) {
+      return JSON.parse(JSON.stringify(obj));
     }
   },
   computed: {
@@ -551,10 +651,10 @@ export default {
     },
     //下一题按钮的使用
     canNext() {
-      if (this.questionManager.questionsFlow.length > 1) {
-        const question = this.getCurrentQuestion();
-        const checklist = this.getCurrentChecklist();
-        if (checklist.currentValue.length > 0) {
+      if (this.questionManager.questionsFlow.length > 0) {
+        const nq = this.getCurrentQuestion();
+        const nc = this.getCurrentChecklist();
+        if (nc.currentValue.length > 0) {
           return true;
         }
         return false;
@@ -571,20 +671,22 @@ export default {
     },
     //下一题或提交
     canSubmitAnswers() {
-      if (this.questionManager.questionsFlow.length > 1) {
-        const question = this.getCurrentQuestion();
-        const checklist = this.getCurrentChecklist();
-        if (checklist.currentValue.length > 0) {
-          for (const optionID of checklist.currentValue) {
-            const option = question.QueryOptions[optionID];
+      if (this.questionManager.questionsFlow.length > 0) {
+        let questiono = this.getCurrentQuestion();
+        let checklisto = this.getCurrentChecklist();
+        if (checklisto.currentValue.length > 0) {
+          for (const optionID of checklisto.currentValue) {
+            const option = questiono.QueryOptions[optionID];
             const NextQuestionNo = option.NextQuestionNo;
             if (
               option.NextExamID != 0 ||
-              (question.Type != 4 && NextQuestionNo) ||
-              question.QuestionNo !=
+              (questiono.Type != 4 && NextQuestionNo) ||
+              questiono.QuestionNo !=
                 this.questionManager.questionsFlow[
                   this.questionManager.questionsFlow.length - 1
-                ].questionNo
+                ].questionNo ||
+              (this.questionManager.questionLast.length > 0 &&
+                checklisto.examID != this.examID)
             ) {
               return false;
             } else {

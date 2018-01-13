@@ -36,5 +36,7 @@ export default {
     async getRoles() {
         return await http.get('Roles')
     },
-
+    async getAssistiveDevice(id) {
+        return await http.get('AssistiveDevices/' + id)
+    },
 }
