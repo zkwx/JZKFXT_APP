@@ -25,3 +25,6 @@ export const getLabel = function(list = [], value) {
 export const getLabels = function(list = [], values = []) {
     return values.map(value => getLabel(list, value))
 }
+export const getShow = function(item) {
+    return typeof item === 'object' ? item.show : item
+}

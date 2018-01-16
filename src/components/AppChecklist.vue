@@ -3,8 +3,8 @@
     <b><p style="font-size:20px;padding:0.8em;"><span style="color:#428bca;" v-text="getQuestionDesc()"></span><br>{{question.QuestionNo}}.{{question.QuestionText}}</p></b>
     <div :class="disabled ? 'vux-checklist-disabled' : ''">
       <!--单选和多选-->
-      <div v-if="question.Type<=2" class="weui-cells weui-cells_checkbox">
-        <label class="weui-cell weui-check_label" :class="{'vux-checklist-label-left': labelPosition === 'left'}" :for="`checkbox_${uuid}_${index}`" v-for="(one, index) in currentOptions" :key="index">
+      <div v-if="question.Type<=2||question.Type===6" class="weui-cells weui-cells_checkbox">
+        <label class="weui-cell weui-check_label" :class="{'vux-checklist-label-left': labelPosition === 'left'}" :for="`checkbox_${uuid}_${index}`" v-for="(one, index) in currentOptions" :key="index" v-show="getShow(one)">
           <div class="weui-cell__hd">
             <input type="checkbox" class="weui-check" :name="`vux-checkbox-${uuid}`" :value="getKey(one)" v-model="currentValue" :id="disabled ? '' : `checkbox_${uuid}_${index}`" :disabled="isDisabled(getKey(one))">
             <i class="weui-icon-checked vux-checklist-icon-checked"></i>
@@ -59,13 +59,26 @@
         </div>
       </div>
        <!--选择后的下拉end-->
-
-      <!--身体部分选择-->
-      <div v-if="question.Type===6">
+        <!-- 填空 -->
+      <div v-if="question.Type===5">
+        <label class="weui-cell vux-x-textarea">
+          <div class="weui-cell__hd"></div> 
+            <div class="weui-cell__bd">
+              <group>
+                <x-textarea :max="100" v-model="messages" placeholder="填空" :readonly="disabled"></x-textarea>
+              </group>
+            </div>
+         </label>      
       </div>
-      <!--身体部分选择end-->
+      <!-- 填空end -->
       <!--上传图片-->
       <div v-if="question.Type===7">
+        <!-- 上传 -->
+        <input type="file" accept="image" @change="imageChange" multiple ref="file" v-show="!disabled">
+        <!-- 展示 -->
+        <div class="image" v-for="(img, allImages) in images" :key="allImages">
+          <img :src="img">
+        </div>
       </div>
       <!--上传图片end-->
       
@@ -77,7 +90,7 @@
 
 <script>
 import uuidMixin from "./mixin_uuid";
-import { getValue, getLabels, getKey } from "./object-filter";
+import { getValue, getLabels, getKey, getShow } from "./object-filter";
 import { Tip, Icon, Group, XTextarea } from "vux";
 
 export default {
@@ -90,7 +103,8 @@ export default {
   },
   filters: {
     getValue,
-    getKey
+    getKey,
+    getShow
   },
   mixins: [uuidMixin],
   props: {
@@ -133,7 +147,10 @@ export default {
       messages: "",
       currentOptions: this.options,
       tempValue: "", // used only for radio mode
-      tempSubValue: "" // used only for radio mode
+      tempSubValue: "", // used only for radio mode
+      images: [],
+      fileExist: false
+      // img: null
     };
   },
   beforeUpdate() {
@@ -159,6 +176,46 @@ export default {
   methods: {
     getValue,
     getKey,
+    getShow,
+    imageChange(e) {
+      let $target = e.target || e.dataTransfer || e.srcElement;
+      if (!$target.files.length) return;
+      for (let f = 0; f < $target.files.length; f++) {
+        let file = $target.files[f];
+        let fileType = file.type;
+        if (fileType.indexOf("image") === -1) {
+          this.$utils.Alert("上传失败", "请上传正确的图片");
+          return;
+        }
+        let url = this.getObjectURL(file);
+
+        this.imageUpload(file).then(data => {
+          this.images.push(data);
+          //存地址答案
+          this.fileExist = true;
+          // this.img = url;
+        });
+      }
+    },
+    imageUpload(file) {
+      let formData = new FormData();
+      formData.append("file", file);
+      return this.$http.post("File", formData);
+    },
+    getObjectURL(file) {
+      var url = null;
+      if (window.createObjectURL != undefined) {
+        // basic
+        url = window.createObjectURL(file);
+      } else if (window.URL != undefined) {
+        // mozilla(firefox)
+        url = window.URL.createObjectURL(file);
+      } else if (window.webkitURL != undefined) {
+        // webkit or chrome
+        url = window.webkitURL.createObjectURL(file);
+      }
+      return url;
+    },
     //获取下一题
     getNextQuestionNo(one) {
       let questionNo = this.question.QueryOptions[getKey(one)].NextQuestionNo;
@@ -351,10 +408,12 @@ function pure(obj) {
 //   color: @checklist-icon-active-color;
 // }
 
+.image img {
+  width: 100%;
+}
 .tab {
   padding-left: 25px;
 }
-
 .weui-cells .vux-no-group-title {
   margin: auto;
 }

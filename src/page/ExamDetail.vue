@@ -283,14 +283,122 @@ export default {
             this.clearOption();
             return;
           }
+          if (type === 6) {
+            this.disability();
+            return;
+          }
         }
         if (type === 4) {
-          this.clearOption();
+          this.clearNoOption(examID, questionNo);
+          return;
+        }
+        if (type === 6) {
+          this.noDisability(examID, questionNo);
           return;
         }
       }
     },
-    //清空选项
+    //没有选择时
+    noDisability(examID, questionNo) {
+      const questions = this.exams[examID];
+      const question = questions[questionNo];
+      for (const opid of question.Options) {
+        opid.show = true;
+      }
+    },
+    //根据残疾部位限制选择
+    disability() {
+      const question = this.getCurrentQuestion();
+      const checklist = this.getCurrentChecklist();
+      //最大的数值
+      let gradeMax = 0;
+      //选择的选项数值
+      let gradeList = [];
+      //遍历选项数组获取最大的数值
+      for (const o of question.Options) {
+        const option = question.QueryOptions[o.key];
+        const grade1 = option.Grade;
+        if (grade1 > gradeMax) {
+          gradeMax = grade1;
+        }
+      }
+      //添加选择的选项的数值
+      for (const i in checklist.currentValue) {
+        const option = question.QueryOptions[checklist.currentValue[i]];
+        const grade2 = option.Grade;
+        gradeList.push(grade2);
+      }
+      //判断数值（上肢区间：gradeMax(包含)--gradeMax/2(不包含),下肢区间：gradeMax/2(包含)--）
+      for (const j in gradeList) {
+        //选择的数值
+        const gl = gradeList[j];
+        for (const p of question.Options) {
+          const opt = question.QueryOptions[p.key];
+          const grade3 = opt.Grade;
+          //上肢区间
+          if (gl > gradeMax / 2) {
+            if (grade3 > gradeMax / 2) {
+              if (grade3 < gl) {
+                p.show = false;
+              } else {
+                p.show = true;
+              }
+            }
+          } else if (grade3 <= gradeMax / 2) {
+            //下肢区间
+            if (grade3 < gl) {
+              p.show = false;
+            } else {
+              p.show = true;
+            }
+          }
+        }
+      }
+
+      if (gradeList.length === 1) {
+        if (gradeList[0] > gradeMax / 2) {
+          for (const pt1 of question.Options) {
+            const ot = question.QueryOptions[pt1.key];
+            const gd = ot.Grade;
+            if (gd <= gradeMax / 2) {
+              pt1.show = true;
+            }
+          }
+        } else {
+          for (const pt2 of question.Options) {
+            const ot = question.QueryOptions[pt2.key];
+            const gd = ot.Grade;
+            if (gd > gradeMax / 2) {
+              pt2.show = true;
+            }
+          }
+        }
+      }
+
+      //选择一项后，又选择上一项，去掉下一项
+      for (const j in checklist.currentValue) {
+        const checkOpt = checklist.currentValue[j];
+        for (const k in question.Options) {
+          const qt = question.Options[k];
+          const grades = question.QueryOptions[qt.key].Grade;
+          if (qt.key === checkOpt) {
+            if (!qt.show) {
+              checklist.currentValue.splice(j, 1);
+            }
+          }
+        }
+      }
+    },
+    //选择下的选择清空选项
+    clearNoOption(examID, questionNo) {
+      const questions = this.exams[examID];
+      const question = questions[questionNo];
+      const currentChecklist = "checklist" + examID + questionNo;
+      const sublist = this.$refs[currentChecklist][0];
+      if (sublist.currentSubValue.length > 0) {
+        sublist.currentSubValue = [];
+      }
+    },
     clearOption() {
       const question = this.getCurrentQuestion();
       const checklist = this.getCurrentChecklist();
@@ -369,11 +477,13 @@ export default {
             NextQuestionNo = first.QuestionNo;
           }
         }
+        //跳回原试卷
         if (question.Type != 4 && NextQuestionNo === null) {
           if (this.State === "0") {
             if (this.questionManager.questionLast.length > 0) {
               option.NextExamID = parseInt(this.examID);
               NextQuestionNo = this.questionManager.questionLast[0].questionNo;
+              this.questionManager.questionLast = [];
             }
           }
         }
@@ -513,7 +623,9 @@ export default {
           question = questions[exam.QuestionNo];
 
           //辅具查询(答案选项，答案记录数据，问题集合)
-          await this.assistiveList(optionIDs, exam, questions);
+          if (optionIDs != "") {
+            await this.assistiveList(optionIDs, exam, questions);
+          }
           //数组转换
           this.arrayChange(questionKey, question, optionIDs, twoOptionIDs);
           //问题选择的选项
@@ -524,12 +636,11 @@ export default {
             questions,
             twoOptionIDs
           );
-
           question.show = true;
         }
       }
 
-      if (this.assistiveDevices.length > 1) {
+      if (this.assistiveDevices.length > 0) {
         let html = [];
         for (const id in this.assistiveDevices) {
           const value = this.assistiveDevices[id].Name;
@@ -573,20 +684,16 @@ export default {
           this.$refs[currentChecklist][0].messages = exam.Other;
         }
       }
+      if (question.Type === 7) {
+        let url = exam.Other.split(",");
+        this.$refs[currentChecklist][0].images = url;
+      }
     },
     //查看答案时辅具查询(答案选项，答案记录数据，问题集合)
     async assistiveList(optionIDs, answer, questions) {
       for (const i in optionIDs) {
         const optionId = optionIDs[i];
-        let option = questions[answer.QuestionNo].QueryOptions[optionId];
-        if (option === undefined) {
-          for (const j in questions) {
-            if (questions[j].QueryOptions[optionId] != undefined) {
-              option = questions[j].QueryOptions[optionId];
-              break;
-            }
-          }
-        }
+        const option = questions[answer.QuestionNo].QueryOptions[optionId];
         if (option.AssistiveDevices != "") {
           let assistives = option.AssistiveDevices.split(",");
           for (const assistive of assistives) {
@@ -600,6 +707,10 @@ export default {
         }
       }
     },
+    //筛选辅具
+    screenAssistives(optionIDs,answer,questions,assistiveDevices){
+      
+    },
     //试卷提交
     SubmitAnswers() {
       //最后一题选择下拉添加
@@ -610,11 +721,18 @@ export default {
         this.questionManager.currentQuestionsFlowIndex
       ];
 
-      lastQuestion.options = checklist.currentValue.concat(
-        checklist.currentSubValue
-      );
-
-      lastQuestion.messages = checklist.messages;
+      if (question.Type === 5) {
+        lastQuestion.options = [];
+        lastQuestion.messages = checklist.messages;
+      } else if (question.Type === 7) {
+        lastQuestion.options = [];
+        lastQuestion.messages = checklist.images.join(",");
+      } else {
+        lastQuestion.options = checklist.currentValue.concat(
+          checklist.currentSubValue
+        );
+        lastQuestion.messages = checklist.messages;
+      }
 
       let Answers = [];
       for (let i = 0; i < this.questionManager.questionsFlow.length; i++) {
@@ -657,6 +775,16 @@ export default {
         if (nc.currentValue.length > 0) {
           return true;
         }
+        if (nq.Type === 5) {
+          if (nc.messages != "") {
+            return true;
+          }
+        }
+        if (nq.Type === 7) {
+          if (nc.fileExist === true) {
+            return true;
+          }
+        }
         return false;
       } else {
         if (this.questionManager.questionsFlow[0] === undefined) {
@@ -678,21 +806,66 @@ export default {
           for (const optionID of checklisto.currentValue) {
             const option = questiono.QueryOptions[optionID];
             const NextQuestionNo = option.NextQuestionNo;
-            if (
-              option.NextExamID != 0 ||
-              (questiono.Type != 4 && NextQuestionNo) ||
+            if (option.NextExamID != 0) {
+              //试卷跳转
+              return false;
+            } else if (questiono.Type != 4 && NextQuestionNo) {
+              //问题类型不为 4 且有下一题
+              return false;
+            } else if (
               questiono.QuestionNo !=
-                this.questionManager.questionsFlow[
-                  this.questionManager.questionsFlow.length - 1
-                ].questionNo ||
-              (this.questionManager.questionLast.length > 0 &&
-                checklisto.examID != this.examID)
+              this.questionManager.questionsFlow[
+                this.questionManager.questionsFlow.length - 1
+              ].questionNo
             ) {
+              //当前题目不是最后一题（多选题）
+              return false;
+            } else if (
+              this.questionManager.questionLast.length > 0 &&
+              checklisto.examID != this.examID
+            ) {
+              //试卷跳回下一题
               return false;
             } else {
               return true;
             }
           }
+        }
+        if (checklisto.currentValue.length === 0) {
+          if (questiono.Type === 5) {
+            if (
+              questiono.QuestionNo !=
+              this.questionManager.questionsFlow[
+                this.questionManager.questionsFlow.length - 1
+              ].questionNo
+            ) {
+              //当前题目不是最后一题（多选题）
+              return false;
+            } else if (
+              this.questionManager.questionLast.length > 0 &&
+              checklisto.examID != this.examID
+            ) {
+              //试卷跳回下一题
+              return false;
+            }
+          } else if (questiono.Type === 7) {
+            if (
+              questiono.QuestionNo !=
+              this.questionManager.questionsFlow[
+                this.questionManager.questionsFlow.length - 1
+              ].questionNo
+            ) {
+              //当前题目不是最后一题（多选题）
+              return false;
+            } else if (
+              this.questionManager.questionLast.length > 0 &&
+              checklisto.examID != this.examID
+            ) {
+              //试卷跳回下一题
+              return false;
+            }
+          }
+          return true;
         }
       }
     },
