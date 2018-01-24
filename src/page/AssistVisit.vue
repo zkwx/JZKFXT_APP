@@ -1,47 +1,9 @@
 <template>
   <div>
-    <group title="评估适配系统" label-width="6em" label-margin-right="1em" v-if="showQuestion===false">
-      <x-input title="姓名" v-model="disabled.Name" required :disabled="IsView"></x-input>
-      <selector title="性别" v-model="disabled.Sex" required :options="Sexlist" :readonly="IsView"></selector>
-      <x-switch title="有无残疾证" v-model="disabled.HasCertificate" :disabled="IsView"></x-switch>
-      <x-input title="残疾证号" v-model="disabled.Certificate" required :min="20" :max="21" v-if="disabled.HasCertificate" :disabled="IsView"></x-input>
-      <x-input title="身份证号" v-model="disabled.IDNumber" required :min="18" :max="18" v-if="!disabled.HasCertificate" :disabled="IsView"></x-input>
-      <x-input title="年龄" :value="age" disabled></x-input>
-      <selector title="残疾类别" v-model="disabled.CategoryID" required :options="Categories" :readonly="IsView"></selector>
-      <selector title="残疾等级" v-model="disabled.DegreeID" required :options="Degrees" direction="right" :readonly="IsView"></selector>
-      <datetime title="致残时间" v-model="disabled.data" value-text-align="left" :disabled="IsView" :readonly="IsView"></datetime>
-      <selector title="致残原因" v-model="disabled.DisabilityReason" required :options="DisabilityReasons" :readonly="IsView"></selector>
-      <x-input title="民族" v-model="disabled.Nation" :disabled="IsView"></x-input>
-      <x-input title="身高" v-model="disabled.Height" :disabled="IsView"></x-input>
-      <x-input title="体重" v-model="disabled.Weight" :disabled="IsView"></x-input>
-      <x-input title="联系电话" v-model="disabled.Tel" :disabled="IsView"></x-input>
-      <x-input title="Email" v-model="disabled.Email" :disabled="IsView"></x-input>
-      <x-address title="地址" v-model="Addresses" :list="addressData" placeholder="请选择地址" value-text-align="left" :readonly="IsView"></x-address>
-      <x-button v-if="!IsView" type="primary" @click.native="submit">评估</x-button>
-      <div v-transfer-dom>
-        <x-dialog v-model="showScrollBox" hide-on-blur >
-          <p style="padding-top:20px;">说明</p>
-          <div 
-            class="img-box" 
-            style="padding:20px;">
-            <p style="text-align:justify;">此系统为初筛评估适配，建议随后与医生、验配师、辅助技术工程师等专业技术人员联系（进行测听，确定具体助听器种类）包括听力检查、试用、适应性训练、必要的环境支持后方可获得合适的助听类辅助器具。</p>
-          </div>
-          <div style="padding: 0 20px 20px 20px;">
-            <check-icon 
-              style="margin-right:2em;margin-bottom:1em;"
-              :value.sync="Agree">阅读并同意</check-icon>
-            <x-button 
-              :disabled="Agree===false" 
-              @click.native="showQuestion=true;showScrollBox=false" 
-              type="primary">开始答题</x-button>
-          </div>
-        </x-dialog>
-      </div>
-    </group>
     <div v-if="showQuestion||IsView">
       <div v-for="(questions,examID) in exams" :key="examID">
         <div v-for="(question,QuestionNo) in questions" :key="QuestionNo">
-          <app-checklist v-show="question.show" required :examID="examID" :ref="'checklist'+examID+QuestionNo" :question="question" :questions="questions" :options="question.Options" label-position="left" :max="question.Type===1?1:question.Type===8?3:10" @on-change="optionChange" :disabled="IsView"></app-checklist>
+          <app-checklist v-show="question.show" required :examID="examID" :ref="'checklist'+examID+QuestionNo" :question="question" :questions="questions" :options="question.Options" label-position="left" :max="(question.Type===1 ||question.Type===3 )?1:question.Type===8?3:10" @on-change="optionChange" :disabled="IsView"></app-checklist>
         </div>
       </div>
       <div v-if="!IsView">
@@ -57,18 +19,6 @@
             <x-button type="primary" @click.native="SubmitAnswers" :disabled="!canNext" v-if="canSubmitAnswers">提交</x-button>
           </flexbox-item>
         </flexbox>
-      </div>
-    </div>
-    <div v-show="showAssistiveDevicesTable || IsView">
-      <div class="weui-cells__title">辅具列表</div>
-      <div>
-        <div class="weui-cells__title" id="assistiveType"></div>
-        <div>
-            <checklist label-position="left" :options="assistiveName" ref="demoObject" v-model="currentValue" :disabled="IsCheck"></checklist>
-        </div>
-        <div>
-        <x-button type="primary"  @click.native="submitExamine" :disabled="!canSubmit" :value="status">{{status}}</x-button>
-        </div>
       </div>
     </div>
   </div>
@@ -129,7 +79,7 @@ export default {
   },
   data() {
     return {
-      showQuestion: false,
+      showQuestion: true,
       State: this.state,
       exams: {}, //{examID,questions}
       questionManager: {
@@ -219,8 +169,74 @@ export default {
         ];
       }
     },
+
     //初始化问题
     async initQuestions() {
+      //时间差
+      let recode = await this.$api.getExamRecord(
+        "?ExamID=" + this.examID + "&disabledID=" + this.disabled.ID
+      );
+      var date = new Date();
+      let sm;
+      if (recode.FinishTime != null) {
+        sm = recode.FinishTime.split("-")[1];
+      }
+      let fm = date.getMonth();
+      let sf = sm - fm;
+      let recode1;
+      let examId;
+      let vstate;
+      let err;
+      if (this.State === "4" && this.examID < 9) {
+        if (sf >= 0 && sf < 6) {
+          examId = 9;
+          let param = { ExamID: examId, DisabledID: this.disabled.ID };
+          await this.$http
+            .get("ExamRecords/Select", param)
+            .catch(function(response) {
+              if (response instanceof Error) {
+                err = response.message;
+              }
+            });
+
+          if (err != null) {
+            await this.$api.addExamRecode({
+              ExamID: examId,
+              DisabledID: this.disabled.ID,
+              State: "0"
+            });
+          }
+
+          recode1 = await this.$api.getExamRecord(
+            "?ExamID=" + examId + "&disabledID=" + this.disabled.ID
+          );
+
+          vstate = recode1.State;
+        } else if (sf >= 6) {
+          examId = 10;
+          let param = { ExamID: examId, DisabledID: this.disabled.ID };
+          await this.$http
+            .get("ExamRecords/Select", param)
+            .catch(function(response) {
+              if (response instanceof Error) {
+                err = response.message;
+              }
+            });
+
+          if (err != null) {
+            await this.$api.addExamRecode({
+              ExamID: examId,
+              DisabledID: this.disabled.ID,
+              State: "0"
+            });
+          }
+
+          recode1 = await this.$api.getExamRecord(
+            "?ExamID=" + examId + "&disabledID=" + this.disabled.ID
+          );
+          vstate = recode1.State;
+        }
+      }
       await this.bindExams(this.examID);
 
       //重新答题时，遍历答过的题目，清空选项
@@ -231,13 +247,27 @@ export default {
           this.$refs[currentChecklist][0].currentValue = [];
         }
       }
-
       this.questionManager.questionsFlow = [];
-      this.questionManager.questionsFlow.push({
-        examID: this.examID,
-        questionNo: "1",
-        messages: ""
-      });
+
+      if (this.State === "4" && examId) {
+        this.questionManager.questionsFlow.push({
+          examID: examId.toString(),
+          questionNo: "1",
+          messages: ""
+        });
+
+        this.$router.push({
+          path: "/AssistVisit/" + this.disabled.ID + "/" + examId + "/" + vstate
+        });
+        location.reload();
+      } else {
+        this.questionManager.questionsFlow.push({
+          examID: this.examID,
+          questionNo: "1",
+          messages: ""
+        });
+      }
+
       this.questionManager.currentQuestionsFlowIndex = 0;
       this.getCurrentQuestion().show = true;
       this.assistiveDevices = [];
@@ -283,7 +313,7 @@ export default {
             }
             return;
           }
-          if (type === 4) {
+          if (type === 4 || type === 3) {
             this.clearOption();
             return;
           }
@@ -431,6 +461,19 @@ export default {
           }
         }
       }
+
+      if (question.Type === 3) {
+        for (const key in checklist.currentValue) {
+          const k = checklist.currentValue[key];
+          for (const optionID of question.Options) {
+            if (optionID.key === k) {
+              if (optionID.value.indexOf("其他") > -1) {
+                checklist.messages = "";
+              }
+            }
+          }
+        }
+      }
     },
     //上一题
     Previous() {
@@ -521,7 +564,7 @@ export default {
       ];
 
       if (this.State === "0") {
-        if (question.Type === 4) {
+        if (question.Type === 4 || question.Type === 3) {
           examQuestion.options = checklist.currentValue.concat(
             checklist.currentSubValue
           );
@@ -617,7 +660,7 @@ export default {
           questions = this.exams[exama.examID];
           question = questions[exama.questionNo];
           //辅具查询(答案选项，答案记录数据，问题集合)
-          await this.assistiveList(optionIDs, exama, questions);
+          //await this.assistiveList(optionIDs, exama, questions);
           //数组转换
           this.arrayChange(questionKey, question, optionIDs, twoOptionIDs);
           //问题选择的选项
@@ -639,9 +682,9 @@ export default {
           question = questions[exama.QuestionNo];
 
           //辅具查询(答案选项，答案记录数据，问题集合)
-          if (optionIDs != "") {
-            await this.assistiveList(optionIDs, exama, questions);
-          }
+          // if (optionIDs != "") {
+          //   await this.assistiveList(optionIDs, exama, questions);
+          // }
           //数组转换
           this.arrayChange(questionKey, question, optionIDs, twoOptionIDs);
           //问题选择的选项
@@ -659,42 +702,42 @@ export default {
         }
       }
 
-      if (this.assistiveDevices.length > 0) {
-        //筛选
-        if (this.conditions.length === 0) {
-          for (const a in this.assistiveDevices) {
-            const at = this.assistiveDevices[a];
-            //辅具所有信息
-            this.assistiveChange.push(at);
-            //辅具名称(用来选择)
-            this.assistiveName.push(at.Name);
-          }
-        } else {
-          for (const ty in this.assistiveDevices) {
-            const assist = this.assistiveDevices[ty];
-            if (this.conditions.indexOf(assist.Type) === -1) {
-              this.assistiveDevices.splice(ty, 1);
-            }
-          }
-          //显示辅具
-          let table = document.getElementById("assistiveType");
-          for (const b in this.conditions) {
-            const bt = this.conditions[b];
-            //table.innerHTML = bt;
-            for (const a in this.assistiveDevices) {
-              const at = this.assistiveDevices[a];
-              if (at.Type === bt) {
-                //辅具所有信息
-                this.assistiveChange.push(at);
-                //辅具名称(用来选择)
-                this.assistiveName.push(at.Name);
-              }
-            }
-          }
-        }
+      // if (this.assistiveDevices.length > 0) {
+      //   //筛选
+      //   if (this.conditions.length === 0) {
+      //     for (const a in this.assistiveDevices) {
+      //       const at = this.assistiveDevices[a];
+      //       //辅具所有信息
+      //       this.assistiveChange.push(at);
+      //       //辅具名称(用来选择)
+      //       this.assistiveName.push(at.Name);
+      //     }
+      //   } else {
+      //     for (const ty in this.assistiveDevices) {
+      //       const assist = this.assistiveDevices[ty];
+      //       if (this.conditions.indexOf(assist.Type) === -1) {
+      //         this.assistiveDevices.splice(ty, 1);
+      //       }
+      //     }
+      //     //显示辅具
+      //     let table = document.getElementById("assistiveType");
+      //     for (const b in this.conditions) {
+      //       const bt = this.conditions[b];
+      //       //table.innerHTML = bt;
+      //       for (const a in this.assistiveDevices) {
+      //         const at = this.assistiveDevices[a];
+      //         if (at.Type === bt) {
+      //           //辅具所有信息
+      //           this.assistiveChange.push(at);
+      //           //辅具名称(用来选择)
+      //           this.assistiveName.push(at.Name);
+      //         }
+      //       }
+      //     }
+      //   }
 
-        this.showAssistiveDevicesTable = true;
-      }
+      //   this.showAssistiveDevicesTable = true;
+      // }
     },
     //查看答案时数组转换
     arrayChange(questionKey, question, optionIDs, twoOptionIDs) {
@@ -719,7 +762,7 @@ export default {
       let currentChecklist = "checklist" + exam.ExamID + exam.QuestionNo;
       this.$refs[currentChecklist][0].currentValue = optionIDs;
 
-      if (question.Type === 4) {
+      if (question.Type === 4 || question.Type === 3) {
         for (const id of optionIDs) {
           let questionNo = question.QueryOptions[id].NextQuestionNo;
           const nextQuestion = questions[questionNo];
@@ -800,46 +843,14 @@ export default {
         });
       }
       this.$http.post("Answers/SaveAnswers", Answers).then(r => {
-        this.$utils.Alert("适配成功");
-        this.State = "1";
+        this.$utils.Alert("提交成功");
+        this.State = "4";
         this.loadAssistiveDevices(Answers);
         //this.$router.push("/FuJuPingGuHome");
       });
       this.questionManager.questionLast = [];
     },
-    //提交审核
-    submitExamine() {
-      let assistiveAnswer = [];
-      if (this.assistiveChange.length === 0) {
-        assistiveAnswer.push({
-          DisabledID: this.disabledID,
-          ExamID: this.examID
-        });
-      } else {
-        for (const name of this.currentValue) {
-          for (const all of this.assistiveChange) {
-            if (name === all.Name) {
-              assistiveAnswer.push({
-                ID: all.ID,
-                Name: all.Name,
-                Type: all.Type,
-                DisabledID: this.disabledID,
-                ExamID: this.examID,
-                optionIDs: this.currentValue.join(",")
-              });
-            }
-          }
-        }
-      }
-      this.$http
-        .post("AssistiveAnswers/SaveAnswers", assistiveAnswer)
-        .then(r => {
-          this.$utils.Alert("提交成功", "等待审核");
-          this.State = "2";
-          this.loadCheckAssistive(assistiveAnswer);
-          this.$router.push("/FuJuPingGuHome");
-        });
-    },
+
     async loadCheckAssistive(assistiveAnswer) {
       if (!assistiveAnswer) {
         let sqlAssistiveAnswer = await this.$api.getAssistiveAnswers(
@@ -917,6 +928,15 @@ export default {
               //试卷跳转
               return false;
             } else if (questiono.Type != 4 && NextQuestionNo) {
+              if (questiono.Type === 3 && NextQuestionNo) {
+                const nqu = this.exams[this.examID][NextQuestionNo];
+                if (
+                  nqu.Type === 5 &&
+                  nqu.QuestionNo.indexOf(questiono.QuestionNo) > -1
+                ) {
+                  return true;
+                }
+              }
               //问题类型不为 4 且有下一题
               return false;
             } else if (

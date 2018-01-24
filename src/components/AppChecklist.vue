@@ -3,7 +3,7 @@
     <b><p style="font-size:20px;padding:0.8em;"><span style="color:#428bca;" v-text="getQuestionDesc()"></span><br>{{question.QuestionNo}}.{{question.QuestionText}}</p></b>
     <div :class="disabled ? 'vux-checklist-disabled' : ''">
       <!--单选和多选-->
-      <div v-if="question.Type<=2||question.Type===6" class="weui-cells weui-cells_checkbox">
+      <div v-if="question.Type<=2||question.Type===6||question.Type===8" class="weui-cells weui-cells_checkbox">
         <label class="weui-cell weui-check_label" :class="{'vux-checklist-label-left': labelPosition === 'left'}" :for="`checkbox_${uuid}_${index}`" v-for="(one, index) in currentOptions" :key="index" v-show="getShow(one)">
           <div class="weui-cell__hd">
             <input type="checkbox" class="weui-check" :name="`vux-checkbox-${uuid}`" :value="getKey(one)" v-model="currentValue" :id="disabled ? '' : `checkbox_${uuid}_${index}`" :disabled="isDisabled(getKey(one))">
@@ -224,12 +224,14 @@ export default {
     //获取下一题的选项
     getNextOptions(one) {
       let questionNo = this.question.QueryOptions[getKey(one)].NextQuestionNo;
+      if(!questionNo) return null
       let options = this.questions[questionNo].Options;
       return options;
     },
     //获取下一题的类型
     getType(one) {
       let questionNo = this.question.QueryOptions[getKey(one)].NextQuestionNo;
+      if(!questionNo) return null
       let types = this.questions[questionNo].Type;
       return types;
     },

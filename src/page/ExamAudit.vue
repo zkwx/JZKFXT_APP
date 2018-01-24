@@ -1,6 +1,6 @@
 <template>
   <div>
-    <group title="评估适配系统" label-width="6em" label-margin-right="1em" v-if="showQuestion===false">
+    <group title="评估适配系统" label-width="6em" label-margin-right="1em">
       <x-input title="姓名" v-model="disabled.Name" required :disabled="IsView"></x-input>
       <selector title="性别" v-model="disabled.Sex" required :options="Sexlist" :readonly="IsView"></selector>
       <x-switch title="有无残疾证" v-model="disabled.HasCertificate" :disabled="IsView"></x-switch>
@@ -17,46 +17,13 @@
       <x-input title="联系电话" v-model="disabled.Tel" :disabled="IsView"></x-input>
       <x-input title="Email" v-model="disabled.Email" :disabled="IsView"></x-input>
       <x-address title="地址" v-model="Addresses" :list="addressData" placeholder="请选择地址" value-text-align="left" :readonly="IsView"></x-address>
-      <x-button v-if="!IsView" type="primary" @click.native="submit">评估</x-button>
-      <div v-transfer-dom>
-        <x-dialog v-model="showScrollBox" hide-on-blur >
-          <p style="padding-top:20px;">说明</p>
-          <div 
-            class="img-box" 
-            style="padding:20px;">
-            <p style="text-align:justify;">此系统为初筛评估适配，建议随后与医生、验配师、辅助技术工程师等专业技术人员联系（进行测听，确定具体助听器种类）包括听力检查、试用、适应性训练、必要的环境支持后方可获得合适的助听类辅助器具。</p>
-          </div>
-          <div style="padding: 0 20px 20px 20px;">
-            <check-icon 
-              style="margin-right:2em;margin-bottom:1em;"
-              :value.sync="Agree">阅读并同意</check-icon>
-            <x-button 
-              :disabled="Agree===false" 
-              @click.native="showQuestion=true;showScrollBox=false" 
-              type="primary">开始答题</x-button>
-          </div>
-        </x-dialog>
-      </div>
     </group>
-    <div v-if="showQuestion||IsView">
+  <div>
+    <div v-if="showQuestion || IsView">
       <div v-for="(questions,examID) in exams" :key="examID">
         <div v-for="(question,QuestionNo) in questions" :key="QuestionNo">
           <app-checklist v-show="question.show" required :examID="examID" :ref="'checklist'+examID+QuestionNo" :question="question" :questions="questions" :options="question.Options" label-position="left" :max="question.Type===1?1:question.Type===8?3:10" @on-change="optionChange" :disabled="IsView"></app-checklist>
         </div>
-      </div>
-      <div v-if="!IsView">
-        <flexbox style="bottom: 1em;position: absolute;" :gutter="10">
-          <flexbox-item>
-            <x-button type="primary" ref="but" @click.native="Previous" :disabled="this.questionManager.currentQuestionsFlowIndex===0">上一题</x-button>
-          </flexbox-item>
-          <flexbox-item>
-            <x-button @click.native="Reset">重新答题</x-button>
-          </flexbox-item>
-          <flexbox-item>
-            <x-button type="primary" @click.native="ToNext" :disabled="!canNext" v-if="!canSubmitAnswers">下一题</x-button>
-            <x-button type="primary" @click.native="SubmitAnswers" :disabled="!canNext" v-if="canSubmitAnswers">提交</x-button>
-          </flexbox-item>
-        </flexbox>
       </div>
     </div>
     <div v-show="showAssistiveDevicesTable || IsView">
@@ -66,11 +33,16 @@
         <div>
             <checklist label-position="left" :options="assistiveName" ref="demoObject" v-model="currentValue" :disabled="IsCheck"></checklist>
         </div>
-        <div>
-        <x-button type="primary"  @click.native="submitExamine" :disabled="!canSubmit" :value="status">{{status}}</x-button>
+        <div v-if="!showView">
+        <x-button type="primary"  @click.native="examNext"  :disabled="canAdopt">通过</x-button>
+        <x-button type="primary"  @click.native="examBack" :disabled="canAdopt">未通过</x-button>
+        </div>
+        <div v-if="showView">
+           <x-button type="primary" :disabled="true">已通过审核</x-button>
         </div>
       </div>
     </div>
+  </div>
   </div>
 </template>
 
@@ -129,7 +101,7 @@ export default {
   },
   data() {
     return {
-      showQuestion: false,
+      showQuestion: true,
       State: this.state,
       exams: {}, //{examID,questions}
       questionManager: {
@@ -264,7 +236,6 @@ export default {
         this.questionManager.currentQuestionsFlowIndex
       ];
       const currentChecklist = "checklist" + exam.examID + exam.questionNo;
-      if (!this.$refs[currentChecklist]) return null;
       return this.$refs[currentChecklist][0];
     },
     //选项变化
@@ -803,7 +774,7 @@ export default {
         this.$utils.Alert("适配成功");
         this.State = "1";
         this.loadAssistiveDevices(Answers);
-        //this.$router.push("/FuJuPingGuHome");
+        this.$router.push("/FuJuPingGuHome");
       });
       this.questionManager.questionLast = [];
     },
@@ -837,7 +808,6 @@ export default {
           this.$utils.Alert("提交成功", "等待审核");
           this.State = "2";
           this.loadCheckAssistive(assistiveAnswer);
-          this.$router.push("/FuJuPingGuHome");
         });
     },
     async loadCheckAssistive(assistiveAnswer) {
@@ -845,7 +815,7 @@ export default {
         let sqlAssistiveAnswer = await this.$api.getAssistiveAnswers(
           "?ExamID=" + this.examID + "&disabledID=" + this.disabled.ID
         );
-        if (sqlAssistiveAnswer === []) {
+        if (sqlAssistiveAnswer[0].Name === null) {
           this.currentValue = [];
         } else {
           for (const sql in sqlAssistiveAnswer) {
@@ -855,13 +825,38 @@ export default {
         }
       } else {
         for (const s in assistiveAnswer) {
-          let options = assistiveAnswer[s].optionIDs.split(",");
+          let options = assistiveAnswer[s].OptionIDs.split(",");
           this.currentValue = options;
         }
       }
     },
     pure(obj) {
       return JSON.parse(JSON.stringify(obj));
+    },
+    //审核未通过
+    examBack() {
+      let assistive = [];
+      assistive.push({
+        ExamID: this.examID,
+        DisabledID: this.disabled.ID
+      });
+      this.$http.post("AssistiveAnswers/DeleteAnswers", assistive).then(r => {
+        this.$utils.Alert("操作成功", "已发回重新评估");
+        this.$router.push("/JiGouPingGuHome");
+      });
+    },
+    //审核通过
+    examNext() {
+      let assistive = [];
+      assistive.push({
+        ExamID: this.examID,
+        DisabledID: this.disabled.ID
+      });
+      this.$http.put("ExamRecords/Modify", assistive).then(r => {
+        this.$utils.Alert("操作成功", "已通过审核");
+        this.State = "3";
+        this.$router.push("/JiGouPingGuHome");
+      });
     }
   },
   computed: {
@@ -874,124 +869,17 @@ export default {
       );
       return age;
     },
-    //下一题按钮的使用
-    canNext() {
-      if (this.questionManager.questionsFlow.length > 0) {
-        const nq = this.getCurrentQuestion();
-        const nc = this.getCurrentChecklist();
-        if (nc && nc.currentValue.length > 0) {
-          return true;
-        }
-        if (nq.Type === 5) {
-          if (nc.messages != "") {
-            return true;
-          }
-        }
-        if (nq.Type === 7) {
-          if (nc.fileExist === true) {
-            return true;
-          }
-        }
+
+    //审核按钮使用
+    canAdopt() {
+      if (this.State === "2") {
         return false;
-      } else {
-        if (this.questionManager.questionsFlow[0] === undefined) {
-          return true;
-        } else {
-          if (this.questionManager.questionsFlow[0].options != undefined) {
-            return true;
-          }
-          return false;
-        }
       }
+      return true;
     },
-    //下一题或提交
-    canSubmitAnswers() {
-      if (this.questionManager.questionsFlow.length > 0) {
-        let questiono = this.getCurrentQuestion();
-        let checklisto = this.getCurrentChecklist();
-        if (checklisto && checklisto.currentValue.length > 0) {
-          for (const optionID of checklisto.currentValue) {
-            const option = questiono.QueryOptions[optionID];
-            const NextQuestionNo = option.NextQuestionNo;
-            if (option.NextExamID != 0) {
-              //试卷跳转
-              return false;
-            } else if (questiono.Type != 4 && NextQuestionNo) {
-              //问题类型不为 4 且有下一题
-              return false;
-            } else if (
-              questiono.QuestionNo !=
-              this.questionManager.questionsFlow[
-                this.questionManager.questionsFlow.length - 1
-              ].questionNo
-            ) {
-              //当前题目不是最后一题（多选题）
-              return false;
-            } else if (
-              this.questionManager.questionLast.length > 0 &&
-              checklisto.examID != this.examID
-            ) {
-              //试卷跳回下一题
-              return false;
-            } else {
-              return true;
-            }
-          }
-        }
-        if (checklisto && checklisto.currentValue.length === 0) {
-          if (questiono.Type === 5) {
-            if (
-              questiono.QuestionNo !=
-              this.questionManager.questionsFlow[
-                this.questionManager.questionsFlow.length - 1
-              ].questionNo
-            ) {
-              //当前题目不是最后一题（多选题）
-              return false;
-            } else if (
-              this.questionManager.questionLast.length > 0 &&
-              checklisto.examID != this.examID
-            ) {
-              //试卷跳回下一题
-              return false;
-            }
-          } else if (questiono.Type === 7) {
-            if (
-              questiono.QuestionNo !=
-              this.questionManager.questionsFlow[
-                this.questionManager.questionsFlow.length - 1
-              ].questionNo
-            ) {
-              //当前题目不是最后一题（多选题）
-              return false;
-            } else if (
-              this.questionManager.questionLast.length > 0 &&
-              checklisto.examID != this.examID
-            ) {
-              //试卷跳回下一题
-              return false;
-            }
-          }
-        }
-      }
-    },
-    //辅具提交按钮使用
-    canSubmit() {
-      if (
-        this.State === "1" &&
-        (this.currentValue.length > 0 || this.assistiveChange.length == 0)
-      ) {
+    showView() {
+      if (this.State === "3") {
         return true;
-      }
-      return false;
-    },
-    status() {
-      if (this.State === "1") {
-        return "提交审批";
-      } else if (this.State === "2") {
-        return "待审核";
-      } else if (this.State === "3") {
-        return "已通过审核";
       }
     },
     //试卷是否做过
@@ -999,7 +887,6 @@ export default {
       if (this.State != "0") {
         return true;
       }
-      return false;
     },
     //辅具是否可选
     IsCheck() {

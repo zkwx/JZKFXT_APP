@@ -39,4 +39,16 @@ export default {
     async getAssistiveDevice(id) {
         return await http.get('AssistiveDevices/' + id)
     },
+    async getAllAssistives() {
+        return await http.get('AssistiveDevices')
+    },
+    async getAssistiveAnswers(param) {
+        return await http.get('AssistiveAnswers' + param)
+    },
+    async getExamRecord(param) {
+        return await http.get('ExamRecords/Select' + param)
+    },
+    async addExamRecode(param){
+        return await http.post('ExamRecords',param);
+    }
 }

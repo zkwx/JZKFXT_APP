@@ -14,80 +14,109 @@
 </template>
 
 <script>
-import AppPanel from '@/components/AppPanel'
+import AppPanel from "@/components/AppPanel";
 
-import {XHeader,Tab,TabItem,Swiper,SwiperItem,Sticky,Group} from 'vux'
+import { XHeader, Tab, TabItem, Swiper, SwiperItem, Sticky, Group } from "vux";
 export default {
-  name: 'FuJuPingGuHome',
-    components: {
-      XHeader,
-      Tab,
-      TabItem,
-      Swiper,
-      SwiperItem,
-      Sticky,
-      Group,
-      AppPanel,
+  name: "FuJuPingGuHome",
+  components: {
+    XHeader,
+    Tab,
+    TabItem,
+    Swiper,
+    SwiperItem,
+    Sticky,
+    Group,
+    AppPanel
   },
   props: {
-    examBy:String,
-    name:String,
-    displayType:String,
+    examBy: String,
+    name: String,
+    displayType: String
   },
-  data () {
+  data() {
     return {
-      tabs:[],
+      tabs: [],
       //categoryTabs:[{name:'视力'},{name:'听力'},{name:'肢体'},{name:'脑瘫'},{name:'偏瘫'},{name:'脊髓损伤'}],
-      categoryTabs:[{name:'假肢'},{name:'无障碍'},{name:'视力'},{name:'听力'},{name:'肢体'},{name:'脑瘫'},{name:'偏瘫'},{name:'脊髓损伤'}],
-      jiaZhiJiaoXingQiTabs:[{name:'长江新里程'},{name:'其它假肢'},{name:'矫形器'}],
-      wuZhangAiTabs:[{name:'无障碍改造'}],
-      list:{},
-      link:"ExamDetail",
-      clientHeight:"",
-      index:0
-    }
+      categoryTabs: [
+        { name: "假肢" },
+        { name: "无障碍" },
+        { name: "视力" },
+        { name: "听力" },
+        { name: "肢体" },
+        { name: "脑瘫" },
+        { name: "偏瘫" },
+        { name: "脊髓损伤" }
+      ],
+      jiaZhiJiaoXingQiTabs: [
+        { name: "长江新里程" },
+        { name: "其它假肢" },
+        { name: "矫形器" }
+      ],
+      wuZhangAiTabs: [{ name: "无障碍改造" }],
+      list: {},
+      link: "",
+      clientHeight: "",
+      index: 0
+    };
   },
-  created () {
-    this.initData()
+  created() {
+    this.initData();
   },
-  mounted(){
-    this.clientHeight = `${(window.innerHeight || document.documentElement.clientHeight || document.body.clientHeight)-92}px`;
+  mounted() {
+    this.clientHeight = `${(window.innerHeight ||
+      document.documentElement.clientHeight ||
+      document.body.clientHeight) - 92}px`;
   },
   methods: {
-    async initData () {
+    async initData() {
       switch (this.displayType) {
-        case 'categoryTabs':
-          this.tabs=this.categoryTabs
+        case "categoryTabs":
+          this.tabs = this.categoryTabs;
           break;
-        case 'jiaZhiJiaoXingQiTabs':
-          this.tabs=this.jiaZhiJiaoXingQiTabs
+        case "jiaZhiJiaoXingQiTabs":
+          this.tabs = this.jiaZhiJiaoXingQiTabs;
           break;
-        case 'wuZhangAiTabs':
-        this.tabs=this.wuZhangAiTabs
+        case "wuZhangAiTabs":
+          this.tabs = this.wuZhangAiTabs;
           break;
         default:
           break;
       }
-      let res = await this.$api.getExamRecords({examby:this.examBy,name:this.name})
-      let list={}
+      let res = await this.$api.getExamRecords({
+        examby: this.examBy,
+        name: this.name
+      });
+      let list = {};
       for (const key in res) {
         const element = res[key];
-        let name = element[0].Exam.Name
-        list[name]=element
+        let name = element[0].Exam.Name;
+        list[name] = element;
       }
-      this.list = list
+      this.list = list;
+
+      switch (this.name) {
+        case "FuJuPingGu":
+          this.link = "ExamDetail";
+          break;
+        case "FuJuShenHe":
+          this.link = "ExamAudit";
+          break;
+        case "FuJuFuWu":
+          this.link = "AssistService";
+          break;
+        case "FuJuFuWuHuiFang":
+          this.link = "AssistVisit";
+          break;
+        default:
+          break;
+      }
     },
-    switchTabItem (index) {
-      
-    },
+    switchTabItem(index) {}
   },
-  computed:{
-    
-  },
-  watch:{
-   
-  }
-}
+  computed: {},
+  watch: {}
+};
 </script>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->

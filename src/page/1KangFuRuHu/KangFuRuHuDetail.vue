@@ -246,7 +246,7 @@ export default {
         const Disabled = await this.$http.post('Disableds', this.Disabled)
         this.Disabled.ID=Disabled.ID
         this.sign=true
-        //_this.$router.push('/KangFuRuHuHome')
+        _this.$router.push('/KangFuRuHuHome')
       }else{
         await this.$http.put('Disableds/'+this.Disabled.ID, this.Disabled)
         this.sign=true
