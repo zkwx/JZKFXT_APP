@@ -9,6 +9,7 @@ import axios from 'axios'
 import http from '@/http/http.js'
 import api from '@/http/api.js'
 import utils from './utils/index.js'
+import user from '@/store/user.js'
 import '@/assets/font-awesome/css/font-awesome.min.css'
 FastClick.attach(document.body)
 
@@ -18,9 +19,26 @@ Vue.prototype.$axios = axios
 Vue.prototype.$http = http
 Vue.prototype.$api = api
 Vue.prototype.$utils = utils
+Vue.prototype.$user = user
 
 /* eslint-disable no-new */
 new Vue({
     router,
     render: h => h(App)
 }).$mount('#app-box')
+
+router.beforeEach((to, from, next) => {
+    // 若userkey不存在并且前往页面不是登陆页面，进入登陆
+    // 若userkey存在并且前往登陆页面，进入主页
+    const userKey = localStorage.getItem('loginUserBaseInfo')
+    if (!userKey && to.path !== '/login') {
+        next({
+            path: '/login',
+            query: { redirect: to.fullPath }
+        })
+    } else if (userKey && to.path === '/login') {
+        next({ path: '/' })
+    } else {
+        next()
+    }
+})

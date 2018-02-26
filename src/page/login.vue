@@ -13,58 +13,74 @@
 </div>
 </template>
 <style scoped>
-    .loginGroup{
-        padding: 40px;
-    }
+.loginGroup {
+  padding: 40px;
+}
 </style>
 <script>
-    import { Group,XInput,XButton,ConfirmPlugin } from 'vux'
+import { Group, XInput, XButton, ConfirmPlugin } from "vux";
 
-    export default {
-        name: 'login',
-        components: {
-            Group,
-            XInput,
-            XButton,
-            ConfirmPlugin,
-        },
-        data() {
-			return {
-                user:{
-                    UserName:'',
-                    Password:'',
-                },
-			}
-		},
-		methods: {
-			submit() {
-				this.$router.push('/KangFuRuHuHome')
-                
-                // var valid = this.$refs.UserNameRef.valid && this.$refs.PasswordRef.valid
-                // if(valid){
-                //     var formData = this.user;
-                //     this.$api.post('Users', formData, r => {
-                //         var result = r.data;
-                //         console.log(r);
-				//         this.$router.push('page1list')
-                //     },r=>{
-                //         this.$vux.alert.show({
-                //             title: '登录失败',
-                //             content: '用户名或密码错误。'
-                //         })
-                //         console.log(r);
-                //     })
-                // }
-            },
-            onCancel () {
-                console.log('on cancel')
-            },
-            onConfirm (msg) {
-                console.log('on confirm')
-                if (msg) {
-                    alert(msg)
-                }
-            },
-		}
+export default {
+  name: "login",
+  components: {
+    Group,
+    XInput,
+    XButton,
+    ConfirmPlugin
+  },
+  data() {
+    return {
+      user: {
+        UserName: "",
+        Password: ""
+      }
+    };
+  },
+  methods: {
+    submit() {
+      // var valid = this.$refs.UserNameRef.valid && this.$refs.PasswordRef.valid
+      // if(valid){
+      //     var formData = this.user;
+      //     this.$http.get('Users', formData, r => {
+      //         var result = r.data;
+      //         console.log(r);
+      //         this.$router.push('KangFuRuHuHome')
+      //     },r=>{
+      //         this.$vux.alert.show({
+      //             title: '登录失败',
+      //             content: '用户名或密码错误。'
+      //         })
+      //         console.log(r);
+      //     })
+      // }
+      var formData = this.user;
+      this.$api
+        .loginUser(formData)
+        .then(r => {
+          localStorage.setItem("loginUserBaseInfo", JSON.stringify(r));
+          //若验证成功跳转
+          var redirect = decodeURIComponent(
+            this.$route.query.redirect || "/KangFuRuHuHome"
+          );
+          this.$router.push({
+            // 你需要接受路由的参数再跳转
+            path: redirect
+          });
+        })
+        .catch(r => {
+          this.$router.push("/");
+          this.$utils.Alert("登录失败", "用户名或密码错误");
+        });
+    },
+    onCancel() {
+      console.log("on cancel");
+    },
+    onConfirm(msg) {
+      console.log("on confirm");
+      if (msg) {
+        alert(msg);
+      }
     }
+  }
+};
 </script>

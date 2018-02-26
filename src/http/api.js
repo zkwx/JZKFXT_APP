@@ -48,7 +48,10 @@ export default {
     async getExamRecord(param) {
         return await http.get('ExamRecords/Select' + param)
     },
-    async addExamRecode(param){
-        return await http.post('ExamRecords',param);
+    async addExamRecode(param) {
+        return await http.post('ExamRecords', param);
+    },
+    async loginUser(param) {
+        return await http.get('User', param);
     }
 }

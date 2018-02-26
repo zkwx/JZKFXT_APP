@@ -22,7 +22,7 @@ export default new Router({
         component: resolve => require(['page/ExamList'], resolve),
         props: true
     }, {
-         //评估试题
+        //评估试题
         path: '/ExamDetail',
         component: resolve => require(['page/ExamDetail'], resolve),
     }, {
@@ -30,7 +30,7 @@ export default new Router({
         component: resolve => require(['page/ExamDetail'], resolve),
         props: true
     }, {
-         //评估审核
+        //评估审核
         path: '/ExamAudit',
         component: resolve => require(['page/ExamAudit'], resolve),
     }, {
@@ -38,22 +38,22 @@ export default new Router({
         component: resolve => require(['page/ExamAudit'], resolve),
         props: true
     }, {
-         //辅具服务
+        //辅具服务
         path: '/AssistService',
         component: resolve => require(['page/AssistService'], resolve),
     }, {
         path: '/AssistService/:disabledID/:examID/:state',
         component: resolve => require(['page/AssistService'], resolve),
         props: true
-    },  {
-         //辅具回访
+    }, {
+        //辅具回访
         path: '/AssistVisit',
         component: resolve => require(['page/AssistVisit'], resolve),
     }, {
         path: '/AssistVisit/:disabledID/:examID/:state',
         component: resolve => require(['page/AssistVisit'], resolve),
         props: true
-    },  {
+    }, {
         //康复入户
         path: '/KangFuRuHuHome',
         component: resolve => require(['KangFuRuHu/KangFuRuHuHome'], resolve),
@@ -96,4 +96,16 @@ export default new Router({
     },
 
     ]
-})
+});
+// 动态路由 meta 定义了role
+export const powerRouter = [
+    {
+        path: '/', redirect: '/KangFuRuHuHome', name: 'KangFuRuHuHome',  hidden: false,
+        children: [
+            { path: '/KangFuRuHuHome', name: 'KangFuRuHuHome', },
+            { path: '/profile', name: 'profile', },
+            { path: '/FuJuPingGuHome', name: 'FuJuPingGuHome',  meta: { role: 'B' } },
+            { path: '/JiGouPingGuHome', name: 'JiGouPingGuHome', meta: { role: 'C' } }
+        ]
+    }
+];

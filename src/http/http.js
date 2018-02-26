@@ -1,35 +1,35 @@
 // 引用axios
 var axios = require('axios')
 var utils = require('@/utils/index')
-    //axios.defaults.timeout = 5000
+//axios.defaults.timeout = 5000
 
 // 配置默认API接口地址
 axios.defaults.baseURL = process.env.BASE_API
-    //axios.defaults.baseURL = 'http://118.89.231.50:8081/api'
-    // 配置默认发送类型
+//axios.defaults.baseURL = 'http://118.89.231.50:8081/api'
+// 配置默认发送类型
 axios.defaults.headers.post['Content-Type'] = 'application/x-www-form-urlencoded';
 //发送前拦截
-// axios.interceptors.request.use(config => {
-//         // loading
-//         // 若是有做鉴权token , 就给头部带上token
-//         // if (localStorage.token) {
-//         //     config.headers.Authorization = localStorage.token;
-//         //   }
-//         return config
-//     }, error => {
-//         return Promise.reject(error.data.error.message)
-//     })
+axios.interceptors.request.use(config => {
+    // loading
+    // 若是有做鉴权token , 就给头部带上token
+    if (localStorage.token) {
+        config.headers.Authorization = localStorage.token;
+    }
+    return config
+}, error => {
+    return Promise.reject(error.data.error.message)
+})
 //接受前拦截
-// axios.interceptors.response.use(response => {
+axios.interceptors.response.use(response => {
 
-//     return response;
-// }, error => {
-//     if (!window.localStorage.getItem("loginUserBaseInfo")) {
-//         // 若是接口访问的时候没有发现有鉴权的基础信息,直接返回登录页
-//         //router.push("/login");
-//     }
-//     return Promise.reject(error);
-// })
+    return response;
+}, error => {
+    if (!window.localStorage.getItem("loginUserBaseInfo")) {
+        // 若是接口访问的时候没有发现有鉴权的基础信息,直接返回登录页
+        router.push("/login");
+    }
+    return Promise.reject(error);
+})
 
 // 判断元素类型
 function toType(obj) {
@@ -64,11 +64,11 @@ function apiAxios(method, url, params) {
     }
     return new Promise((resolve, reject) => {
         axios({
-                method: method,
-                url: url,
-                data: method === 'POST' || method === 'PUT' ? params : null,
-                params: method === 'GET' || method === 'DELETE' ? params : null,
-            })
+            method: method,
+            url: url,
+            data: method === 'POST' || method === 'PUT' ? params : null,
+            params: method === 'GET' || method === 'DELETE' ? params : null,
+        })
             .then(response => {
                 if (response.data) {
                     resolve(response.data)
@@ -86,16 +86,16 @@ function apiAxios(method, url, params) {
 
 // 返回在vue模板中的调用接口
 export default {
-    get: function(url, params) {
+    get: function (url, params) {
         return apiAxios('GET', url, params)
     },
-    post: function(url, params) {
+    post: function (url, params) {
         return apiAxios('POST', url, params)
     },
-    put: function(url, params) {
+    put: function (url, params) {
         return apiAxios('PUT', url, params)
     },
-    delete: function(url, params) {
+    delete: function (url, params) {
         return apiAxios('DELETE', url, params)
     }
 }

@@ -3,9 +3,9 @@
     <div v-if="!sign">
       <group title="康复人员信息登记表" label-width="7em" label-margin-right="1em" >
         <x-input title="姓名" v-model="Disabled.Name" required ref="Name"></x-input>
-        <selector title="性别" v-model="Disabled.Sex" required ref="Sex" :options="Sexlist"></selector>
+        <selector title="性别" placeholder="请选择性别" v-model="Disabled.Sex" required ref="Sex" :options="Sexlist"></selector>
         <x-input title="监护人" v-model="Disabled.Guardian" required ref="Guardian"></x-input>
-        <selector title="与残疾人关系" v-model="Disabled.RelationshipID" required ref="RelationshipID" :options="RelationshipList"></selector>
+        <selector title="与残疾人关系" placeholder="请选择关系" v-model="Disabled.RelationshipID" required ref="RelationshipID" :options="RelationshipList"></selector>
         <x-input title="联系电话" v-model="Disabled.Tel" required ref="Tel" type="tel" :max="13"></x-input>
         <x-switch title="有无残疾证" v-model="Disabled.HasCertificate"></x-switch>
         <x-input title="残疾证号" v-model="Disabled.Certificate" required ref="Certificate" type="number" :min="20" :max="21" v-if="Disabled.HasCertificate"></x-input>
@@ -53,251 +53,348 @@
 </template>
 
 <script>
-import { XHeader,Group, XInput, Checklist, Selector,XSwitch,XButton,PopupPicker  } from 'vux'
-import AppSign from '@/components/AppSign'
+import {
+  XHeader,
+  Group,
+  XInput,
+  Checklist,
+  Selector,
+  XSwitch,
+  XButton,
+  PopupPicker
+} from "vux";
+import AppSign from "@/components/AppSign";
 export default {
-  name: 'KangFuRuHuDetail',
-    components: {
-      XHeader,
-      Group,
-      XInput,
-      Checklist,
-      Selector,
-      XSwitch,
-      XButton,
-      PopupPicker,
-      AppSign
+  name: "KangFuRuHuDetail",
+  components: {
+    XHeader,
+    Group,
+    XInput,
+    Checklist,
+    Selector,
+    XSwitch,
+    XButton,
+    PopupPicker,
+    AppSign
   },
-  props:{
-    disabledID:String
+  props: {
+    disabledID: String
   },
-  data () {
+  data() {
     return {
-      sign:false,
-      Sexlist: [{key: 1, value: '男'}, {key: 2, value: '女'}],
-      RelationshipList:[{key: 1, value: '父母'},{key: 2, value: '配偶'},{key: 3, value: '兄弟姐妹'},{key: 4, value: '祖父母'},{key: 5, value: '其他'}],
-      Categories:[],
-      Degrees:[],
-      Nexts:[],
-      Lists:{
-        VisionList:[],
-        HearingList:[],
-        BodyList:[],
-        IntelligenceList:[],
-        SpiritList:[],
+      sign: false,
+      Sexlist: [{ key: 1, value: "男" }, { key: 2, value: "女" }],
+      RelationshipList: [
+        { key: 1, value: "父母" },
+        { key: 2, value: "配偶" },
+        { key: 3, value: "兄弟姐妹" },
+        { key: 4, value: "祖父母" },
+        { key: 5, value: "其他" }
+      ],
+      Categories: [],
+      Degrees: [],
+      Nexts: [],
+      Lists: {
+        VisionList: [],
+        HearingList: [],
+        BodyList: [],
+        IntelligenceList: [],
+        SpiritList: []
       },
-      DefaultDetails:[
+      DefaultDetails: [
         {
-          ID:null,
-          CategoryID:1,
-          DegreeID:null,
-          RehabilitationIDs:[],
-          RehabilitationID:null,
-          NextID:null
-        },{
-          ID:null,
-          CategoryID:2,
-          DegreeID:null,
-          RehabilitationIDs:[],
-          RehabilitationID:null,
-          NextID:null
-        },{
-          ID:null,
-          CategoryID:3,
-          DegreeID:null,
-          RehabilitationIDs:[],
-          RehabilitationID:null,
-          NextID:null
-        },{
-          ID:null,
-          CategoryID:4,
-          DegreeID:null,
-          RehabilitationIDs:[],
-          RehabilitationID:null,
-          NextID:null
-        },{
-          ID:null,
-          CategoryID:5,
-          DegreeID:null,
-          RehabilitationIDs:[],
-          RehabilitationID:null,
-          NextID:null
-        },{
-          ID:null,
-          CategoryID:6,
-          DegreeID:null,
-          RehabilitationIDs:[],
-          RehabilitationID:null,
-          NextID:null
+          ID: null,
+          CategoryID: 1,
+          DegreeID: null,
+          RehabilitationIDs: [],
+          RehabilitationID: null,
+          NextID: null
+        },
+        {
+          ID: null,
+          CategoryID: 2,
+          DegreeID: null,
+          RehabilitationIDs: [],
+          RehabilitationID: null,
+          NextID: null
+        },
+        {
+          ID: null,
+          CategoryID: 3,
+          DegreeID: null,
+          RehabilitationIDs: [],
+          RehabilitationID: null,
+          NextID: null
+        },
+        {
+          ID: null,
+          CategoryID: 4,
+          DegreeID: null,
+          RehabilitationIDs: [],
+          RehabilitationID: null,
+          NextID: null
+        },
+        {
+          ID: null,
+          CategoryID: 5,
+          DegreeID: null,
+          RehabilitationIDs: [],
+          RehabilitationID: null,
+          NextID: null
+        },
+        {
+          ID: null,
+          CategoryID: 6,
+          DegreeID: null,
+          RehabilitationIDs: [],
+          RehabilitationID: null,
+          NextID: null
         }
       ],
-      Disabled:{
-        ID:null,
-        Name:"",
-        Sex:null,
-        Tel:"",
-        Guardian:"",
-        RelationshipID:null,
-        HasCertificate:true,
-        Certificate:"",
-        IDNumber:"",
-        CategoryID:null,
-        DegreeID:null,
-        Categories:[],
-        Need:true,
-        DoorService:"",
-        FirstSign:"",
-        SecondSign:"",
-        Disabled_Details:[]
-      },
-    }
+      Disabled: {
+        ID: null,
+        Name: "",
+        Sex: null,
+        Tel: "",
+        Guardian: "",
+        RelationshipID: null,
+        HasCertificate: true,
+        Certificate: "",
+        IDNumber: "",
+        CategoryID: null,
+        DegreeID: null,
+        Categories: [],
+        Need: true,
+        DoorService: "",
+        FirstSign: "",
+        SecondSign: "",
+        Disabled_Details: []
+      }
+    };
   },
-  created () {
-    this.Disabled.ID = this.disabledID
-    this.initData()
+  created() {
+    this.Disabled.ID = this.disabledID;
+    this.initData();
   },
   methods: {
-    initData(){
+    initData() {
       //绑定人员基本信息
-      if(this.Disabled.ID){
-        this.getDisabled(this.Disabled.ID)
-      }else{
-        this.Disabled.Disabled_Details = this.DefaultDetails
+      if (this.Disabled.ID) {
+        this.getDisabled(this.Disabled.ID);
+      } else {
+        this.Disabled.Disabled_Details = this.DefaultDetails;
       }
       //填充选项列表
-      this.$api.getCategories().then(r => { 
-        r.pop()
-        this.Categories = r
-      })
-      this.$api.getDegrees().then(r => { this.Degrees = r })
-      this.$api.getRehabilitationData().then(r => { this.Lists = r })
-      this.$api.getNexts().then(r => { this.Nexts = r })
+      this.$api.getCategories().then(r => {
+        r.pop();
+        this.Categories = r;
+      });
+      this.$api.getDegrees().then(r => {
+        this.Degrees = r;
+      });
+      this.$api.getRehabilitationData().then(r => {
+        this.Lists = r;
+      });
+      this.$api.getNexts().then(r => {
+        this.Nexts = r;
+      });
     },
-    getDisabled (id) {
-      var _this=this
+    getDisabled(id) {
+      var _this = this;
       this.$api.getDisabled(id).then(r => {
-        let details=this.DefaultDetails.slice() 
-        r.Categories=[]
-        r.Disabled_Details.forEach(function(item,i) {
-          if(item) {
-            r.Categories.push(item.CategoryID)
-            if(item.RehabilitationID){
-              item.RehabilitationIDs=[item.RehabilitationID.toString().substr(0,5),item.RehabilitationID.toString()]
+        let details = this.DefaultDetails.slice();
+        r.Categories = [];
+        r.Disabled_Details.forEach(function(item, i) {
+          if (item) {
+            r.Categories.push(item.CategoryID);
+            if (item.RehabilitationID) {
+              item.RehabilitationIDs = [
+                item.RehabilitationID.toString().substr(0, 5),
+                item.RehabilitationID.toString()
+              ];
             }
-            details[item.CategoryID-1]=item
+            details[item.CategoryID - 1] = item;
           }
         });
-        r.Disabled_Details=details
-        _this.Disabled=r
-      })
+        r.Disabled_Details = details;
+        _this.Disabled = r;
+      });
     },
-    change (val, label) {
-      console.log('change', val, label)
+    change(val, label) {
+      console.log("change", val, label);
     },
     async submit() {
       //表单验证
-      if(false){
-      var msg=""
-      if(!this.$refs.Name.valid){
-        msg=this.$refs.Name.title+(this.$refs.Name.firstError==null?"必填哦":this.$refs.Name.firstError)
-      }else if (!this.$refs.Tel.valid){
-        msg=this.$refs.Tel.title+(this.$refs.Tel.firstError==null?"必填哦":this.$refs.Tel.firstError)
-      }
-      if (msg=="") {
-        if(this.Disabled.HasCertificate) {
-          if(!this.$refs.Certificate.valid){
-            msg=this.$refs.Certificate.title+(this.$refs.Certificate.firstError==null?"必填哦":this.$refs.Certificate.firstError)
-          }
-        }else{
-          if(!this.$refs.IDNumber.valid){
-            msg=this.$refs.IDNumber.title+(this.$refs.IDNumber.firstError==null?"必填哦":this.$refs.IDNumber.firstError)
+      if (true) {
+        var msg = "";
+        //患者姓名
+        if (!this.$refs.Name.valid || this.$refs.Name.value == "") {
+          msg =
+            this.$refs.Name.title +
+            (this.$refs.Name.firstError == null
+              ? "必填哦"
+              : this.$refs.Name.firstError == ""
+                ? "必填哦"
+                : this.$refs.Name.firstError);
+        } else if (this.$refs.Sex.getFullValue() == null) {
+          //患者性别
+          msg = this.$refs.Sex.title + "必选哦";
+        } else if (
+          !this.$refs.Guardian.valid ||
+          this.$refs.Guardian.value == ""
+        ) {
+          //监护人
+          msg =
+            this.$refs.Guardian.title +
+            (this.$refs.Guardian.firstError == null
+              ? "必填哦"
+              : this.$refs.Guardian.firstError == ""
+                ? "必填哦"
+                : this.$refs.Guardian.firstError);
+        } else if (this.$refs.RelationshipID.getFullValue() == null) {
+          //监护人与患者的关系
+          msg = this.$refs.RelationshipID.title + "必选哦";
+        } else if (!this.$refs.Tel.valid || this.$refs.Tel.value == "") {
+          //患者联系电话
+          msg =
+            this.$refs.Tel.title +
+            (this.$refs.Tel.firstError == null
+              ? "必填哦"
+              : this.$refs.Tel.firstError == ""
+                ? "必填哦"
+                : this.$refs.Tel.firstError);
+        } else if (this.$refs.Tel.value != "") {
+          //患者联系电话格式
+          var reg = /^[1][3,4,5,7,8][0-9]{9}$/;
+          if (!reg.test(this.$refs.Tel.value)) {
+            msg = this.$refs.Tel.title + "格式不正确";
           }
         }
-      }
-      if (msg=="") {
-        if(!this.$refs.Categories.valid){
-          msg=this.$refs.Categories.title+(this.$refs.Categories.firstError==null?"必填哦":this.$refs.Categories.firstError)
-        }else{
-          this.Disabled.Categories.forEach(function(item,i) {
-            let detail = this.Disabled.Disabled_Details[item-1]
-            if(!detail.DegreeID){
-              msg=this.$refs.HearingDegreeID.title+(this.$refs.HearingDegreeID.firstError==null?"必填哦":this.$refs.HearingDegreeID.firstError)
-            }else if(!detail.RehabilitationID){
-              msg=this.$refs.HearingRehabilitationIDs.title+(this.$refs.HearingRehabilitationIDs.firstError==null?"必填哦":this.$refs.HearingRehabilitationIDs.firstError)
-            }else if(!detail.NextID){
-              msg=this.$refs.HearingNextID.title+(this.$refs.HearingNextID.firstError==null?"必填哦":this.$refs.HearingNextID.firstError)
+        //残疾证号
+        //年龄
+        if (msg == "") {
+          if (this.Disabled.HasCertificate) {
+            if (!this.$refs.Certificate.valid) {
+              msg =
+                this.$refs.Certificate.title +
+                (this.$refs.Certificate.firstError == null
+                  ? "必填哦"
+                  : this.$refs.Certificate.firstError);
             }
-          });
+          } else {
+            if (!this.$refs.IDNumber.valid) {
+              msg =
+                this.$refs.IDNumber.title +
+                (this.$refs.IDNumber.firstError == null
+                  ? "必填哦"
+                  : this.$refs.IDNumber.firstError);
+            }
+          }
+        }
+        if (msg == "") {
+          if (!this.$refs.Categories.valid) {
+            msg =
+              this.$refs.Categories.title +
+              (this.$refs.Categories.firstError == null
+                ? "必填哦"
+                : this.$refs.Categories.firstError);
+          } else {
+            this.Disabled.Categories.forEach(function(item, i) {
+              let detail = this.Disabled.Disabled_Details[item - 1];
+              if (!detail.DegreeID) {
+                msg =
+                  this.$refs.HearingDegreeID.title +
+                  (this.$refs.HearingDegreeID.firstError == null
+                    ? "必填哦"
+                    : this.$refs.HearingDegreeID.firstError);
+              } else if (!detail.RehabilitationID) {
+                msg =
+                  this.$refs.HearingRehabilitationIDs.title +
+                  (this.$refs.HearingRehabilitationIDs.firstError == null
+                    ? "必填哦"
+                    : this.$refs.HearingRehabilitationIDs.firstError);
+              } else if (!detail.NextID) {
+                msg =
+                  this.$refs.HearingNextID.title +
+                  (this.$refs.HearingNextID.firstError == null
+                    ? "必填哦"
+                    : this.$refs.HearingNextID.firstError);
+              }
+            });
+          }
+        }
+        if (msg != "") {
+          this.$utils.Alert("保存失败", msg);
+          return;
         }
       }
-      if(msg!=""){
-        this.$utils.Alert('保存失败',msg)
-        return
-      }
-      }
-      var _this=this
+      var _this = this;
       //如果未选择，清空后传入后台更新
       for (let i = 0; i < 6; i++) {
-        if(this.Disabled.Categories.indexOf(i+1)===-1){
-          this.Disabled.Disabled_Details[i]=null
+        if (this.Disabled.Categories.indexOf(i + 1) === -1) {
+          this.Disabled.Disabled_Details[i] = null;
         }
       }
-      if(!this.Disabled.ID){
-        const Disabled = await this.$http.post('Disableds', this.Disabled)
-        this.Disabled.ID=Disabled.ID
-        this.sign=true
-        _this.$router.push('/KangFuRuHuHome')
-      }else{
-        await this.$http.put('Disableds/'+this.Disabled.ID, this.Disabled)
-        this.sign=true
+      if (!this.Disabled.ID) {
+        const Disabled = await this.$http.post("Disableds", this.Disabled);
+        this.Disabled.ID = Disabled.ID;
+        this.sign = true;
+        _this.$router.push("/KangFuRuHuHome");
+      } else {
+        await this.$http.put("Disableds/" + this.Disabled.ID, this.Disabled);
+        this.sign = true;
       }
     },
     successSignCallback(response) {
-      this.$utils.Alert('保存成功')
-      this.$router.push('/KangFuRuHuHome')
+      this.$utils.Alert("保存成功");
+      this.$router.push("/KangFuRuHuHome");
     }
   },
-  computed:{
+  computed: {
     //年龄计算
-    age(){
-      let age = this.$utils.CalcAge(this.Disabled.HasCertificate,this.Disabled.Certificate,this.Disabled.IDNumber)
-      return age
+    age() {
+      let age = this.$utils.CalcAge(
+        this.Disabled.HasCertificate,
+        this.Disabled.Certificate,
+        this.Disabled.IDNumber
+      );
+      return age;
     },
-    canChoose(){
-      return !this.Disabled.HasCertificate||this.Disabled.CategoryID===7
+    canChoose() {
+      return !this.Disabled.HasCertificate || this.Disabled.CategoryID === 7;
     }
   },
-  watch:{
+  watch: {
     //根据残疾证号选择残疾类别和等级
-    'Disabled.Certificate'() {
-      if(this.Disabled.Certificate.length<20)return
-      let a = this.$utils.CalcCategoryDegree(this.Disabled.Certificate)
-      if(a!=null){
-        this.Disabled.CategoryID=a.category
-        this.Disabled.DegreeID=a.degree
-        if(a.category!==7){
-          this.Disabled.Categories.push(a.category)
-          this.Disabled.Disabled_Details[a.category-1].DegreeID=a.degree
+    "Disabled.Certificate"() {
+      if (this.Disabled.Certificate.length < 20) return;
+      let a = this.$utils.CalcCategoryDegree(this.Disabled.Certificate);
+      if (a != null) {
+        this.Disabled.CategoryID = a.category;
+        this.Disabled.DegreeID = a.degree;
+        if (a.category !== 7) {
+          this.Disabled.Categories.push(a.category);
+          this.Disabled.Disabled_Details[a.category - 1].DegreeID = a.degree;
         }
-      }else{
-        this.Disabled.Categories=[]
-        this.Disabled.CategoryID=null
-        this.Disabled.DegreeID=null
+      } else {
+        this.Disabled.Categories = [];
+        this.Disabled.CategoryID = null;
+        this.Disabled.DegreeID = null;
       }
     },
     //提取多列选择器的选项
-    'Disabled.Disabled_Details': {
-      handler: function (val, oldVal) {
+    "Disabled.Disabled_Details": {
+      handler: function(val, oldVal) {
         this.Disabled.Disabled_Details.forEach(element => {
-          if(element.RehabilitationIDs.length>0){
-            element.RehabilitationID = element.RehabilitationIDs[1]
+          if (element.RehabilitationIDs.length > 0) {
+            element.RehabilitationID = element.RehabilitationIDs[1];
           }
         });
       },
       deep: true
     }
   }
-}
+};
 </script>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
@@ -308,7 +405,7 @@ export default {
   color: #888;
   font-size: 12px;
 }
-select{
-  text-align:right;
+select {
+  text-align: right;
 }
 </style>

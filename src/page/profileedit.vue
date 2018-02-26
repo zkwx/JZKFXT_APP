@@ -60,7 +60,7 @@ export default {
   },
   methods: {
     initData () {
-      this.$api.GetRoles({forFuJuShangMen:true}).then(res => { this.Roles = res })
+      this.$api.getRoles({forFuJuShangMen:true}).then(res => { this.Roles = res })
     },
     imageChoose(){
       this.$refs.file.click();
