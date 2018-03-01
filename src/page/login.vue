@@ -54,6 +54,13 @@ export default {
       //     })
       // }
       var formData = this.user;
+      // var json = {
+      //   user:formData,
+      //   login:true
+      // }
+      // this.$http.get("Users",json).then(r =>{
+      //   this.$utils.Alert(r);
+      // });
       this.$api
         .loginUser(formData)
         .then(r => {

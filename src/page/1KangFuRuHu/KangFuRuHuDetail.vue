@@ -270,10 +270,11 @@ export default {
             msg = this.$refs.Tel.title + "格式不正确";
           }
         }
-        //残疾证号
-        //年龄
+
         if (msg == "") {
+          //判断选择(残疾证号/身份证号)
           if (this.Disabled.HasCertificate) {
+            //验证残疾证号
             if (!this.$refs.Certificate.valid) {
               msg =
                 this.$refs.Certificate.title +
@@ -282,6 +283,7 @@ export default {
                   : this.$refs.Certificate.firstError);
             }
           } else {
+            //验证身份证号
             if (!this.$refs.IDNumber.valid) {
               msg =
                 this.$refs.IDNumber.title +
