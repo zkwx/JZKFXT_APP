@@ -707,7 +707,20 @@ export default {
     async assistiveList(optionIDs, answer, questions) {
       for (const i in optionIDs) {
         const optionId = optionIDs[i];
-        const option = questions[answer.QuestionNo].QueryOptions[optionId];
+        let option;
+        if (questions[answer.QuestionNo].Type === 4) {
+          for (const j in questions) {
+            let ops = questions[j].Options;
+            for (const k in ops) {
+              let key = ops[k].key;
+              if (parseInt(optionId) === key) {
+                option = questions[questions[j].QuestionNo].QueryOptions[key];
+              }
+            }
+          }
+        } else {
+          option = questions[answer.QuestionNo].QueryOptions[optionId];
+        }
         if (option.AssistiveDevices != "") {
           let assistives = option.AssistiveDevices.split(",");
           for (const assistive of assistives) {
@@ -815,7 +828,10 @@ export default {
         let sqlAssistiveAnswer = await this.$api.getAssistiveAnswers(
           "?ExamID=" + this.examID + "&disabledID=" + this.disabled.ID
         );
-        if (sqlAssistiveAnswer[0].Name === null) {
+        if (
+          sqlAssistiveAnswer.length === 0 ||
+          sqlAssistiveAnswer[0].Name === null
+        ) {
           this.currentValue = [];
         } else {
           for (const sql in sqlAssistiveAnswer) {

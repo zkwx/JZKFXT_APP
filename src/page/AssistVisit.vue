@@ -179,16 +179,25 @@ export default {
       var date = new Date();
       let sm;
       if (recode.FinishTime != null) {
-        sm = recode.FinishTime.split("-")[1];
+        sm =
+          parseInt(recode.FinishTime.split("-")[1].replace(/^0+/, "")) +
+          parseInt(recode.FinishTime.split("-")[0]) * 12;
       }
-      let fm = date.getMonth();
-      let sf = sm - fm;
+      let fm =
+        parseInt(
+          date
+            .toLocaleDateString()
+            .split("/")[1]
+            .replace(/^0+/, "")
+        ) +
+        parseInt(date.toLocaleDateString().split("/")[0]) * 12;
+      let sf = fm - sm;
       let recode1;
       let examId;
       let vstate;
       let err;
       if (this.State === "4" && this.examID < 9) {
-        if (sf >= 0 && sf < 6) {
+        if (sf >= 1 && sf < 6) {
           examId = 9;
           let param = { ExamID: examId, DisabledID: this.disabled.ID };
           await this.$http
@@ -779,7 +788,20 @@ export default {
     async assistiveList(optionIDs, answer, questions) {
       for (const i in optionIDs) {
         const optionId = optionIDs[i];
-        const option = questions[answer.QuestionNo].QueryOptions[optionId];
+        let option;
+        if (questions[answer.QuestionNo].Type === 4) {
+          for (const j in questions) {
+            let ops = questions[j].Options;
+            for (const k in ops) {
+              let key = ops[k].key;
+              if (parseInt(optionId) === key) {
+                option = questions[questions[j].QuestionNo].QueryOptions[key];
+              }
+            }
+          }
+        } else {
+          option = questions[answer.QuestionNo].QueryOptions[optionId];
+        }
         if (option.AssistiveDevices != "") {
           let assistives = option.AssistiveDevices.split(",");
           for (const assistive of assistives) {

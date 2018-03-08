@@ -10,38 +10,38 @@
         <x-switch title="有无残疾证" v-model="Disabled.HasCertificate"></x-switch>
         <x-input title="残疾证号" v-model="Disabled.Certificate" required ref="Certificate" type="number" :min="20" :max="21" v-if="Disabled.HasCertificate"></x-input>
         <x-input title="身份证号" v-model="Disabled.IDNumber" required ref="IDNumber" type="number" :min="18" :max="18" v-if="!Disabled.HasCertificate"></x-input>
-        <x-input title="年龄" :value="age" Disabled></x-input>
+        <x-input title="年龄" :value="age" Disabled ref="Age"></x-input>
         <checklist title="残疾类别" v-model="Disabled.Categories" required :Disabled="!canChoose" ref="Categories" :options="Categories" label-position="left" :max="this.Disabled.CategoryID===7?6:1"></checklist>
         <x-switch title="有无康复需求" v-model="Disabled.Need"></x-switch>
       </group>
       <group>
         <group title="视力" v-if="Disabled.Categories.indexOf(1) !== -1" label-width="7em" label-margin-right="2em">
-          <selector title="视力残疾等级" :readonly="!canChoose" v-model="Disabled.Disabled_Details[0].DegreeID" :options="Degrees" direction="right" required ref="VisionDegreeID"></selector>
+          <selector title="视力残疾等级" :readonly="!canChoose" placeholder="请选择残疾等级" v-model="Disabled.Disabled_Details[0].DegreeID" :options="Degrees" direction="right" required ref="VisionDegreeID"></selector>
           <popup-picker title="康复需求" v-if="Disabled.Need" v-model="Disabled.Disabled_Details[0].RehabilitationIDs" :data="Lists.VisionList" :columns="2" :column-width="[1/3]" required ref="VisionRehabilitationIDs" show-name value-text-align="left"></popup-picker>
-          <selector title="服务走向" v-if="Disabled.Need" v-model="Disabled.Disabled_Details[0].NextID" :options="Nexts" direction="right" required ref="VisionNextID"></selector>
+          <selector title="服务走向" v-if="Disabled.Need" placeholder="请选择服务走向" v-model="Disabled.Disabled_Details[0].NextID" :options="Nexts" direction="right" required ref="VisionNextID"></selector>
         </group>
         <group title="听力" v-if="Disabled.Categories.indexOf(2) !== -1" label-width="7em" label-margin-right="2em">
-          <selector title="听力残疾等级" :readonly="!canChoose" v-model="Disabled.Disabled_Details[1].DegreeID" :options="Degrees" direction="right" required ref="HearingDegreeID"></selector>
+          <selector title="听力残疾等级" :readonly="!canChoose" placeholder="请选择残疾等级" v-model="Disabled.Disabled_Details[1].DegreeID" :options="Degrees" direction="right" required ref="HearingDegreeID"></selector>
           <popup-picker v-if="Disabled.Need" title="康复需求" v-model="Disabled.Disabled_Details[1].RehabilitationIDs" :data="Lists.HearingList" :columns="2" :column-width="[1/3]" required ref="HearingRehabilitationIDs" show-name value-text-align="left"></popup-picker>
-          <selector v-if="Disabled.Need" title="服务走向" v-model="Disabled.Disabled_Details[1].NextID" :options="Nexts" direction="right" required ref="HearingNextID"></selector>
+          <selector v-if="Disabled.Need" title="服务走向" placeholder="请选择服务走向" v-model="Disabled.Disabled_Details[1].NextID" :options="Nexts" direction="right" required ref="HearingNextID"></selector>
         </group>
         <group title="言语" v-if="Disabled.Categories.indexOf(3) !== -1" label-width="7em" label-margin-right="2em">
-          <selector title="言语残疾等级" v-model="Disabled.Disabled_Details[2].DegreeID" :options="Degrees" direction="right" required ref="SpeakingDegreeID"></selector>
+          <selector title="言语残疾等级" v-model="Disabled.Disabled_Details[2].DegreeID" placeholder="请选择残疾等级" :options="Degrees" direction="right" required ref="SpeakingDegreeID"></selector>
         </group>
         <group title="肢体" v-if="Disabled.Categories.indexOf(4) !== -1" label-width="7em" label-margin-right="2em">
-          <selector title="肢体残疾等级" v-model="Disabled.Disabled_Details[3].DegreeID" :options="Degrees" direction="right" required ref="BodyDegreeID"></selector>
+          <selector title="肢体残疾等级" v-model="Disabled.Disabled_Details[3].DegreeID" placeholder="请选择残疾等级" :options="Degrees" direction="right" required ref="BodyDegreeID"></selector>
           <popup-picker v-if="Disabled.Need" title="康复需求" v-model="Disabled.Disabled_Details[3].RehabilitationIDs" :data="Lists.BodyList" :columns="2" :column-width="[1/3]" required ref="BodyRehabilitationIDs" show-name value-text-align="left"></popup-picker>
           <selector v-if="Disabled.Need" title="服务走向" v-model="Disabled.Disabled_Details[3].NextID" :options="Nexts" direction="right" required ref="BodyNextID"></selector>
         </group>
         <group title="智力" v-if="Disabled.Categories.indexOf(5) !== -1" label-width="7em" label-margin-right="2em">
-          <selector title="智力残疾等级" v-model="Disabled.Disabled_Details[4].DegreeID" :options="Degrees" direction="right" required ref="IntelligenceDegreeID"></selector>
+          <selector title="智力残疾等级" v-model="Disabled.Disabled_Details[4].DegreeID" placeholder="请选择残疾等级" :options="Degrees" direction="right" required ref="IntelligenceDegreeID"></selector>
           <popup-picker v-if="Disabled.Need" title="康复需求" v-model="Disabled.Disabled_Details[4].RehabilitationIDs" :data="Lists.IntelligenceList" :columns="2" :column-width="[1/3]" required ref="IntelligenceRehabilitationIDs" show-name value-text-align="left"></popup-picker>
-          <selector v-if="Disabled.Need" title="服务走向" v-model="Disabled.Disabled_Details[4].NextID" :options="Nexts" direction="right" required ref="IntelligenceNextID"></selector>
+          <selector v-if="Disabled.Need" title="服务走向" placeholder="请选择服务走向" v-model="Disabled.Disabled_Details[4].NextID" :options="Nexts" direction="right" required ref="IntelligenceNextID"></selector>
         </group>
         <group title="精神" v-if="Disabled.Categories.indexOf(6) !== -1" label-width="7em" label-margin-right="2em">
-          <selector title="精神残疾等级" v-model="Disabled.Disabled_Details[5].DegreeID" :options="Degrees" direction="right" required ref="SpiritDegreeID"></selector>
+          <selector title="精神残疾等级" v-model="Disabled.Disabled_Details[5].DegreeID" placeholder="请选择残疾等级" :options="Degrees" direction="right" required ref="SpiritDegreeID"></selector>
           <popup-picker v-if="Disabled.Need" title="康复需求" v-model="Disabled.Disabled_Details[5].RehabilitationIDs" :data="Lists.SpiritList" :columns="2" :column-width="[1/3]" required ref="SpiritRehabilitationIDs" show-name value-text-align="left"></popup-picker>
-          <selector v-if="Disabled.Need" title="服务走向" v-model="Disabled.Disabled_Details[5].NextID" :options="Nexts" direction="right" required ref="SpiritNextID"></selector>
+          <selector v-if="Disabled.Need" title="服务走向" placeholder="请选择服务走向" v-model="Disabled.Disabled_Details[5].NextID" :options="Nexts" direction="right" required ref="SpiritNextID"></selector>
         </group>
       </group>
       <div style="padding: 0 15px;">
@@ -168,6 +168,7 @@ export default {
         DoorService: "",
         FirstSign: "",
         SecondSign: "",
+        UserID: "",
         Disabled_Details: []
       }
     };
@@ -272,24 +273,40 @@ export default {
         }
 
         if (msg == "") {
+          var am = this.$refs.Age.value;
           //判断选择(残疾证号/身份证号)
           if (this.Disabled.HasCertificate) {
             //验证残疾证号
-            if (!this.$refs.Certificate.valid) {
+            if (
+              !this.$refs.Certificate.valid ||
+              this.$refs.Certificate.value == ""
+            ) {
               msg =
                 this.$refs.Certificate.title +
                 (this.$refs.Certificate.firstError == null
                   ? "必填哦"
-                  : this.$refs.Certificate.firstError);
+                  : this.$refs.Certificate.firstError == ""
+                    ? "必填哦"
+                    : this.$refs.Certificate.firstError);
+            } else {
+              if (typeof am != "number") {
+                msg = this.$refs.Age.value;
+              }
             }
           } else {
             //验证身份证号
-            if (!this.$refs.IDNumber.valid) {
+            if (!this.$refs.IDNumber.valid || this.$refs.IDNumber.value == "") {
               msg =
                 this.$refs.IDNumber.title +
                 (this.$refs.IDNumber.firstError == null
                   ? "必填哦"
-                  : this.$refs.IDNumber.firstError);
+                  : this.$refs.IDNumber.firstError == ""
+                    ? "必填哦"
+                    : this.$refs.IDNumber.firstError);
+            } else {
+              if (typeof am != "number") {
+                msg = this.$refs.Age.value;
+              }
             }
           }
         }
@@ -301,8 +318,9 @@ export default {
                 ? "必填哦"
                 : this.$refs.Categories.firstError);
           } else {
+            var _this = this;
             this.Disabled.Categories.forEach(function(item, i) {
-              let detail = this.Disabled.Disabled_Details[item - 1];
+              let detail = _this.Disabled.Disabled_Details[item - 1];
               if (!detail.DegreeID) {
                 msg =
                   this.$refs.HearingDegreeID.title +
@@ -330,18 +348,21 @@ export default {
           return;
         }
       }
-      var _this = this;
+      var _that = this;
       //如果未选择，清空后传入后台更新
       for (let i = 0; i < 6; i++) {
         if (this.Disabled.Categories.indexOf(i + 1) === -1) {
           this.Disabled.Disabled_Details[i] = null;
         }
       }
+      let userKey = localStorage.getItem("loginUserBaseInfo");
+      var obj = JSON.parse(userKey);
+      this.Disabled.UserID = obj;
       if (!this.Disabled.ID) {
         const Disabled = await this.$http.post("Disableds", this.Disabled);
         this.Disabled.ID = Disabled.ID;
         this.sign = true;
-        _this.$router.push("/KangFuRuHuHome");
+        _that.$router.push("/KangFuRuHuHome");
       } else {
         await this.$http.put("Disableds/" + this.Disabled.ID, this.Disabled);
         this.sign = true;

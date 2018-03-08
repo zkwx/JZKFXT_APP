@@ -6,29 +6,33 @@
             <img :src="user.img">
           </div>
 					<p>{{user.name}}</p>
+          <p>{{user.phone}}</p>
           <router-link to="/profile/edit" class="edit">设置</router-link>
 					<flexbox :gutter="0" class="infos-flex">
 						<flexbox-item class="infos-flex-item vux-1px-r">
 							<div>
-								<p>1</p>
+								<p>{{disabled.conduct}}</p>
 								<label>进行中患者</label>
 							</div>
 						</flexbox-item>
 						<flexbox-item class="infos-flex-item vux-1px-r">
 							<div>
-								<p>2</p>
+								<p>{{disabled.finish}}</p>
 								<label>已完成患者</label>
 							</div>
 						</flexbox-item>
 					</flexbox>
 			</group>
-			<group title="角色与区域">
-				<cell title="角色">{{user.real}}</cell>
-				<cell title="区域">江苏省-徐州市-铜山区</cell>
+			<group title="角色">
+				<cell title="角色">{{role.name}}</cell>
 			</group>
-			<group title="参与者权限">
-				<checklist v-model="user.Roles" :options="Roles" disabled label-position="left"></checklist>
-			</group>
+			<group title="描述">
+				<!-- <checklist v-model="user.Roles" :options="Roles" disabled label-position="left"></checklist> -->
+				<cell value-align="left">{{role.description}}</cell>
+      </group>
+      <group title="职责">
+				<cell value-align="left">{{role.duty}}</cell>
+      </group>
 		</div>
   </div>
 </template>
@@ -56,12 +60,23 @@ export default {
   },
   data() {
     return {
-      Roles: [],
+      //Roles: [],
       user: {
         name: "",
+        phone: "",
         real: "",
-        Roles: [1, 2],
+        roleID: "",
+        //Roles: [1, 2],
         img: require("@/assets/icon/avatar-male.png")
+      },
+      disabled: {
+        conduct: "",
+        finish: ""
+      },
+      role: {
+        name: "",
+        description: "",
+        duty: ""
       }
     };
   },
@@ -70,13 +85,46 @@ export default {
   },
   methods: {
     initData() {
-      const userKey = localStorage.getItem('loginUserBaseInfo');
+      const userKey = localStorage.getItem("loginUserBaseInfo");
       var obj = JSON.parse(userKey);
-      this.user.name = obj.UserName;
-      this.user.real = obj.RealName;
-      this.$api.getRoles({ forFuJuShangMen: true }).then(res => {
-        this.Roles = res.slice(0, 2);
+      this.$api.getUser(obj).then(r => {
+        this.user.name = r.RealName;
+        //用户电话
+        this.user.phone = r.Phone;
+        this.user.roleID = r.RoleID;
+        //头像
+        if (r.Other != "") {
+          this.user.img = r.Other;
+        }
+        //用户角色
+        this.$api.getRole(this.user.roleID).then(r => {
+          this.role.name = r.RoleName;
+          this.role.description = r.Description;
+          this.role.duty = r.Duty;
+        });
       });
+      //用户ID
+      var userID = {
+        id: obj
+      };
+      this.$api.getConduct(userID).then(r => {
+        if (r > 0) {
+          this.disabled.conduct = r;
+        } else {
+          this.disabled.conduct = r.data;
+        }
+      });
+      this.$api.getFinish(userID).then(x => {
+        if (x > 0) {
+          this.disabled.finish = x;
+        } else {
+          this.disabled.finish = x.data;
+        }
+      });
+      //参与者权限
+      // this.$api.getRoles({ forFuJuShangMen: true }).then(res => {
+      //   this.Roles = res.slice(0, 2);
+      // });
     }
   },
   computed: {},

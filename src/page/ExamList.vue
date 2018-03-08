@@ -83,15 +83,38 @@ export default {
         default:
           break;
       }
+      let id = localStorage.getItem("loginUserBaseInfo");
       let res = await this.$api.getExamRecords({
         examby: this.examBy,
-        name: this.name
+        name: this.name,
+        userID: parseInt(id)
       });
       let list = {};
-      for (const key in res) {
-        const element = res[key];
-        let name = element[0].Exam.Name;
-        list[name] = element;
+
+      switch (this.displayType) {
+        case "categoryTabs":
+          for (const key in res) {
+            const element = res[key];
+            let name = element[0].Exam.Name;
+            list[name] = element;
+          }
+          break;
+        case "jiaZhiJiaoXingQiTabs":
+          for (const key in res) {
+            const element = res[key];
+            let name = element[0].showArea;
+            list[name] = element;
+          }
+          break;
+        case "wuZhangAiTabs":
+          for (const key in res) {
+            const element = res[key];
+            let name = element[0].showArea;
+            list[name] = element;
+          }
+          break;
+        default:
+          break;
       }
       this.list = list;
 
@@ -99,7 +122,19 @@ export default {
         case "FuJuPingGu":
           this.link = "ExamDetail";
           break;
+        case "JiaZhiJiaoXingQi":
+          this.link = "ExamDetail";
+          break;
+        case "WuZhangAiGaiZao":
+          this.link = "ExamDetail";
+          break;
         case "FuJuShenHe":
+          this.link = "ExamAudit";
+          break;
+        case "JiaZhiJiaoXingQiShenHe":
+          this.link = "ExamAudit";
+          break;
+        case "WuZhangAiShenHe":
           this.link = "ExamAudit";
           break;
         case "FuJuFuWu":

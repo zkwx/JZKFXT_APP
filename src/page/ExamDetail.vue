@@ -736,7 +736,20 @@ export default {
     async assistiveList(optionIDs, answer, questions) {
       for (const i in optionIDs) {
         const optionId = optionIDs[i];
-        const option = questions[answer.QuestionNo].QueryOptions[optionId];
+        let option;
+        if (questions[answer.QuestionNo].Type === 4) {
+          for (const j in questions) {
+            let ops = questions[j].Options;
+            for (const k in ops) {
+              let key = ops[k].key;
+              if (parseInt(optionId) === key) {
+                option = questions[questions[j].QuestionNo].QueryOptions[key];
+              }
+            }
+          }
+        } else {
+          option = questions[answer.QuestionNo].QueryOptions[optionId];
+        }
         if (option.AssistiveDevices != "") {
           let assistives = option.AssistiveDevices.split(",");
           for (const assistive of assistives) {
@@ -789,14 +802,71 @@ export default {
       }
 
       let Answers = [];
+      let area = null;
       for (let i = 0; i < this.questionManager.questionsFlow.length; i++) {
         let que = this.questionManager.questionsFlow[i];
+        let tp = this.exams[que.examID][que.questionNo].Type;
+        //判断答案中假肢转存
+        if (tp === 6) {
+          //最大值
+          let size = 0;
+          //转存
+          let flag;
+          for (var j in this.exams[que.examID][que.questionNo].QueryOptions) {
+            let max = this.exams[que.examID][que.questionNo].QueryOptions[j]
+              .Grade;
+            if (max > size) {
+              size = max;
+            }
+          }
+          for (let m = 0; m < que.options.length; m++) {
+            let qm = que.options[m];
+            let ge = this.exams[que.examID][que.questionNo].QueryOptions[qm]
+              .Grade;
+            if (ge > size / 2) {
+              flag = true;
+            } else {
+              flag = false;
+            }
+          }
+          if (flag) {
+            area = "其它假肢";
+          } else {
+            area = "长江新里程";
+          }
+        } else if (tp === 8) {
+          //判断答案中矫形器和无障碍转存
+          let queChange = [];
+          for (let k = 0; k < que.options.length; k++) {
+            let qm = que.options[k];
+            for (
+              let l = 0;
+              l < this.exams[que.examID][que.questionNo].Options.length;
+              l++
+            ) {
+              let op = this.exams[que.examID][que.questionNo].Options[l];
+              if (qm == op.key) {
+                queChange.push(op.value.split(".")[1]);
+              }
+            }
+          }
+          if (queChange.indexOf("矫形器") != -1) {
+            area = "矫形器";
+          } else if (queChange.indexOf("无障碍环境") != -1) {
+            area = "无障碍改造";
+          }
+        } else if (tp == 4 && que.examID == "8") {
+          area = "无障碍改造";
+        } else {
+          area = null;
+        }
         Answers.push({
           ExamID: que.examID,
           QuestionNo: que.questionNo,
           OptionIDs: que.options.join(","),
           disabledID: this.disabled.ID,
-          Other: que.messages
+          Other: que.messages,
+          Area: area
         });
       }
       this.$http.post("Answers/SaveAnswers", Answers).then(r => {
@@ -855,8 +925,10 @@ export default {
         }
       } else {
         for (const s in assistiveAnswer) {
-          let options = assistiveAnswer[s].optionIDs.split(",");
-          this.currentValue = options;
+          if (assistiveAnswer[s].optionIDs != undefined) {
+            let options = assistiveAnswer[s].optionIDs.split(",");
+            this.currentValue = options;
+          }
         }
       }
     },
@@ -904,12 +976,17 @@ export default {
         }
       }
     },
-    //下一题或提交
+    //下一题或提交(true -- 提交,false -- 下一题)
     canSubmitAnswers() {
       if (this.questionManager.questionsFlow.length > 0) {
+        let examo = this.getCurrentExam();
         let questiono = this.getCurrentQuestion();
         let checklisto = this.getCurrentChecklist();
-        if (checklisto && checklisto.currentValue.length > 0) {
+        if (
+          checklisto &&
+          checklisto.currentValue.length > 0 &&
+          questiono.Options.length > 0
+        ) {
           for (const optionID of checklisto.currentValue) {
             const option = questiono.QueryOptions[optionID];
             const NextQuestionNo = option.NextQuestionNo;
@@ -938,7 +1015,11 @@ export default {
             }
           }
         }
-        if (checklisto && checklisto.currentValue.length === 0) {
+        if (
+          checklisto &&
+          checklisto.currentValue.length === 0 &&
+          questiono.Options.length === 0
+        ) {
           if (questiono.Type === 5) {
             if (
               questiono.QuestionNo !=
@@ -971,6 +1052,7 @@ export default {
               //试卷跳回下一题
               return false;
             }
+            return true;
           }
         }
       }

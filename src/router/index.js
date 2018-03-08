@@ -97,15 +97,3 @@ export default new Router({
 
     ]
 });
-// 动态路由 meta 定义了role
-export const powerRouter = [
-    {
-        path: '/', redirect: '/KangFuRuHuHome', name: 'KangFuRuHuHome',  hidden: false,
-        children: [
-            { path: '/KangFuRuHuHome', name: 'KangFuRuHuHome', },
-            { path: '/profile', name: 'profile', },
-            { path: '/FuJuPingGuHome', name: 'FuJuPingGuHome',  meta: { role: 'B' } },
-            { path: '/JiGouPingGuHome', name: 'JiGouPingGuHome', meta: { role: 'C' } }
-        ]
-    }
-];

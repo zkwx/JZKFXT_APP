@@ -53,31 +53,43 @@ export default {
       //         console.log(r);
       //     })
       // }
-      var formData = this.user;
-      // var json = {
-      //   user:formData,
-      //   login:true
-      // }
-      // this.$http.get("Users",json).then(r =>{
-      //   this.$utils.Alert(r);
-      // });
-      this.$api
-        .loginUser(formData)
-        .then(r => {
-          localStorage.setItem("loginUserBaseInfo", JSON.stringify(r));
-          //若验证成功跳转
-          var redirect = decodeURIComponent(
-            this.$route.query.redirect || "/KangFuRuHuHome"
-          );
-          this.$router.push({
-            // 你需要接受路由的参数再跳转
-            path: redirect
+      var msg = "";
+      if (true) {
+        if (this.$refs.UserNameRef.value === "") {
+          msg = this.$refs.UserNameRef.title + "必填哦!";
+        } else if (this.$refs.PasswordRef.value === "") {
+          msg = this.$refs.PasswordRef.title + "必填哦!";
+        }
+      }
+      if (msg === "") {
+        var formData = this.user;
+        // var json = {
+        //   user:formData,
+        //   login:true
+        // }
+        // this.$http.get("Users",json).then(r =>{
+        //   this.$utils.Alert(r);
+        // });
+        this.$api
+          .loginUser(formData)
+          .then(r => {
+            localStorage.setItem("loginUserBaseInfo", JSON.stringify(r.ID));
+            //若验证成功跳转
+            var redirect = decodeURIComponent(
+              this.$route.query.redirect || "/KangFuRuHuHome"
+            );
+            this.$router.push({
+              // 你需要接受路由的参数再跳转
+              path: redirect
+            });
+          })
+          .catch(r => {
+            this.$router.push("/");
+            this.$utils.Alert("登录失败", "用户名或密码错误");
           });
-        })
-        .catch(r => {
-          this.$router.push("/");
-          this.$utils.Alert("登录失败", "用户名或密码错误");
-        });
+      }else{
+        this.$utils.Alert("错误信息",msg);
+      }
     },
     onCancel() {
       console.log("on cancel");
