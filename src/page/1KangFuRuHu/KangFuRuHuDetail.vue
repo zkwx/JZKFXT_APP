@@ -357,7 +357,7 @@ export default {
       }
       let userKey = localStorage.getItem("loginUserBaseInfo");
       var obj = JSON.parse(userKey);
-      this.Disabled.UserID = obj;
+      this.Disabled.UserID = obj.I;
       if (!this.Disabled.ID) {
         const Disabled = await this.$http.post("Disableds", this.Disabled);
         this.Disabled.ID = Disabled.ID;

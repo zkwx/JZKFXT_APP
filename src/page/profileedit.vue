@@ -77,7 +77,7 @@ export default {
     initData() {
       const userKey = localStorage.getItem("loginUserBaseInfo");
       var obj = JSON.parse(userKey);
-      this.$api.getUser(obj).then(r => {
+      this.$api.getUser(obj.I).then(r => {
         this.user.id = r.ID;
         //用户姓名
         this.user.name = r.RealName;

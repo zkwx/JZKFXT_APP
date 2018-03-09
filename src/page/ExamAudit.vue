@@ -69,6 +69,7 @@ import {
   FlexboxItem,
   XTable
 } from "vux";
+import { userInfo } from "os";
 export default {
   name: "FuJuPingGuDetail",
   directives: {
@@ -863,10 +864,14 @@ export default {
     },
     //审核通过
     examNext() {
+      let Key = localStorage.getItem("loginUserBaseInfo");
+      let obj = JSON.parse(Key);
+      let uID = obj.I;
       let assistive = [];
       assistive.push({
         ExamID: this.examID,
-        DisabledID: this.disabled.ID
+        DisabledID: this.disabled.ID,
+        Auditor: uID
       });
       this.$http.put("ExamRecords/Modify", assistive).then(r => {
         this.$utils.Alert("操作成功", "已通过审核");

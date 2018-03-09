@@ -614,8 +614,8 @@ export default {
         if (!this.IsView) {
           //做完之后直接查看
           exama = this.questionManager.questionsFlow[key];
-          questions = this.exams[exama.examID];
-          question = questions[exama.questionNo];
+          questions = this.exams[exama.ExamID];
+          question = questions[exama.QuestionNo];
           //辅具查询(答案选项，答案记录数据，问题集合)
           await this.assistiveList(optionIDs, exama, questions);
           //数组转换
@@ -662,7 +662,7 @@ export default {
       if (this.assistiveDevices.length > 0) {
         //筛选
         if (this.conditions.length === 0) {
-          for (const a in this.assistiveDevices) {
+          for (let a in this.assistiveDevices) {
             const at = this.assistiveDevices[a];
             //辅具所有信息
             this.assistiveChange.push(at);
@@ -681,7 +681,7 @@ export default {
           for (const b in this.conditions) {
             const bt = this.conditions[b];
             //table.innerHTML = bt;
-            for (const a in this.assistiveDevices) {
+            for (let a in this.assistiveDevices) {
               const at = this.assistiveDevices[a];
               if (at.Type === bt) {
                 //辅具所有信息

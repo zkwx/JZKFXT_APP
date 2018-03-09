@@ -57,7 +57,7 @@ export default new Router({
         //康复入户
         path: '/KangFuRuHuHome',
         component: resolve => require(['KangFuRuHu/KangFuRuHuHome'], resolve),
-        meta: { navShow: true },
+        meta: { navShow: true, role: [1, 2] },
     }, {
         path: '/KangFuRuHuDetail',
         component: resolve => require(['KangFuRuHu/KangFuRuHuDetail'], resolve),
@@ -69,22 +69,22 @@ export default new Router({
         //辅具评估
         path: '/FuJuPingGuHome',
         component: resolve => require(['FuJuPingGu/FuJuPingGuHome'], resolve),
-        meta: { navShow: true },
+        meta: { navShow: true, role: [1, 2] },
     }, {
         //机构评估
         path: '/JiGouPingGuHome',
         component: resolve => require(['JiGouPingGu/JiGouPingGuHome'], resolve),
-        meta: { navShow: true },
+        meta: { navShow: true, role: [3, 4, 5, 6, 7, 8, 9, 10, 11] },
     }, {
         //综合康复
         path: '/ZongHeKangFuHome',
         component: resolve => require(['ZongHeKangFu/ZongHeKangFuHome'], resolve),
-        meta: { navShow: true },
+        meta: { navShow: true, role: [3, 4, 5, 6, 7, 8, 9, 10, 11] },
     }, {
         //服务回访
         path: '/FuWuHuiFangHome',
         component: resolve => require(['FuWuHuiFang/FuWuHuiFangHome'], resolve),
-        meta: { navShow: true },
+        meta: { navShow: true, role: [1, 2] },
     }, {
         //我
         path: '/profile',

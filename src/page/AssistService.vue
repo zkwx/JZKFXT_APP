@@ -626,7 +626,7 @@ export default {
         }
       }
 
-     if (this.assistiveDevices.length > 0) {
+      if (this.assistiveDevices.length > 0) {
         //筛选
         if (this.conditions.length === 0) {
           for (const a in this.assistiveDevices) {
@@ -824,8 +824,10 @@ export default {
         let sqlAssistiveAnswer = await this.$api.getAssistiveAnswers(
           "?ExamID=" + this.examID + "&disabledID=" + this.disabled.ID
         );
-        if (sqlAssistiveAnswer.length === 0 ||
-          sqlAssistiveAnswer[0].Name === null) {
+        if (
+          sqlAssistiveAnswer.length === 0 ||
+          sqlAssistiveAnswer[0].Name === null
+        ) {
           this.currentValue = [];
         } else {
           for (const sql in sqlAssistiveAnswer) {
@@ -857,10 +859,14 @@ export default {
     },
     //审核通过
     examNext() {
+      let Key = localStorage.getItem("loginUserBaseInfo");
+      let obj = JSON.parse(Key);
+      let uID = obj.I;
       let record = [];
       record.push({
         ExamID: this.examID,
         DisabledID: this.disabled.ID,
+        Auditor: uID
       });
       this.$http.put("ExamRecords/Modify", record).then(r => {
         this.$utils.Alert("操作成功", "已通过审核");
@@ -870,10 +876,14 @@ export default {
     },
     //辅具服务点击完成
     finish() {
+      let Key = localStorage.getItem("loginUserBaseInfo");
+      let obj = JSON.parse(Key);
+      let uID = obj.I;
       let record = [];
       record.push({
         ExamID: this.examID,
         DisabledID: this.disabled.ID,
+        Complete: uID
       });
       this.$http.put("ExamRecords/Modify", record).then(r => {
         this.$utils.Alert("操作成功", "已完成该次服务");

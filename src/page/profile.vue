@@ -12,13 +12,13 @@
 						<flexbox-item class="infos-flex-item vux-1px-r">
 							<div>
 								<p>{{disabled.conduct}}</p>
-								<label>进行中患者</label>
+								<label>{{disabled.conVal}}</label>
 							</div>
 						</flexbox-item>
 						<flexbox-item class="infos-flex-item vux-1px-r">
 							<div>
 								<p>{{disabled.finish}}</p>
-								<label>已完成患者</label>
+								<label>{{disabled.finVal}}</label>
 							</div>
 						</flexbox-item>
 					</flexbox>
@@ -71,7 +71,9 @@ export default {
       },
       disabled: {
         conduct: "",
-        finish: ""
+        conVal: "",
+        finish: "",
+        finVal: ""
       },
       role: {
         name: "",
@@ -87,7 +89,9 @@ export default {
     initData() {
       const userKey = localStorage.getItem("loginUserBaseInfo");
       var obj = JSON.parse(userKey);
-      this.$api.getUser(obj).then(r => {
+      let id = obj.I;
+      let role = obj.R;
+      this.$api.getUser(id).then(r => {
         this.user.name = r.RealName;
         //用户电话
         this.user.phone = r.Phone;
@@ -103,18 +107,28 @@ export default {
           this.role.duty = r.Duty;
         });
       });
-      //用户ID
-      var userID = {
-        id: obj
+      if (role < 3) {
+        this.disabled.conVal = "进行中患者";
+        this.disabled.finVal = "已完成患者";
+      } else if (role > 2 && role < 10) {
+        this.disabled.conVal = "待审核患者";
+        this.disabled.finVal = "已审核患者";
+      } else if (role > 9) {
+        this.disabled.conVal = "待完成患者";
+        this.disabled.finVal = "已完成患者";
+      }
+      var user = {
+        id: id,
+        role: role
       };
-      this.$api.getConduct(userID).then(r => {
+      this.$api.getConduct(user).then(r => {
         if (r > 0) {
           this.disabled.conduct = r;
         } else {
           this.disabled.conduct = r.data;
         }
       });
-      this.$api.getFinish(userID).then(x => {
+      this.$api.getFinish(user).then(x => {
         if (x > 0) {
           this.disabled.finish = x;
         } else {

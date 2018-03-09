@@ -73,11 +73,26 @@ export default {
         this.$api
           .loginUser(formData)
           .then(r => {
-            localStorage.setItem("loginUserBaseInfo", JSON.stringify(r.ID));
+            let User = {
+              I: r.ID,
+              R: r.RoleID
+            };
+            localStorage.setItem("loginUserBaseInfo", JSON.stringify(User));
             //若验证成功跳转
-            var redirect = decodeURIComponent(
-              this.$route.query.redirect || "/KangFuRuHuHome"
-            );
+            if (r.RoleID < 3) {
+              var redirect = decodeURIComponent(
+                this.$route.query.redirect || "/KangFuRuHuHome"
+              );
+            } else if (r.RoleID > 2 && r.RoleID < 10) {
+              var redirect = decodeURIComponent(
+                this.$route.query.redirect || "/JiGouPingGuHome"
+              );
+            } else {
+              var redirect = decodeURIComponent(
+                this.$route.query.redirect || "/ZongHeKangFuHome"
+              );
+            }
+
             this.$router.push({
               // 你需要接受路由的参数再跳转
               path: redirect
@@ -87,8 +102,8 @@ export default {
             this.$router.push("/");
             this.$utils.Alert("登录失败", "用户名或密码错误");
           });
-      }else{
-        this.$utils.Alert("错误信息",msg);
+      } else {
+        this.$utils.Alert("错误信息", msg);
       }
     },
     onCancel() {

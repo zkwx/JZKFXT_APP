@@ -27,7 +27,7 @@ export default {
       let user = localStorage.getItem("loginUserBaseInfo");
       var userID = JSON.parse(user);
       var json = {
-        userID: userID
+        userID: userID.I
       };
       this.$api.getDisableds(json).then(res => {
         this.list = res;

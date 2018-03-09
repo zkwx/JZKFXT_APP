@@ -39,8 +39,8 @@ export default {
       tabs: [],
       //categoryTabs:[{name:'视力'},{name:'听力'},{name:'肢体'},{name:'脑瘫'},{name:'偏瘫'},{name:'脊髓损伤'}],
       categoryTabs: [
-        { name: "假肢" },
-        { name: "无障碍" },
+        //{ name: "假肢" },
+        //{ name: "无障碍" },
         { name: "视力" },
         { name: "听力" },
         { name: "肢体" },
@@ -83,11 +83,12 @@ export default {
         default:
           break;
       }
-      let id = localStorage.getItem("loginUserBaseInfo");
+      let lu = localStorage.getItem("loginUserBaseInfo");
+      let id = JSON.parse(lu).I;
       let res = await this.$api.getExamRecords({
         examby: this.examBy,
         name: this.name,
-        userID: parseInt(id)
+        userID: id
       });
       let list = {};
 
@@ -102,14 +103,14 @@ export default {
         case "jiaZhiJiaoXingQiTabs":
           for (const key in res) {
             const element = res[key];
-            let name = element[0].showArea;
+            let name = element[0].ShowArea;
             list[name] = element;
           }
           break;
         case "wuZhangAiTabs":
           for (const key in res) {
             const element = res[key];
-            let name = element[0].showArea;
+            let name = element[0].ShowArea;
             list[name] = element;
           }
           break;

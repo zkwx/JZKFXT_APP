@@ -30,15 +30,20 @@ new Vue({
 router.beforeEach((to, from, next) => {
     // 若userkey不存在并且前往页面不是登陆页面，进入登陆
     // 若userkey存在并且前往登陆页面，进入主页
-    const userKey = localStorage.getItem('loginUserBaseInfo')
-    if (!userKey && to.path !== '/login') {
+    let user = JSON.parse(localStorage.getItem('loginUserBaseInfo'));
+    let uID = user.I
+    let rID = user.R;
+    if (!user && to.path !== '/login') {
         next({
             path: '/login',
             query: { redirect: to.fullPath }
         })
-    } else if (userKey && to.path === '/login') {
+    } else if (user && to.path === '/login') {
         next({ path: '/' })
-    } else {
+    } else if (user && to.path !== '/login' &&from.path !== '/' && to.meta.role && to.meta.role.indexOf(rID) === -1) {
+        next(false);
+    }
+    else {
         next()
     }
 })
