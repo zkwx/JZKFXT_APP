@@ -23,7 +23,7 @@
     <div style="padding: 15px;">
       <x-button type="primary" @click.native="submit">注册</x-button>
       <div style="text-align:center;">
-      <a href="#/login">登录</a>
+      <a href="#/login">前往登录</a>
       </div>
     </div>
   </div>
@@ -114,19 +114,19 @@ export default {
       var msg = "";
       if (true) {
         //登录名
-        if (this.user.name === "") {
+        if (this.user.name.trim() === "") {
           msg = this.$refs.run.title + "必填哦";
         } else {
-          if (this.user.password === "") {
+          if (this.user.password.trim() === "") {
             //密码
             msg = this.$refs.rpw.title + "必填哦";
           } else {
-            if (this.user.realname === "") {
+            if (this.user.realname.trim() === "") {
               //真实姓名
               msg = this.$refs.rrn.title + "必填哦";
             } else {
               //手机号
-              if (this.user.phone === "") {
+              if (this.user.phone.trim() === "") {
                 msg = this.$refs.rp.title + "必填哦";
               } else {
                 var reg = /^[1][3,4,5,7,8][0-9]{9}$/;

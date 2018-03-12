@@ -130,10 +130,10 @@ export default {
     async submit() {
       var msg = "";
       if (true) {
-        if (this.$refs.cn.value === "") {
+        if (this.$refs.cn.value.trim() === "") {
           msg = this.$refs.cn.title + "必填哦";
         } else {
-          if (this.$refs.cp.value === "") {
+          if (this.$refs.cp.value.trim() === "") {
             msg = this.$refs.cp.title + "必填哦";
           } else {
             var reg = /^[1][3,4,5,7,8][0-9]{9}$/;
