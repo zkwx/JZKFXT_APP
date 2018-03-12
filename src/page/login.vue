@@ -1,20 +1,23 @@
 <template>
 <div>
 	<div id="login">
+      <h1 style="text-align:center;">精准康复系统</h1>
 		<form v-on:submit.prevent="submit">
-                <h1 style="text-align:center;">精准康复系统</h1>
             <group label-width="70px" class="loginGroup">
             <x-input title="用户名" v-model="user.UserName" placeholder="请输入你的用户名" ref="UserNameRef" required></x-input>
             <x-input title="密码" v-model="user.Password" placeholder="请输入你的密码" type="password" ref="PasswordRef" required></x-input>
 			<x-button type="primary" @click="submit">登录</x-button>
             </group>
 		</form>
+    <div style="text-align:center;">
+    <a href="#/register">没有账号?点击注册</a>
+  </div>
 	</div>
 </div>
 </template>
 <style scoped>
 .loginGroup {
-  padding: 40px;
+  padding: 40px 20px 0 20px;
 }
 </style>
 <script>
@@ -63,13 +66,6 @@ export default {
       }
       if (msg === "") {
         var formData = this.user;
-        // var json = {
-        //   user:formData,
-        //   login:true
-        // }
-        // this.$http.get("Users",json).then(r =>{
-        //   this.$utils.Alert(r);
-        // });
         this.$api
           .loginUser(formData)
           .then(r => {

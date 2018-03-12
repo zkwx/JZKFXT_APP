@@ -15,6 +15,9 @@ export default new Router({
         path: '/login',
         component: resolve => require(['page/login'], resolve)
     }, {
+        path: '/register',
+        component: resolve => require(['page/register'], resolve)
+    }, {
         path: '/sign',
         component: resolve => require(['@/components/AppSign'], resolve),
     }, {
@@ -54,10 +57,26 @@ export default new Router({
         component: resolve => require(['page/AssistVisit'], resolve),
         props: true
     }, {
+        //机构评估
+        path: '/JiGou',
+        component: resolve => require(['page/JiGou'], resolve),
+    }, {
+        path: '/JiGou/:disabledID/:examID/:state',
+        component: resolve => require(['page/JiGou'], resolve),
+        props: true
+    }, {
+        //康复服务
+        path: '/FuWu',
+        component: resolve => require(['page/FuWu'], resolve),
+    }, {
+        path: '/FuWu/:disabledID/:examID/:state',
+        component: resolve => require(['page/FuWu'], resolve),
+        props: true
+    }, {
         //康复入户
         path: '/KangFuRuHuHome',
         component: resolve => require(['KangFuRuHu/KangFuRuHuHome'], resolve),
-        meta: { navShow: true, role: [1, 2] },
+        meta: { navShow: true, role: [1, 2, 12] },
     }, {
         path: '/KangFuRuHuDetail',
         component: resolve => require(['KangFuRuHu/KangFuRuHuDetail'], resolve),
@@ -69,22 +88,22 @@ export default new Router({
         //辅具评估
         path: '/FuJuPingGuHome',
         component: resolve => require(['FuJuPingGu/FuJuPingGuHome'], resolve),
-        meta: { navShow: true, role: [1, 2] },
+        meta: { navShow: true, role: [1, 2, 12] },
     }, {
         //机构评估
         path: '/JiGouPingGuHome',
         component: resolve => require(['JiGouPingGu/JiGouPingGuHome'], resolve),
-        meta: { navShow: true, role: [3, 4, 5, 6, 7, 8, 9, 10, 11] },
+        meta: { navShow: true, role: [3, 4, 5, 6, 7, 8, 9, 12] },
     }, {
         //综合康复
         path: '/ZongHeKangFuHome',
         component: resolve => require(['ZongHeKangFu/ZongHeKangFuHome'], resolve),
-        meta: { navShow: true, role: [3, 4, 5, 6, 7, 8, 9, 10, 11] },
+        meta: { navShow: true, role: [10, 11, 12] },
     }, {
         //服务回访
         path: '/FuWuHuiFangHome',
         component: resolve => require(['FuWuHuiFang/FuWuHuiFangHome'], resolve),
-        meta: { navShow: true, role: [1, 2] },
+        meta: { navShow: true, role: [1, 2, 12] },
     }, {
         //我
         path: '/profile',

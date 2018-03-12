@@ -120,29 +120,45 @@ export default {
       this.list = list;
 
       switch (this.name) {
+        //辅具评估
         case "FuJuPingGu":
           this.link = "ExamDetail";
           break;
+        //假肢矫形器评估
         case "JiaZhiJiaoXingQi":
           this.link = "ExamDetail";
           break;
+        //无障碍改造
         case "WuZhangAiGaiZao":
           this.link = "ExamDetail";
           break;
+        //辅具审核
         case "FuJuShenHe":
           this.link = "ExamAudit";
           break;
+        //假肢矫形器审核
         case "JiaZhiJiaoXingQiShenHe":
           this.link = "ExamAudit";
           break;
+        //无障碍审核
         case "WuZhangAiShenHe":
           this.link = "ExamAudit";
           break;
+        //辅具服务回访
+        case "FuJuFuWuHuiFang":
+          this.link = "AssistVisit";
+          break;
+        //辅具回访
         case "FuJuFuWu":
           this.link = "AssistService";
           break;
-        case "FuJuFuWuHuiFang":
-          this.link = "AssistVisit";
+        //机构评估
+        case "JiGouPingGu":
+          this.link = "JiGou";
+          break;
+        //康复服务
+        case "KangFuFuWu":
+          this.link = "FuWu";
           break;
         default:
           break;

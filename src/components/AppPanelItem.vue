@@ -12,7 +12,7 @@
       <span v-if="item.State===0" style="color: #5bc0de">待评估</span>
       <span v-if="item.State===1" style="color: #127e9e">已评估</span>
       <span v-if="item.State===2" style="color: #09BB07">待审核</span>
-      <span v-if="item.State===3" style="color: #078006">已审核</span>
+      <span v-if="item.State===3" style="color: #078006">待完成</span>
       <span v-if="item.State===4" style="color: #078006">已完成</span>
     </div>
     <span v-if="isLink || !!link" class="weui-cell__ft"></span>

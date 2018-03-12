@@ -6,33 +6,25 @@
             <img :src="user.img">
             <img class="imageUpload" src="../assets/icon/imageUpload.png">
           </div>
-          <p>{{user.name}}</p>
+          <!-- <p>{{user.name}}</p> -->
           <div class="paddingbottom"></div>
           <input type="file" accept="image" @change="imageChange" v-show="false" ref="file">
 			</group>
       <group title="个人信息">
-        <x-input title="姓名" v-model="user.name" text-align="right" ref="cn"></x-input>
-        <x-input title="手机号" v-model="user.phone" text-align="right" ref="cp"></x-input>
+        <x-input title="登录名" v-model="user.name" placeholder="请填写登录名" text-align="right" ref="run"></x-input>
+        <x-input title="密码" v-model="user.password" placeholder="请填写密码" text-align="right" ref="rpw" type="password"></x-input>
+        <x-input title="真实名" v-model="user.realname" placeholder="请填写真实名" text-align="right" ref="rrn"></x-input>
+        <x-input title="手机号" v-model="user.phone" placeholder="请填写手机号" text-align="right" ref="rp"></x-input>
       </group>
-      <!-- <group title="角色与区域">
-        <cell title="角色">管理员</cell>
-        <cell title="区域">江苏省-徐州市-铜山区</cell>
-      </group>
-      <group title="参与者权限">
-        <checklist v-model="user.Roles" :options="Roles" label-position="left"></checklist>
-      </group> -->
-      	<group title="角色">
-				<cell title="角色">{{role.name}}</cell>
-			</group>
-			<group title="描述">
-				<cell value-align="left">{{role.description}}</cell>
-      </group>
-      <group title="职责">
-				<cell value-align="left">{{role.duty}}</cell>
+       <group title="参与者权限">
+        <checklist v-model="user.Roles" :max="1" :options="Roles" label-position="left"></checklist>
       </group>
 		</div>
     <div style="padding: 15px;">
-      <x-button type="primary" @click.native="submit">保存</x-button>
+      <x-button type="primary" @click.native="submit">注册</x-button>
+      <div style="text-align:center;">
+      <a href="#/login">登录</a>
+      </div>
     </div>
   </div>
 </template>
@@ -54,10 +46,11 @@ export default {
       IsEdit: false,
       Roles: [],
       user: {
-        id: "",
         name: "",
+        password: "",
+        realname: "",
         phone: "",
-        //Roles: [1, 2],
+        Roles: [],
         img: require("@/assets/icon/avatar-male.png")
       },
       role: {
@@ -75,26 +68,16 @@ export default {
   },
   methods: {
     initData() {
-      const userKey = localStorage.getItem("loginUserBaseInfo");
-      var obj = JSON.parse(userKey);
-      this.$api.getUser(obj.I).then(r => {
-        this.user.id = r.ID;
-        //用户姓名
-        this.user.name = r.RealName;
-        //用户电话
-        this.user.phone = r.Phone;
-        //头像
-        if (r.Img != "") {
-          this.user.img = r.Img;
+      this.$api.getRoles({ forFuJuShangMen: true }).then(res => {
+        //this.Roles = res;
+        for (let i = 0; i < res.length; i++) {
+          if (i < 2) {
+            this.Roles.push(res[i]);
+          } else {
+            break;
+          }
         }
-        //用户角色
-        this.$api.getRole(r.RoleID).then(r => {
-          this.role.name = r.RoleName;
-          this.role.description = r.Description;
-          this.role.duty = r.Duty;
-        });
       });
-      //this.$api.getRoles({forFuJuShangMen:true}).then(res => { this.Roles = res })
     },
     imageChoose() {
       this.$refs.file.click();
@@ -130,39 +113,62 @@ export default {
     async submit() {
       var msg = "";
       if (true) {
-        if (this.$refs.cn.value === "") {
-          msg = this.$refs.cn.title + "必填哦";
+        //登录名
+        if (this.user.name === "") {
+          msg = this.$refs.run.title + "必填哦";
         } else {
-          if (this.$refs.cp.value === "") {
-            msg = this.$refs.cp.title + "必填哦";
+          if (this.user.password === "") {
+            //密码
+            msg = this.$refs.rpw.title + "必填哦";
           } else {
-            var reg = /^[1][3,4,5,7,8][0-9]{9}$/;
-            if (!reg.test(this.$refs.cp.value)) {
-              msg = this.$refs.cp.title + "格式不正确";
+            if (this.user.realname === "") {
+              //真实姓名
+              msg = this.$refs.rrn.title + "必填哦";
             } else {
-              let list = await this.$http.get("Users");
-              for (let i = 0; i < list.length; i++) {
-                if (
-                  list[i].Phone === this.$refs.cp.value &&
-                  list[i].ID != this.user.id
-                ) {
-                  msg = this.$refs.cp.title + "已存在！";
+              //手机号
+              if (this.user.phone === "") {
+                msg = this.$refs.rp.title + "必填哦";
+              } else {
+                var reg = /^[1][3,4,5,7,8][0-9]{9}$/;
+                if (!reg.test(this.user.phone)) {
+                  msg = this.$refs.rp.title + "格式不正确";
+                } else {
+                  let list = await this.$http.get("Users");
+                  for (let i = 0; i < list.length; i++) {
+                    if (
+                      list[i].Phone === this.user.phone &&
+                      list[i].ID != this.user.id
+                    ) {
+                      msg = this.$refs.rp.title + "已存在！";
+                    }
+                  }
                 }
               }
             }
           }
         }
+        if (msg === "") {
+          if (this.user.Roles.length === 0) {
+            msg = "请选择用户权限！";
+          }
+        }
       }
       if (msg === "") {
-        // var newUser = {
-        //   ID: this.user.id,
-        //   RealName: this.$refs.cn.value,
-        //   phone: this.$refs.cp.value,
-        //   Img: this.user.img
-        // };
-        this.$http.put("ChangeUser", this.user).then(r => {
-          this.$router.push("/profile");
+        var newUser = {
+          UserName: this.user.name,
+          Password: this.user.password,
+          RealName: this.user.realname,
+          Phone: this.user.phone,
+          RoleID: this.user.Roles[0],
+          Img: this.user.img
+        };
+        this.$http.post("Users", newUser).then(r => {
+          this.$utils.Alert("注册成功");
+          this.$router.push("/login");
         });
+        // this.$http.put("ChangeUser", newUser).then(r => {
+        //   this.$router.push("/profile");
+        // });
       } else {
         this.$utils.Alert("错误", msg);
       }

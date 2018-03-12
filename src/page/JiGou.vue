@@ -10,8 +10,8 @@
       <selector title="残疾类别" v-model="disabled.CategoryID" required :options="Categories" :readonly="IsView"></selector>
       <selector title="残疾等级" v-model="disabled.DegreeID" required :options="Degrees" direction="right" :readonly="IsView"></selector>
       <datetime title="致残时间" v-model="disabled.data" value-text-align="left" placeholder="请选择致残时间" :disabled="IsView" :readonly="IsView"></datetime>
-      <selector title="致残原因" v-model="disabled.DisabilityReason" required placeholder="请选择致残原因" :options="DisabilityReasons" :readonly="IsView"></selector>
-      <x-input title="民族" v-model="disabled.Nation" :disabled="IsView"></x-input>
+      <selector title="致残原因" v-model="disabled.DisabilityReason" placeholder="请选择致残原因" required :options="DisabilityReasons" :readonly="IsView"></selector>
+      <x-input title="民族" v-model="disabled.Nation" placeholder="请填写民族" :disabled="IsView"></x-input>
       <x-input title="身高" v-model="disabled.Height" :disabled="IsView"></x-input>
       <x-input title="体重" v-model="disabled.Weight" :disabled="IsView"></x-input>
       <x-input title="联系电话" v-model="disabled.Tel" :disabled="IsView"></x-input>

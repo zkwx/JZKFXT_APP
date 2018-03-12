@@ -61,6 +61,8 @@ export default {
     showUser() {
       if (this.role < 3) {
         return true;
+      } else if (this.role === 12) {
+        return true;
       } else {
         return false;
       }
@@ -68,12 +70,16 @@ export default {
     showAdmin() {
       if (this.role > 2 && this.role < 10) {
         return true;
+      } else if (this.role === 12) {
+        return true;
       } else {
         return false;
       }
     },
     showfeel() {
       if (this.role > 9) {
+        return true;
+      } else if (this.role === 12) {
         return true;
       } else {
         return false;

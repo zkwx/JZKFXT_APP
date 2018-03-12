@@ -97,8 +97,8 @@ export default {
         this.user.phone = r.Phone;
         this.user.roleID = r.RoleID;
         //头像
-        if (r.Other != "") {
-          this.user.img = r.Other;
+        if (r.Img != "") {
+          this.user.img = r.Img;
         }
         //用户角色
         this.$api.getRole(this.user.roleID).then(r => {
