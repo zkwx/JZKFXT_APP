@@ -59,7 +59,7 @@ export default {
   },
   computed: {
     showUser() {
-      if (this.role < 3) {
+      if (this.role > 0 && this.role < 3) {
         return true;
       } else if (this.role === 12) {
         return true;
@@ -77,7 +77,7 @@ export default {
       }
     },
     showfeel() {
-      if (this.role > 9) {
+      if (this.role > 9 && this.role < 12) {
         return true;
       } else if (this.role === 12) {
         return true;

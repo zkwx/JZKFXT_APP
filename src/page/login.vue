@@ -75,7 +75,7 @@ export default {
             };
             localStorage.setItem("loginUserBaseInfo", JSON.stringify(User));
             //若验证成功跳转
-            if (r.RoleID < 3) {
+            if (r.RoleID > 0 && r.RoleID < 3) {
               var redirect = decodeURIComponent(
                 this.$route.query.redirect || "/KangFuRuHuHome"
               );
@@ -83,9 +83,13 @@ export default {
               var redirect = decodeURIComponent(
                 this.$route.query.redirect || "/JiGouPingGuHome"
               );
-            } else {
+            } else if (r.RoleID > 9 && r.RoleID < 12) {
               var redirect = decodeURIComponent(
                 this.$route.query.redirect || "/ZongHeKangFuHome"
+              );
+            } else {
+              var redirect = decodeURIComponent(
+                this.$route.query.redirect || "/KangFuRuHuHome"
               );
             }
 

@@ -9,7 +9,7 @@
       <x-input title="年龄" :value="age" disabled></x-input>
       <selector title="残疾类别" v-model="disabled.CategoryID" required :options="Categories" :readonly="IsView"></selector>
       <selector title="残疾等级" v-model="disabled.DegreeID" required :options="Degrees" direction="right" :readonly="IsView"></selector>
-      <datetime title="致残时间" v-model="disabled.data" value-text-align="left" placeholder="请选择致残时间" :disabled="IsView" :readonly="IsView"></datetime>
+      <datetime title="致残时间" v-model="disabled.data" :end-date="endDate" value-text-align="left" placeholder="请选择致残时间" :disabled="IsView" :readonly="IsView"></datetime>
       <selector title="致残原因" v-model="disabled.DisabilityReason" required placeholder="请选择致残原因" :options="DisabilityReasons" :readonly="IsView"></selector>
       <x-input title="民族" v-model="disabled.Nation" :disabled="IsView"></x-input>
       <x-input title="身高" v-model="disabled.Height" :disabled="IsView"></x-input>
@@ -166,6 +166,7 @@ export default {
       assistiveName: [], //筛选之后的辅具名称(用来选择)
       assistiveChange: [], //筛选之后的辅具集合
       currentValue: [], //辅具选择
+      endDate: "", //致残时间 最大选择时间
       disabled: {
         ID: null,
         Name: "",
@@ -206,6 +207,14 @@ export default {
         this.loadAssistiveDevices();
         this.loadCheckAssistive();
       }
+      //致残时间  最大选择时间(当前时间)
+      var date = new Date();
+      var y = date.getFullYear();
+      var m = date.getMonth() + 1;
+      m = m < 10 ? "0" + m : m;
+      var d = date.getDate();
+      d = d < 10 ? "0" + d : d;
+      this.endDate = y + "-" + m + "-" + d;
     },
     //地址
     async getDisabled(ID) {
