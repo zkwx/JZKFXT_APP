@@ -17,6 +17,7 @@
 import AppPanel from "@/components/AppPanel";
 
 import { XHeader, Tab, TabItem, Swiper, SwiperItem, Sticky, Group } from "vux";
+import { log } from "util";
 export default {
   name: "FuJuPingGuHome",
   components: {
@@ -54,6 +55,7 @@ export default {
         { name: "矫形器" }
       ],
       wuZhangAiTabs: [{ name: "无障碍改造" }],
+      userTabs: [{ name: "用户管理" }],
       list: {},
       link: "",
       clientHeight: "",
@@ -80,6 +82,8 @@ export default {
         case "wuZhangAiTabs":
           this.tabs = this.wuZhangAiTabs;
           break;
+        case "userTabs":
+          this.tabs = this.userTabs;
         default:
           break;
       }

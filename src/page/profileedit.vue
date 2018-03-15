@@ -12,7 +12,9 @@
 			</group>
       <group title="个人信息">
         <x-input title="姓名" v-model="user.name" text-align="right" ref="cn"></x-input>
+         <selector title="性别" v-model="user.sex" ref="Sex" :options="Sexlist"></selector>
         <x-input title="手机号" v-model="user.phone" text-align="right" ref="cp"></x-input>
+        <x-input title="身份证号" v-model="user.idNumber" text-align="right" ref="cin"></x-input>
       </group>
       <!-- <group title="角色与区域">
         <cell title="角色">管理员</cell>
@@ -21,15 +23,9 @@
       <group title="参与者权限">
         <checklist v-model="user.Roles" :options="Roles" label-position="left"></checklist>
       </group> -->
-      	<group title="角色">
+      	<!-- <group title="角色">
 				<cell title="角色">{{role.name}}</cell>
-			</group>
-			<group title="描述">
-				<cell value-align="left">{{role.description}}</cell>
-      </group>
-      <group title="职责">
-				<cell value-align="left">{{role.duty}}</cell>
-      </group>
+			</group> -->
 		</div>
     <div style="padding: 15px;">
       <x-button type="primary" @click.native="submit">保存</x-button>
@@ -38,7 +34,7 @@
 </template>
 
 <script>
-import { XHeader, Group, XInput, Cell, Checklist, XButton } from "vux";
+import { XHeader, Group, XInput, Cell, Checklist, XButton,Selector } from "vux";
 export default {
   name: "profile",
   components: {
@@ -47,16 +43,20 @@ export default {
     XInput,
     Cell,
     Checklist,
-    XButton
+    XButton,
+    Selector
   },
   data() {
     return {
       IsEdit: false,
       Roles: [],
+      Sexlist: [{ key: 1, value: "男" }, { key: 2, value: "女" }],
       user: {
         id: "",
         name: "",
         phone: "",
+        sex: null,
+        idNumber: "",
         //Roles: [1, 2],
         img: require("@/assets/icon/avatar-male.png")
       },
@@ -77,12 +77,15 @@ export default {
     initData() {
       const userKey = localStorage.getItem("loginUserBaseInfo");
       var obj = JSON.parse(userKey);
-      this.$api.getUser(obj.I).then(r => {
+      var uid = obj.I;
+      this.$api.getUser(uid).then(r => {
         this.user.id = r.ID;
         //用户姓名
         this.user.name = r.RealName;
         //用户电话
         this.user.phone = r.Phone;
+        this.user.sex = r.Sex;
+        this.user.idNumber = r.IDNumber;
         //头像
         if (r.Img != "") {
           this.user.img = r.Img;

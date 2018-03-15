@@ -9,9 +9,9 @@
 			<x-button type="primary" @click="submit">登录</x-button>
             </group>
 		</form>
-    <div style="text-align:center;">
+    <!-- <div style="text-align:center;">
     <a href="#/register">没有账号?点击注册</a>
-  </div>
+  </div> -->
 	</div>
 </div>
 </template>

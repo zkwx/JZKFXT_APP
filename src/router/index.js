@@ -14,10 +14,12 @@ export default new Router({
     }, {
         path: '/login',
         component: resolve => require(['page/login'], resolve)
-    }, {
-        path: '/register',
-        component: resolve => require(['page/register'], resolve)
-    }, {
+    },
+    // {
+    //     path: '/register',
+    //     component: resolve => require(['page/register'], resolve)
+    // }, 
+    {
         path: '/sign',
         component: resolve => require(['@/components/AppSign'], resolve),
     }, {
@@ -112,7 +114,19 @@ export default new Router({
     }, {
         path: '/profile/edit',
         component: resolve => require(['page/profileedit'], resolve),
+    }, {
+        path: '/profile/all',
+        component: resolve => require(['page/profileall'], resolve),
+    }, {
+        path: '/profileDetail',
+        component: resolve => require(['page/profileDetail'], resolve),
+    }, {
+        path: '/profile/profileDetail',
+        component: resolve => require(['page/profileDetail'], resolve),
+    }, {
+        path: '/profileDetail/:userID',
+        component: resolve => require(['page/profileDetail'], resolve),
+        props: true
     },
-
     ]
 });

@@ -7,6 +7,7 @@
           </div>
 					<p>{{user.name}}</p>
           <p>{{user.phone}}</p>
+           <router-link to="/profile/all" class="guan" v-show="all">管理</router-link>
           <router-link to="/profile/edit" class="edit">设置</router-link>
 					<flexbox :gutter="0" class="infos-flex">
 						<flexbox-item class="infos-flex-item vux-1px-r">
@@ -141,7 +142,15 @@ export default {
       // });
     }
   },
-  computed: {},
+  computed: {
+    all() {
+      if (this.user.roleID === 12) {
+        return true;
+      } else {
+        return false;
+      }
+    }
+  },
   watch: {}
 };
 </script>
@@ -184,6 +193,12 @@ img {
   position: absolute;
   top: 12px;
   right: 12px;
+}
+.me .guan {
+  color: #09bb07;
+  position: absolute;
+  top: 12px;
+  right: 50px;
 }
 .me .infos-flex-item {
   display: -webkit-flex;

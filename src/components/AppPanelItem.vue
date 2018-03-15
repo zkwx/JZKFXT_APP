@@ -1,11 +1,20 @@
 <template>
   <div class="weui-media-box weui-media-box_appmsg weui-cell_access" @click="isLink?onClick():null">
-    <div class="weui-media-box__hd">
-      <img :src="item.Sex===1?avatar.male:avatar.female" alt="" class="weui-media-box__thumb">
+    <div class="weui-media-box__hd" v-if="type!='user'">
+      <img :src="item.Img!=''?item.Img:item.Sex===1?avatar.male:avatar.female" alt="" class="weui-media-box__thumb">
     </div>
-    <div class="weui-media-box__bd">
+    <div class="weui-media-box__bd" v-if="type!='user'">
       <span class="weui-media-box__title">{{item.Name}}<img class="icon" :src="item.Sex===1?sex.male:sex.female"/></span>
       <p class="weui-media-box__desc">{{item.Category}}-{{item.Degree}}<br></p>
+    </div>
+     <div class="weui-media-box__hd" v-if="type==='user'">
+      <img :src="item.Img!=''?item.Img:item.Sex===1?avatar.male:avatar.female" alt="" class="weui-media-box__thumb">
+    </div>
+    <div class="weui-media-box__bd" v-if="type==='user'">
+      <span class="weui-media-box__title">{{item.RealName}}
+        <img class="icon" :src="item.Sex===1?sex.male:sex.female"/>
+        </span>
+      <p class="weui-media-box__desc">联系方式 - {{item.Phone}}<br></p>
     </div>
     <div v-if="type==='exam'">
       <span><img class="cell-icon" :src="exam"/>{{item.Exam.Name}}</span>
@@ -19,40 +28,40 @@
   </div>
 </template>
 <script>
-  import { Panel } from 'vux'
-  export default {
-    name: 'AppPanel',
-    components: {
-      Panel
+import { Panel } from "vux";
+export default {
+  name: "AppPanel",
+  components: {
+    Panel
+  },
+  props: {
+    item: Object,
+    type: String,
+    isLink: Boolean,
+    link: String
+  },
+  data() {
+    return {
+      sex: {
+        male: require("@/assets/icon/male.png"),
+        female: require("@/assets/icon/female.png")
+      },
+      avatar: {
+        male: require("@/assets/icon/avatar-male.png"),
+        female: require("@/assets/icon/avatar-female.png")
+      },
+      exam: require("@/assets/icon/exam.png")
+    };
+  },
+  methods: {
+    onClick() {
+      this.$router.push(this.link);
     },
-    props: {
-      item: Object,
-      type: String,
-      isLink:Boolean,
-      link: String,
-    },
-    data(){
-      return{
-        sex:{
-          male:require("@/assets/icon/male.png"),
-          female:require("@/assets/icon/female.png"),
-        },
-        avatar:{
-          male:require("@/assets/icon/avatar-male.png"),
-          female:require("@/assets/icon/avatar-female.png"),
-        },
-        exam:require("@/assets/icon/exam.png"),
-      }
-    },
-    methods:{
-      onClick () {
-        this.$router.push(this.link)
-      }
-    }
   }
+};
 </script>
 <style scoped>
-span{
+span {
   font-weight: bold;
 }
 </style>

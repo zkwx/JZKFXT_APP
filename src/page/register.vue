@@ -11,10 +11,12 @@
           <input type="file" accept="image" @change="imageChange" v-show="false" ref="file">
 			</group>
       <group title="个人信息">
-        <x-input title="登录名" v-model="user.name" placeholder="请填写登录名" text-align="right" ref="run"></x-input>
-        <x-input title="密码" v-model="user.password" placeholder="请填写密码" text-align="right" ref="rpw" type="password"></x-input>
-        <x-input title="真实名" v-model="user.realname" placeholder="请填写真实名" text-align="right" ref="rrn"></x-input>
-        <x-input title="手机号" v-model="user.phone" placeholder="请填写手机号" text-align="right" ref="rp"></x-input>
+        <x-input title="登录名" v-model="user.name" placeholder="请填写登录名" text-align="right" ref="run" required></x-input>
+        <x-input title="密码" v-model="user.password" placeholder="请填写密码" text-align="right" ref="rpw" type="password" required></x-input>
+        <x-input title="真实名" v-model="user.realname" placeholder="请填写真实名" text-align="right" ref="rrn" required></x-input>
+        <selector title="性别" placeholder="请选择性别" v-model="user.Sex" required ref="Sex" :options="Sexlist"></selector>
+        <x-input title="手机号" v-model="user.phone" placeholder="请填写手机号" text-align="right" ref="rp" required></x-input>
+         <x-input title="身份证号" v-model="user.idNumber" placeholder="请填写身份证号" text-align="right" ref="rin" required></x-input>
       </group>
        <group title="参与者权限">
         <checklist v-model="user.Roles" :max="1" :options="Roles" label-position="left"></checklist>
@@ -30,7 +32,15 @@
 </template>
 
 <script>
-import { XHeader, Group, XInput, Cell, Checklist, XButton } from "vux";
+import {
+  XHeader,
+  Group,
+  XInput,
+  Cell,
+  Checklist,
+  XButton,
+  Selector
+} from "vux";
 export default {
   name: "profile",
   components: {
@@ -39,18 +49,22 @@ export default {
     XInput,
     Cell,
     Checklist,
-    XButton
+    XButton,
+    Selector
   },
   data() {
     return {
       IsEdit: false,
       Roles: [],
+      Sexlist: [{ key: 1, value: "男" }, { key: 2, value: "女" }],
       user: {
         name: "",
         password: "",
         realname: "",
-        phone: "",
+        sex: null,
+        phone: null,
         Roles: [],
+        idNumber: "",
         img: require("@/assets/icon/avatar-male.png")
       },
       role: {
@@ -117,6 +131,16 @@ export default {
         if (this.user.name.trim() === "") {
           msg = this.$refs.run.title + "必填哦";
         } else {
+          let lis = await this.$http.get("Users");
+          for (let n = 0; n < lis.length; n++) {
+            if (list[i].UserName === this.user.name.trim()) {
+              msg = this.$refs.run.title + "已存在！";
+              break;
+            }
+          }
+        }
+
+        if (msg === "") {
           if (this.user.password.trim() === "") {
             //密码
             msg = this.$refs.rpw.title + "必填哦";
@@ -125,23 +149,44 @@ export default {
               //真实姓名
               msg = this.$refs.rrn.title + "必填哦";
             } else {
-              //手机号
-              if (this.user.phone.trim() === "") {
-                msg = this.$refs.rp.title + "必填哦";
+              if (this.$refs.Sex.getFullValue() == null) {
+                //患者性别
+                msg = this.$refs.Sex.title + "必选哦";
               } else {
-                var reg = /^[1][3,4,5,7,8][0-9]{9}$/;
-                if (!reg.test(this.user.phone)) {
-                  msg = this.$refs.rp.title + "格式不正确";
+                //手机号
+                if (this.user.phone.trim() === "") {
+                  msg = this.$refs.rp.title + "必填哦";
                 } else {
-                  let list = await this.$http.get("Users");
-                  for (let i = 0; i < list.length; i++) {
-                    if (
-                      list[i].Phone === this.user.phone &&
-                      list[i].ID != this.user.id
-                    ) {
-                      msg = this.$refs.rp.title + "已存在！";
+                  var reg = /^[1][3,4,5,7,8][0-9]{9}$/;
+                  if (!reg.test(this.user.phone.trim())) {
+                    msg = this.$refs.rp.title + "格式不正确";
+                  } else {
+                    let list = await this.$http.get("Users");
+                    for (let i = 0; i < list.length; i++) {
+                      if (list[i].Phone === this.user.phone.trim()) {
+                        msg = this.$refs.rp.title + "已存在！";
+                        break;
+                      }
                     }
                   }
+                }
+              }
+            }
+          }
+        }
+        if (msg === "") {
+          if (this.user.idNumber.trim() === "") {
+            msg = this.$refs.rin.title + "必填哦";
+          } else {
+            var rid = /^[1-9]{1}[0-9]{14}$|^[1-9]{1}[0-9]{16}([0-9]|[xX])$/;
+            if (!rid.test(this.user.idNumber.trim())) {
+              msg = this.$refs.rin.title + "格式不正确";
+            } else {
+              let li = await this.$http.get("Users");
+              for (let i = 0; i < li.length; i++) {
+                if (li[i].idNumber === this.user.idNumber) {
+                  msg = this.$refs.rin.title + "已存在！";
+                  break;
                 }
               }
             }
@@ -159,6 +204,8 @@ export default {
           Password: this.user.password,
           RealName: this.user.realname,
           Phone: this.user.phone,
+          Sex: this.user.Sex,
+          idNumber: this.user.idNumber,
           RoleID: this.user.Roles[0],
           Img: this.user.img
         };

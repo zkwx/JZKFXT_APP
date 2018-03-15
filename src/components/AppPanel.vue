@@ -19,69 +19,69 @@
 </div>
 </template>
 <script>
-  import AppPanelItem from '@/components/AppPanelItem'
-  import { Panel,Search } from 'vux'
-  export default {
-    name: 'AppPanel',
-    components: {
-      Panel,
-      Search,
-      AppPanelItem
-    },
-    props: {
-      title: String,
-      list: Array,
-      type: String,
-      isLink: Boolean,
-      link: String,
-      canAdd: Boolean
-    },
-    data(){
-      return{
-        filterList: [],
-        results: [],
-        value: '姓名',
+import AppPanelItem from "@/components/AppPanelItem";
+import { Panel, Search } from "vux";
+export default {
+  name: "AppPanel",
+  components: {
+    Panel,
+    Search,
+    AppPanelItem
+  },
+  props: {
+    title: String,
+    list: Array,
+    type: String,
+    isLink: Boolean,
+    link: String,
+    canAdd: Boolean
+  },
+  data() {
+    return {
+      filterList: [],
+      results: [],
+      value: "姓名"
+    };
+  },
+  created() {},
+  methods: {
+    getLink(item) {
+      let clink = (clink = "/" + this.link + "/" + item.ID);
+      if (this.type === "exam") {
+        clink += "/" + item.Exam.ID + "/" + item.State;
       }
-    },
-    created () {
-      
-    },
-    methods:{
-      getLink(item){
-        let clink=clink='/'+this.link+'/'+item.ID
-        if (this.type==='exam') {
-          clink += '/'+item.Exam.ID+'/'+item.State
-        }
-        return clink
-      },
-      onSearchChange (val) {
-        this.filterList = this.list.filter(v => {
-          return v.Name.indexOf(val) > -1
-        })
-      },
-      onFocus () {
-        console.log('on focus')
-      },
-      onCancel () {
-        this.filterList=this.list
-      },
-      onSubmit () {
-        this.$refs.search.setBlur()
-        
-      },
-    },
-    watch:{
-      list(){
-        this.filterList=this.list
+      if (this.tupe === "user") {
+        link += "/" + item.ID;
       }
+      return clink;
+    },
+    onSearchChange(val) {
+      this.filterList = this.list.filter(v => {
+        return v.Name.indexOf(val) > -1;
+      });
+    },
+    onFocus() {
+      console.log("on focus");
+    },
+    onCancel() {
+      this.filterList = this.list;
+    },
+    onSubmit() {
+      this.$refs.search.setBlur();
+    }
+  },
+  watch: {
+    list() {
+      this.filterList = this.list;
     }
   }
+};
 </script>
 <style scoped>
-.weui-search-bar__add-btn{
+.weui-search-bar__add-btn {
   margin-left: 10px;
   line-height: 28px;
-  color: #09BB07;
+  color: #09bb07;
   white-space: nowrap;
 }
 </style>
