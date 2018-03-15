@@ -16,14 +16,11 @@
         <x-input title="手机号" v-model="user.phone" text-align="right" ref="cp"></x-input>
         <x-input title="身份证号" v-model="user.idNumber" text-align="right" ref="cin"></x-input>
       </group>
-      <!-- <group title="角色与区域">
-        <cell title="角色">管理员</cell>
-        <cell title="区域">江苏省-徐州市-铜山区</cell>
-      </group>
+      <!-- 
       <group title="参与者权限">
         <checklist v-model="user.Roles" :options="Roles" label-position="left"></checklist>
-      </group> -->
-      	<!-- <group title="角色">
+      </group>  
+      <group title="角色">
 				<cell title="角色">{{role.name}}</cell>
 			</group> -->
 		</div>
