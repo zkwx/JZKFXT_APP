@@ -1,7 +1,7 @@
 <template>
   <div class="weui-media-box weui-media-box_appmsg weui-cell_access" @click="isLink?onClick():null">
     <div class="weui-media-box__hd" v-if="type!='user'">
-      <img :src="item.Img!=''?item.Img:item.Sex===1?avatar.male:avatar.female" alt="" class="weui-media-box__thumb">
+      <img :src="item.Sex===1?avatar.male:avatar.female" alt="" class="weui-media-box__thumb">
     </div>
     <div class="weui-media-box__bd" v-if="type!='user'">
       <span class="weui-media-box__title">{{item.Name}}<img class="icon" :src="item.Sex===1?sex.male:sex.female"/></span>

@@ -11,7 +11,7 @@
           <input type="file" accept="image" @change="imageChange" v-show="false" ref="file">
 			</group>
       <group title="个人信息">
-        <x-input title="登录名" v-model="user.userName" text-align="right" ref="cun"></x-input>
+        <x-input title="登录名" v-model="user.userName" text-align="right" ref="cun" :readonly="!IsEdit"></x-input>
          <x-input title="密码" v-model="user.password" text-align="right" ref="cpw" v-show="isView"></x-input>
         <x-input title="姓名" v-model="user.realName" text-align="right" ref="crn"></x-input>
        <selector title="性别" placeholder="请选择性别" v-model="user.sex" required ref="Sex" :options="Sexlist"></selector>
@@ -111,6 +111,7 @@ export default {
           this.Roles = res;
         });
       } else {
+        this.IsEdit = true;
         this.isView = true;
         this.$api.getRoles({ forFuJuShangMen: true }).then(res => {
           this.Roles = res;
