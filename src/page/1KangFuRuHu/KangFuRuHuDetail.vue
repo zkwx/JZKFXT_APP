@@ -45,7 +45,7 @@
         </group>
       </group>
       <div style="padding: 0 15px;">
-        <x-button type="primary" @click.native="submit">保存</x-button>
+        <x-button type="primary" @click.native="submit" :disabled="isSave">保存</x-button>
       </div>
     </div>
     <app-sign v-if="sign" :DisabledID="Disabled.ID" @success="successSignCallback" ref="sign"></app-sign>
@@ -83,6 +83,7 @@ export default {
   data() {
     return {
       sign: false,
+      isSave: false,
       Sexlist: [{ key: 1, value: "男" }, { key: 2, value: "女" }],
       RelationshipList: [
         { key: 1, value: "父母" },
@@ -219,6 +220,18 @@ export default {
         });
         r.Disabled_Details = details;
         _this.Disabled = r;
+        this.$api
+          .getExamRecord(
+            "?ExamID=" +
+              _this.Disabled.Categories[0] +
+              "&disabledID=" +
+              _this.Disabled.ID
+          )
+          .then(r => {
+            if (r.State > 0) {
+              this.isSave = true;
+            }
+          });
       });
     },
     change(val, label) {

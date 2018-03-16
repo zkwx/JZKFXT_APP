@@ -57,6 +57,10 @@ export default {
     async getExamRecord(param) {
         return await http.get('ExamRecords/Select' + param)
     },
+    //康复服务修改试卷记录
+    async postExamRecord(param) {
+        return await http.post('ExamRecords/Change' + param)
+    },
     //添加试卷记录
     async addExamRecode(param) {
         return await http.post('ExamRecords', param);

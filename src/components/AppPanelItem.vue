@@ -56,7 +56,7 @@ export default {
   methods: {
     onClick() {
       this.$router.push(this.link);
-    },
+    }
   }
 };
 </script>
