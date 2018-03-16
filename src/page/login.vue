@@ -1,13 +1,18 @@
 <template>
-<div>
-	<div id="login">
+<div :style ="note">
+	<div id="login" >
+  <!-- <img :src="background"> -->
       <h1 style="text-align:center;">精准康复系统</h1>
 		<form v-on:submit.prevent="submit">
             <group label-width="70px" class="loginGroup">
             <x-input title="用户名" v-model="user.UserName" placeholder="请输入你的用户名" ref="UserNameRef" required></x-input>
+             </group>
+              <group label-width="70px" class="loginGroup">
             <x-input title="密码" v-model="user.Password" placeholder="请输入你的密码" type="password" ref="PasswordRef" required></x-input>
-			<x-button type="primary" @click="submit">登录</x-button>
             </group>
+            <group label-width="70px" class="loginGroup">
+            <x-button type="primary" @click="submit">登录</x-button>
+             </group>
 		</form>
     <!-- <div style="text-align:center;">
     <a href="#/register">没有账号?点击注册</a>
@@ -33,6 +38,12 @@ export default {
   },
   data() {
     return {
+      note: {
+        backgroundImage: "url(" + require("@/assets/icon/bg.jpg") + ")",
+        backgroundRepeat: "no-repeat",
+        backgroundSize: "100% 100%",
+        height: "100%"
+      },
       user: {
         UserName: "",
         Password: ""
