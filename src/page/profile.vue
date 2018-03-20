@@ -9,7 +9,7 @@
           <p>{{user.phone}}</p>
            <router-link to="/profile/all" class="guan" v-show="all">管理</router-link>
           <router-link to="/profile/edit" class="edit">设置</router-link>
-					<flexbox :gutter="0" class="infos-flex">
+					<flexbox :gutter="0" class="infos-flex" v-show="isShow">
 						<flexbox-item class="infos-flex-item vux-1px-r">
 							<div>
 								<p>{{disabled.conduct}}</p>
@@ -80,7 +80,8 @@ export default {
         name: "",
         description: "",
         duty: ""
-      }
+      },
+      isShow: false
     };
   },
   created() {
@@ -109,15 +110,17 @@ export default {
         });
       });
       if (role < 3) {
+        this.isShow = true;
         this.disabled.conVal = "进行中患者";
         this.disabled.finVal = "已完成患者";
-      } else if (role > 2 && role < 10) {
-        this.disabled.conVal = "待审核患者";
-        this.disabled.finVal = "已审核患者";
-      } else if (role > 9) {
-        this.disabled.conVal = "待完成患者";
-        this.disabled.finVal = "已完成患者";
       }
+      // else if (role > 2 && role < 10) {
+      //   this.disabled.conVal = "待审核患者";
+      //   this.disabled.finVal = "已审核患者";
+      // } else if (role > 9) {
+      //   this.disabled.conVal = "待完成患者";
+      //   this.disabled.finVal = "已完成患者";
+      // }
       var user = {
         id: id,
         role: role

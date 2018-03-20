@@ -83,5 +83,5 @@ export default {
     //查询用户权限
     async getRole(id) {
         return await http.get('Roles/' + id);
-    }
+    },
 }

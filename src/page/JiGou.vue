@@ -2,17 +2,17 @@
   <div>
     <div v-if="!sign">
       <group title="康复人员信息登记表" label-width="7em" label-margin-right="1em" >
-        <x-input title="姓名" v-model="Disabled.Name" required ref="Name"></x-input>
-        <selector title="性别" placeholder="请选择性别" v-model="Disabled.Sex" required ref="Sex" :options="Sexlist"></selector>
-        <x-input title="监护人" v-model="Disabled.Guardian" required ref="Guardian"></x-input>
-        <selector title="与残疾人关系" placeholder="请选择关系" v-model="Disabled.RelationshipID" required ref="RelationshipID" :options="RelationshipList"></selector>
-        <x-input title="联系电话" v-model="Disabled.Tel" required ref="Tel" type="tel" :max="13"></x-input>
-        <x-switch title="有无残疾证" v-model="Disabled.HasCertificate"></x-switch>
-        <x-input title="残疾证号" v-model="Disabled.Certificate" required ref="Certificate" type="number" :min="20" :max="21" v-if="Disabled.HasCertificate"></x-input>
-        <x-input title="身份证号" v-model="Disabled.IDNumber" required ref="IDNumber" type="number" :min="18" :max="18" v-if="!Disabled.HasCertificate"></x-input>
+        <x-input title="姓名" v-model="Disabled.Name" required ref="Name" :readonly="isView"></x-input>
+        <selector title="性别" placeholder="请选择性别" v-model="Disabled.Sex" :readonly="isView" required ref="Sex" :options="Sexlist"></selector>
+        <x-input title="监护人" v-model="Disabled.Guardian" required  :readonly="isView" ref="Guardian"></x-input>
+        <selector title="与残疾人关系" placeholder="请选择关系" :readonly="isView" v-model="Disabled.RelationshipID" required ref="RelationshipID" :options="RelationshipList"></selector>
+        <x-input title="联系电话" v-model="Disabled.Tel" :readonly="isView" required ref="Tel" type="tel" :max="13"></x-input>
+        <x-switch title="有无残疾证" v-model="Disabled.HasCertificate" :disabled="isView"></x-switch>
+        <x-input title="残疾证号" v-model="Disabled.Certificate" :readonly="isView" required ref="Certificate" type="number" :min="20" :max="21" v-if="Disabled.HasCertificate"></x-input>
+        <x-input title="身份证号" v-model="Disabled.IDNumber" :readonly="isView" required ref="IDNumber" type="number" :min="18" :max="18" v-if="!Disabled.HasCertificate"></x-input>
         <x-input title="年龄" :value="age" Disabled ref="Age" :readonly="true"></x-input>
         <checklist title="残疾类别" v-model="Disabled.Categories" required :disabled="!canChoose" ref="Categories" :options="Categories" label-position="left" :max="this.Disabled.CategoryID===7?6:1"></checklist>
-        <x-switch title="有无康复需求" v-model="Disabled.Need"></x-switch>
+        <x-switch title="有无康复需求" v-model="Disabled.Need" :disabled="isView"></x-switch>
       </group>
       <group>
         <group title="视力" v-if="Disabled.Categories.indexOf(1) !== -1" label-width="7em" label-margin-right="2em">
@@ -83,6 +83,7 @@ export default {
   data() {
     return {
       sign: false,
+      isView:true,
       Sexlist: [{ key: 1, value: "男" }, { key: 2, value: "女" }],
       RelationshipList: [
         { key: 1, value: "父母" },
@@ -358,6 +359,8 @@ export default {
       let userKey = localStorage.getItem("loginUserBaseInfo");
       var obj = JSON.parse(userKey);
       //this.Disabled.UserID = obj.I;
+      //审核人
+      let auditor =  obj.I;
       if (!this.Disabled.ID) {
         //选择身份证号后选择的残疾类别和等级
         if (this.Disabled.Categories === []) {
@@ -373,7 +376,7 @@ export default {
         this.Disabled.ID = Disabled.ID;
         this.sign = true;
         this.$utils.Alert("保存成功");
-        _that.$router.push("/KangFuRuHuHome");
+        _that.$router.push("/JiGouPingGuHome");
       } else {
         await this.$http.put("Disableds/" + this.Disabled.ID, this.Disabled);
         this.sign = true;
@@ -381,7 +384,7 @@ export default {
     },
     successSignCallback(response) {
       this.$utils.Alert("保存成功");
-      this.$router.push("/KangFuRuHuHome");
+      this.$router.push("/JiGouPingGuHome");
     }
   },
   computed: {
@@ -395,7 +398,8 @@ export default {
       return age;
     },
     canChoose() {
-      return !this.Disabled.HasCertificate || this.Disabled.CategoryID === 7;
+      // return !this.Disabled.HasCertificate || this.Disabled.CategoryID === 7;
+      return false;
     }
   },
   watch: {

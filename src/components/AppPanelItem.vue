@@ -22,7 +22,17 @@
       <span v-if="item.State===1" style="color: #127e9e">已评估</span>
       <span v-if="item.State===2" style="color: #09BB07">待审核</span>
       <span v-if="item.State===3" style="color: #078006">待完成</span>
-      <span v-if="item.State===4" style="color: #078006">已完成</span>
+      <span v-if="item.State===4" style="color: #078006">待回访</span>
+      <span v-if="item.State===5" style="color: #078006">已完成</span>
+    </div>
+     <div v-if="type==='info'">
+      <span><img class="cell-icon" :src="exam"/>{{this.name}}</span>
+      <span v-if="state===0" style="color: #5bc0de">待评估</span>
+      <span v-if="state===1" style="color: #127e9e">已评估</span>
+      <span v-if="state===2" style="color: #09BB07">待审核</span>
+      <span v-if="state===3" style="color: #078006">待完成</span>
+      <span v-if="state===4" style="color: #078006">待回访</span>
+      <span v-if="state===5" style="color: #078006">已完成</span>
     </div>
     <span v-if="isLink || !!link" class="weui-cell__ft"></span>
   </div>
@@ -50,10 +60,28 @@ export default {
         male: require("@/assets/icon/avatar-male.png"),
         female: require("@/assets/icon/avatar-female.png")
       },
-      exam: require("@/assets/icon/exam.png")
+      exam: require("@/assets/icon/exam.png"),
+      state: null,
+      name: ""
     };
   },
+  created() {
+    this.initData();
+  },
   methods: {
+    initData() {
+      let user = localStorage.getItem("loginUserBaseInfo");
+      var userID = JSON.parse(user).I;
+      let exam = {
+        ExamName: this.item.Category,
+        DisabledID: this.item.ID,
+        userID: userID
+      };
+      this.$http.get("Disableds/Exam", exam).then(r => {
+        this.state = r[0].State;
+        this.name = r[0].Exam.Name;
+      });
+    },
     onClick() {
       this.$router.push(this.link);
     }

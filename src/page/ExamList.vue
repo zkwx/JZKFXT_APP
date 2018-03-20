@@ -152,6 +152,10 @@ export default {
         case "FuJuFuWuHuiFang":
           this.link = "AssistVisit";
           break;
+        //康复服务回访
+        case "KangFuFuWuHuiFang":
+          this.link = "AssistVisit";
+          break;
         //辅具回访
         case "FuJuFuWu":
           this.link = "AssistService";

@@ -581,7 +581,7 @@ export default {
         });
       } else {
         this.$http
-          .put("disableds/" + this.disabled.ID, this.disabled)
+          .put("disableds/" + this.disabled.ID,this.disabled)
           .then(r => {
             let result = r;
             _this.initQuestions();

@@ -172,78 +172,68 @@ export default {
 
     //初始化问题
     async initQuestions() {
+      let ex = JSON.parse(localStorage.getItem("examID"));
+      if (!ex) {
+        localStorage.setItem("examID", JSON.stringify(this.examID));
+      }
+      //let user = JSON.parse(localStorage.getItem("loginUserBaseInfo"));
       //时间差
       let recode = await this.$api.getExamRecord(
         "?ExamID=" + this.examID + "&disabledID=" + this.disabled.ID
       );
-      var date = new Date();
-      let sm;
-      if (recode.FinishTime != null) {
-        sm =
-          parseInt(recode.FinishTime.split("-")[1].replace(/^0+/, "")) +
-          parseInt(recode.FinishTime.split("-")[0]) * 12;
-      }
-      let fm =
-        parseInt(
-          date
-            .toLocaleDateString()
-            .split("/")[1]
-            .replace(/^0+/, "")
-        ) +
-        parseInt(date.toLocaleDateString().split("/")[0]) * 12;
-      let sf = fm - sm;
       let recode1;
       let examId;
-      let vstate;
       let err;
-      if (this.State === "4" && this.examID < 9) {
-        if (sf >= 1 && sf < 6) {
-          examId = 9;
+      let vstate;
+      if (
+        recode.Evaluated === true &&
+        recode.FinishTime != null &&
+        recode.NextID === 2
+      ) {
+        if (this.State === "4" && this.examID < 9) {
+          examId = 11;
           let param = { ExamID: examId, DisabledID: this.disabled.ID };
-          await this.$http
+          recode1 = await this.$http
             .get("ExamRecords/Select", param)
-            .catch(function(response) {
-              if (response instanceof Error) {
-                err = response.message;
-              }
+            .then(r => {
+              vstate = r.State;
             });
-
-          if (err != null) {
-            await this.$api.addExamRecode({
-              ExamID: examId,
-              DisabledID: this.disabled.ID,
-              State: "0"
-            });
+        }
+      } else {
+        var date = new Date();
+        let sm;
+        if (recode.FinishTime != null) {
+          sm =
+            parseInt(recode.FinishTime.split("-")[1].replace(/^0+/, "")) +
+            parseInt(recode.FinishTime.split("-")[0]) * 12;
+        }
+        let fm =
+          parseInt(
+            date
+              .toLocaleDateString()
+              .split("/")[1]
+              .replace(/^0+/, "")
+          ) +
+          parseInt(date.toLocaleDateString().split("/")[0]) * 12;
+        let sf = fm - sm;
+        if (this.State === "4" && this.examID < 9) {
+          if (sf >= 1 && sf < 6) {
+            examId = 9;
+            let param = { ExamID: examId, DisabledID: this.disabled.ID };
+            recode1 = await this.$http
+              .get("ExamRecords/Select", param)
+              .then(r => {
+                vstate = r.State;
+              });
+          } else if (sf >= 6) {
+            examId = 10;
+            let param = { ExamID: examId, DisabledID: this.disabled.ID };
+            recode1 = await this.$http
+              .get("ExamRecords/Select", param)
+              .then(r => {
+                vstate = r.State;
+              });
           }
-
-          recode1 = await this.$api.getExamRecord(
-            "?ExamID=" + examId + "&disabledID=" + this.disabled.ID
-          );
-
-          vstate = recode1.State;
-        } else if (sf >= 6) {
-          examId = 10;
-          let param = { ExamID: examId, DisabledID: this.disabled.ID };
-          await this.$http
-            .get("ExamRecords/Select", param)
-            .catch(function(response) {
-              if (response instanceof Error) {
-                err = response.message;
-              }
-            });
-
-          if (err != null) {
-            await this.$api.addExamRecode({
-              ExamID: examId,
-              DisabledID: this.disabled.ID,
-              State: "0"
-            });
-          }
-
-          recode1 = await this.$api.getExamRecord(
-            "?ExamID=" + examId + "&disabledID=" + this.disabled.ID
-          );
-          vstate = recode1.State;
         }
       }
       await this.bindExams(this.examID);
@@ -768,7 +758,16 @@ export default {
     },
     //查看答案时问题选择的选项
     answerOptions(exam, optionIDs, question, questions, twoOptionIDs) {
-      let currentChecklist = "checklist" + exam.ExamID + exam.QuestionNo;
+      let ex;
+      let qu;
+      if (exam.examID) {
+        ex = exam.examID;
+        qu = exam.questionNo;
+      } else {
+        ex = exam.ExamID;
+        qu = exam.QuestionNo;
+      }
+      let currentChecklist = "checklist" + ex + qu;
       this.$refs[currentChecklist][0].currentValue = optionIDs;
 
       if (question.Type === 4 || question.Type === 3) {
@@ -865,8 +864,15 @@ export default {
         });
       }
       this.$http.post("Answers/SaveAnswers", Answers).then(r => {
-        this.$utils.Alert("提交成功");
-        this.State = "4";
+        let ex = JSON.parse(localStorage.getItem("examID"));
+        let exam = {
+          ExamID: ex,
+          DisabledID: this.disabled.ID
+        };
+        this.$http.post("ExamRecords/ChangeState", exam).then(x => {
+          this.$utils.Alert("提交成功");
+          this.State = "5";
+        });
         this.loadAssistiveDevices(Answers);
         //this.$router.push("/FuJuPingGuHome");
       });

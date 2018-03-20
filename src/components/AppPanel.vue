@@ -49,9 +49,10 @@ export default {
       let clink = (clink = "/" + this.link + "/" + item.ID);
       if (this.type === "exam") {
         clink += "/" + item.Exam.ID + "/" + item.State;
-      }
-      if (this.tupe === "user") {
-        link += "/" + item.ID;
+      } else if (this.type === "user") {
+        clink = "/" + this.link + "/" + item.ID;
+      } else if (this.type === "info") {
+        clink = "/" + this.link + "/" + item.ID;
       }
       return clink;
     },
