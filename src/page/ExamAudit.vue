@@ -34,6 +34,7 @@
             <checklist label-position="left" :options="assistiveName" ref="demoObject" v-model="currentValue" :disabled="IsCheck"></checklist>
         </div>
         <div v-if="!showView">
+        <x-button type="primary"  @click.native="examChange"  :disabled="canAdopt">修改</x-button>
         <x-button type="primary"  @click.native="examNext"  :disabled="canAdopt">通过</x-button>
         <x-button type="primary"  @click.native="examBack" :disabled="canAdopt">未通过</x-button>
         </div>
@@ -156,7 +157,8 @@ export default {
         Email: "",
         Address: null,
         disabled_Details: []
-      }
+      },
+      IsCheck: false
     };
   },
   created() {
@@ -178,6 +180,10 @@ export default {
       if (this.IsView) {
         this.loadAssistiveDevices();
         this.loadCheckAssistive();
+      }
+      //辅具是否可选
+      if (this.State != "1") {
+        this.IsCheck = true;
       }
     },
     //地址
@@ -639,7 +645,7 @@ export default {
             //辅具所有信息
             this.assistiveChange.push(at);
             //辅具名称(用来选择)
-            this.assistiveName.push(at.Name);
+            this.assistiveName.push({ key: at.ID, value: at.Name });
           }
         } else {
           for (const ty in this.assistiveDevices) {
@@ -659,7 +665,7 @@ export default {
                 //辅具所有信息
                 this.assistiveChange.push(at);
                 //辅具名称(用来选择)
-                this.assistiveName.push(at.Name);
+                this.assistiveName.push({ key: at.ID, value: at.Name });
               }
             }
           }
@@ -801,9 +807,9 @@ export default {
           ExamID: this.examID
         });
       } else {
-        for (const name of this.currentValue) {
+        for (const id of this.currentValue) {
           for (const all of this.assistiveChange) {
-            if (name === all.Name) {
+            if (parseInt(id) === all.ID) {
               assistiveAnswer.push({
                 ID: all.ID,
                 Name: all.Name,
@@ -850,6 +856,10 @@ export default {
     pure(obj) {
       return JSON.parse(JSON.stringify(obj));
     },
+    //审核修改
+    examChange() {
+      this.IsCheck = false;
+    },
     //审核未通过
     examBack() {
       let assistive = [];
@@ -867,17 +877,45 @@ export default {
       let Key = localStorage.getItem("loginUserBaseInfo");
       let obj = JSON.parse(Key);
       let uID = obj.I;
+      this.assistiveChange;
+      this.currentValue;
       let assistive = [];
       assistive.push({
         ExamID: this.examID,
         DisabledID: this.disabled.ID,
         Auditor: uID
       });
-      this.$http.put("ExamRecords/Modify", assistive).then(r => {
-        this.$utils.Alert("操作成功", "已通过审核");
-        this.State = "3";
-        this.$router.push("/JiGouPingGuHome");
-      });
+      let assistiveAnswer = [];
+      if (this.assistiveChange.length === 0) {
+        assistiveAnswer.push({
+          DisabledID: this.disabledID,
+          ExamID: this.examID
+        });
+      } else {
+        for (const id of this.currentValue) {
+          for (const all of this.assistiveChange) {
+            if (parseInt(id) === all.ID) {
+              assistiveAnswer.push({
+                ID: all.ID,
+                Name: all.Name,
+                Type: all.Type,
+                DisabledID: this.disabledID,
+                ExamID: this.examID,
+                optionIDs: this.currentValue.join(",")
+              });
+            }
+          }
+        }
+      }
+      this.$http
+        .post("AssistiveAnswers/SaveAnswers", assistiveAnswer)
+        .then(x => {
+          this.$http.put("ExamRecords/Modify", assistive).then(r => {
+            this.$utils.Alert("操作成功", "已通过审核");
+            this.State = "3";
+            this.$router.push("/JiGouPingGuHome");
+          });
+        });
     }
   },
   computed: {
@@ -906,12 +944,6 @@ export default {
     //试卷是否做过
     IsView() {
       if (this.State != "0") {
-        return true;
-      }
-    },
-    //辅具是否可选
-    IsCheck() {
-      if (this.State != "1") {
         return true;
       }
     }

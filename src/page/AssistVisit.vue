@@ -149,6 +149,7 @@ export default {
       this.DisabilityReasons = await this.$api.getDisabilityReasons(2);
       if (this.disabled.ID != null) {
         this.getDisabled(this.disabled.ID);
+        localStorage.removeItem(this.disabled.ID);
       }
       await this.initQuestions();
 
@@ -172,11 +173,6 @@ export default {
 
     //初始化问题
     async initQuestions() {
-      let ex = JSON.parse(localStorage.getItem("examID"));
-      if (!ex) {
-        localStorage.setItem("examID", JSON.stringify(this.examID));
-      }
-      //let user = JSON.parse(localStorage.getItem("loginUserBaseInfo"));
       //时间差
       let recode = await this.$api.getExamRecord(
         "?ExamID=" + this.examID + "&disabledID=" + this.disabled.ID
@@ -217,7 +213,9 @@ export default {
           parseInt(date.toLocaleDateString().split("/")[0]) * 12;
         let sf = fm - sm;
         if (this.State === "4" && this.examID < 9) {
-          if (sf >= 1 && sf < 6) {
+          if (sf < 1) {
+           this.$utils.Alert("操作失败", "未到回访时间");
+          } else if (sf >= 1 && sf < 6) {
             examId = 9;
             let param = { ExamID: examId, DisabledID: this.disabled.ID };
             recode1 = await this.$http
@@ -254,6 +252,12 @@ export default {
           questionNo: "1",
           messages: ""
         });
+
+        let ex = JSON.parse(localStorage.getItem(this.disabled.ID));
+        if (!ex) {
+          debugger;
+          localStorage.setItem(this.disabled.ID, JSON.stringify(this.examID));
+        }
 
         this.$router.push({
           path: "/AssistVisit/" + this.disabled.ID + "/" + examId + "/" + vstate
@@ -864,7 +868,7 @@ export default {
         });
       }
       this.$http.post("Answers/SaveAnswers", Answers).then(r => {
-        let ex = JSON.parse(localStorage.getItem("examID"));
+        let ex = JSON.parse(localStorage.getItem(this.disabled.ID));
         let exam = {
           ExamID: ex,
           DisabledID: this.disabled.ID
@@ -872,6 +876,7 @@ export default {
         this.$http.post("ExamRecords/ChangeState", exam).then(x => {
           this.$utils.Alert("提交成功");
           this.State = "5";
+          localStorage.removeItem(this.disabled.ID);
         });
         this.loadAssistiveDevices(Answers);
         //this.$router.push("/FuJuPingGuHome");

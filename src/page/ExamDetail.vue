@@ -581,7 +581,7 @@ export default {
         });
       } else {
         this.$http
-          .put("disableds/" + this.disabled.ID,this.disabled)
+          .put("disableds/" + this.disabled.ID, this.disabled)
           .then(r => {
             let result = r;
             _this.initQuestions();
@@ -676,7 +676,8 @@ export default {
             //辅具所有信息
             this.assistiveChange.push(at);
             //辅具名称(用来选择)
-            this.assistiveName.push(at.Name);
+            //this.assistiveName.push(at.Name);
+            this.assistiveName.push({ key: at.ID, value: at.Name });
           }
         } else {
           for (const ty in this.assistiveDevices) {
@@ -696,7 +697,8 @@ export default {
                 //辅具所有信息
                 this.assistiveChange.push(at);
                 //辅具名称(用来选择)
-                this.assistiveName.push(at.Name);
+                //this.assistiveName.push(at.Name);
+                 this.assistiveName.push({ key: at.ID, value: at.Name });
               }
             }
           }
@@ -895,9 +897,9 @@ export default {
           ExamID: this.examID
         });
       } else {
-        for (const name of this.currentValue) {
+        for (const id of this.currentValue) {
           for (const all of this.assistiveChange) {
-            if (name === all.Name) {
+            if (parseInt(id) === all.ID) {
               assistiveAnswer.push({
                 ID: all.ID,
                 Name: all.Name,
