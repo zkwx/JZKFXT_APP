@@ -379,9 +379,7 @@ export default {
           this.Disabled.Disabled_Details[i] = null;
         }
       }
-      // let userKey = localStorage.getItem("loginUserBaseInfo");
-      // var obj = JSON.parse(userKey);
-      //this.Disabled.UserID = obj.I;
+
       if (!this.Disabled.ID) {
         //选择身份证号后选择的残疾类别和等级
         if (this.Disabled.Categories === []) {

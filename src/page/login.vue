@@ -85,6 +85,7 @@ export default {
               R: r.RoleID
             };
             localStorage.setItem("loginUserBaseInfo", JSON.stringify(User));
+            //localStorage.setItem(r.ID, JSON.stringify(User));
             //若验证成功跳转
             if (r.RoleID > 0 && r.RoleID < 3) {
               var redirect = decodeURIComponent(
@@ -100,7 +101,7 @@ export default {
               );
             } else {
               var redirect = decodeURIComponent(
-                this.$route.query.redirect || "/KangFuRuHuHome"
+                this.$route.query.redirect || "/KangFuRuHuHome/"
               );
             }
 

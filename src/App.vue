@@ -10,48 +10,47 @@
 </template>
 
 <script>
-  import AppFooter from './components/AppFooter'
-  import { ViewBox } from 'vux'
-  export default {
-    name: 'app',
-    components: {
-      AppFooter,
-      ViewBox
-    },
-    data(){
-      return {
-      }
-    }
+import AppFooter from "./components/AppFooter";
+import { ViewBox } from "vux";
+export default {
+  name: "app",
+  components: {
+    AppFooter,
+    ViewBox
+  },
+  data() {
+    return {};
   }
+};
 </script>
 
 <style lang="less">
-@import '~vux/src/styles/reset.less';
-@import '~vux/src/styles/1px.less';
-@import '~vux/src/styles/close.less';
+@import "~vux/src/styles/reset.less";
+@import "~vux/src/styles/1px.less";
+@import "~vux/src/styles/close.less";
 
 body {
   background-color: #fbf9fe;
 }
 
-html, body {
+html,
+body {
   height: 100%;
   width: 100%;
   overflow-x: hidden;
   color: black;
   font-weight: bold;
-
 }
 .container {
   width: 100%;
   height: 100%;
 }
-.icon{
+.icon {
   width: 1em;
   height: 1em;
-  margin-left:10px;
+  margin-left: 10px;
 }
-.cell-icon{
+.cell-icon {
   width: 24px;
   height: 24px;
   margin-right: 10px;

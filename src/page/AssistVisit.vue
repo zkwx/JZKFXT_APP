@@ -253,7 +253,7 @@ export default {
           messages: ""
         });
 
-        let ex = JSON.parse(localStorage.getItem(this.disabled.ID));
+        let ex = JSON.parse(localStorage.getItem("loginUserBaseInfo"));
         if (!ex) {
           debugger;
           localStorage.setItem(this.disabled.ID, JSON.stringify(this.examID));
@@ -868,7 +868,7 @@ export default {
         });
       }
       this.$http.post("Answers/SaveAnswers", Answers).then(r => {
-        let ex = JSON.parse(localStorage.getItem(this.disabled.ID));
+        let ex = JSON.parse(localStorage.getItem("loginUserBaseInfo"));
         let exam = {
           ExamID: ex,
           DisabledID: this.disabled.ID
