@@ -11,7 +11,7 @@
           <input type="file" accept="image" @change="imageChange" v-show="false" ref="file">
 			</group>
       <group title="个人信息">
-        <x-input title="姓名" v-model="user.name" text-align="right" ref="cn"></x-input>
+        <x-input title="姓名" v-model="user.realName" text-align="right" ref="cn"></x-input>
          <selector title="性别" v-model="user.sex" ref="Sex" :options="Sexlist"></selector>
         <x-input title="手机号" v-model="user.phone" text-align="right" ref="cp"></x-input>
         <x-input title="身份证号" v-model="user.idNumber" text-align="right" ref="cin"></x-input>
@@ -31,7 +31,15 @@
 </template>
 
 <script>
-import { XHeader, Group, XInput, Cell, Checklist, XButton,Selector } from "vux";
+import {
+  XHeader,
+  Group,
+  XInput,
+  Cell,
+  Checklist,
+  XButton,
+  Selector
+} from "vux";
 export default {
   name: "profile",
   components: {
@@ -50,10 +58,11 @@ export default {
       Sexlist: [{ key: 1, value: "男" }, { key: 2, value: "女" }],
       user: {
         id: "",
-        name: "",
+        realName: "",
         phone: "",
         sex: null,
         idNumber: "",
+        roleID: null,
         //Roles: [1, 2],
         img: require("@/assets/icon/avatar-male.png")
       },
@@ -78,11 +87,12 @@ export default {
       this.$api.getUser(uid).then(r => {
         this.user.id = r.ID;
         //用户姓名
-        this.user.name = r.RealName;
+        this.user.realName = r.RealName;
         //用户电话
         this.user.phone = r.Phone;
         this.user.sex = r.Sex;
         this.user.idNumber = r.IDNumber;
+        this.user.roleID = r.RoleID;
         //头像
         if (r.Img != "") {
           this.user.img = r.Img;
@@ -137,7 +147,7 @@ export default {
             msg = this.$refs.cp.title + "必填哦";
           } else {
             var reg = /^[1][3,4,5,7,8][0-9]{9}$/;
-            if (!reg.test(this.$refs.cp.value)) {
+            if (!reg.test(this.$refs.cp.value.trim())) {
               msg = this.$refs.cp.title + "格式不正确";
             } else {
               let list = await this.$http.get("Users");
@@ -147,6 +157,27 @@ export default {
                   list[i].ID != this.user.id
                 ) {
                   msg = this.$refs.cp.title + "已存在！";
+                }
+              }
+            }
+          }
+        }
+        if (msg === "") {
+          //身份证号
+          if (this.$refs.cin.value.trim() === "") {
+            msg = this.$refs.cin.title + "必填哦";
+          } else {
+            var rid = /^[1-9]{1}[0-9]{14}$|^[1-9]{1}[0-9]{16}([0-9]|[xX])$/;
+            if (!rid.test(this.$refs.cin.value.trim())) {
+              msg = this.$refs.cin.title + "格式不正确";
+            } else {
+              let li = await this.$http.get("Users");
+              for (let i = 0; i < li.length; i++) {
+                if (
+                  li[i].IDNumber === this.$refs.cin.value &&
+                  li[i].ID != this.user.id
+                ) {
+                  msg = this.$refs.cin.title + "已存在！";
                 }
               }
             }

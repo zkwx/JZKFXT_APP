@@ -200,17 +200,22 @@ export default {
           }
         }
         if (msg === "") {
-          //身份证号
           if (this.$refs.cin.value.trim() === "") {
             msg = this.$refs.cin.title + "必填哦";
           } else {
-            let li = await this.$http.get("Users");
-            for (let i = 0; i < li.length; i++) {
-              if (
-                li[i].IDNumber === this.$refs.cin.value &&
-                li[i].ID != this.user.id
-              ) {
-                msg = this.$refs.cin.title + "已存在！";
+            var rid = /^[1-9]{1}[0-9]{14}$|^[1-9]{1}[0-9]{16}([0-9]|[xX])$/;
+            if (!rid.test(this.$refs.cin.value.trim())) {
+              msg = this.$refs.cin.title + "格式不正确";
+            } else {
+              let li = await this.$http.get("Users");
+              for (let i = 0; i < li.length; i++) {
+                if (
+                  li[i].idNumber === this.user.idNumber &&
+                  li[i].ID != this.user.id
+                ) {
+                  msg = this.$refs.cin.title + "已存在！";
+                  break;
+                }
               }
             }
           }

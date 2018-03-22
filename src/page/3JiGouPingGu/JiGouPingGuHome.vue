@@ -17,7 +17,7 @@ export default {
   data() {
     return {
       canUse: false,
-      canAdm: false,
+      canAdm: true,
       title: "机构评估与审核",
       menus: [
         {
@@ -58,6 +58,8 @@ export default {
     let role = obj.R;
     if (role === 9) {
       this.canUse = true;
+      this.canAdm = false;
+    } else if (role === 12) {
       this.canAdm = false;
     }
   },
