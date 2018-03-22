@@ -156,8 +156,16 @@ export default {
           if (this.$refs.cun.value.trim() === "") {
             msg = this.$refs.cun.title + "必填哦";
           } else {
-            if (this.$refs.cpw.value.trim() === "") {
-              msg = this.$refs.cpw.title + "必填哦";
+            var n = {
+              UserName: this.$refs.cun.value.trim()
+            };
+            var u = await this.$http.get("User/Name", n);
+            if (u != null) {
+              msg = this.$refs.cun.title + "已存在！";
+            } else {
+              if (this.$refs.cpw.value.trim() === "") {
+                msg = this.$refs.cpw.title + "必填哦";
+              }
             }
           }
         }
