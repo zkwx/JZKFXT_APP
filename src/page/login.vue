@@ -101,7 +101,7 @@ export default {
               );
             } else {
               var redirect = decodeURIComponent(
-                this.$route.query.redirect || "/KangFuRuHuHome/"
+                this.$route.query.redirect || "/KangFuRuHuHome"
               );
             }
 

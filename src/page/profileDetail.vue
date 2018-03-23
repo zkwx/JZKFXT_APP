@@ -12,7 +12,7 @@
 			</group>
       <group title="个人信息">
         <x-input title="登录名" v-model="user.userName" text-align="right" ref="cun" :readonly="!IsEdit"></x-input>
-         <x-input title="密码" v-model="user.password" text-align="right" ref="cpw" v-show="isView"></x-input>
+         <x-input title="密码" type="password" v-model="user.password" text-align="right" ref="cpw" v-show="isView"></x-input>
         <x-input title="姓名" v-model="user.realName" text-align="right" ref="crn"></x-input>
        <selector title="性别" placeholder="请选择性别" v-model="user.sex" required ref="Sex" :options="Sexlist"></selector>
         <x-input title="手机号" v-model="user.phone" text-align="right" ref="cp"></x-input>
@@ -160,8 +160,8 @@ export default {
             var n = {
               UserName: this.$refs.cun.value.trim()
             };
-            var u = await this.$http.get("User/Name", n);
-            if (u != null) {
+            let u = await this.$http.get("User/Name", n);
+            if (u!="true") {
               msg = this.$refs.cun.title + "已存在！";
             } else {
               if (this.$refs.cpw.value.trim() === "") {
