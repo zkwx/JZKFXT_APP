@@ -115,7 +115,8 @@ export default {
       let file = $target.files[0];
       let url = this.getObjectURL(file);
       this.imageUpload(file).then(data => {
-        this.user.img = url;
+        //this.user.img = url;
+        this.user.img = data;
       });
     },
     imageUpload(file) {
