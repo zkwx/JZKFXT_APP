@@ -332,26 +332,29 @@ export default {
                 : this.$refs.Categories.firstError);
           } else {
             var _this = this;
-            this.Disabled.Categories.forEach(function(item, i) {
+            _this.Disabled.Categories.forEach(function(item, i) {
               let detail = _this.Disabled.Disabled_Details[item - 1];
               if (!detail.DegreeID) {
-                msg =
-                  this.$refs.HearingDegreeID.title +
-                  (this.$refs.HearingDegreeID.firstError == null
-                    ? "必填哦"
-                    : this.$refs.HearingDegreeID.firstError);
+                // msg =
+                //   this.$refs.HearingDegreeID.title +
+                //   (this.$refs.HearingDegreeID.firstError == null
+                //     ? "必填哦"
+                //     : this.$refs.HearingDegreeID.firstError);
+                msg = "残疾等级必填！";
               } else if (!detail.RehabilitationID) {
-                msg =
-                  this.$refs.HearingRehabilitationIDs.title +
-                  (this.$refs.HearingRehabilitationIDs.firstError == null
-                    ? "必填哦"
-                    : this.$refs.HearingRehabilitationIDs.firstError);
+                // msg =
+                //   this.$refs.HearingRehabilitationIDs.title +
+                //   (this.$refs.HearingRehabilitationIDs.firstError == null
+                //     ? "必填哦"
+                //     : this.$refs.HearingRehabilitationIDs.firstError);
+                msg = "康复需求必填！";
               } else if (!detail.NextID) {
-                msg =
-                  this.$refs.HearingNextID.title +
-                  (this.$refs.HearingNextID.firstError == null
-                    ? "必填哦"
-                    : this.$refs.HearingNextID.firstError);
+                // msg =
+                //   this.$refs.HearingNextID.title +
+                //   (this.$refs.HearingNextID.firstError == null
+                //     ? "必填哦"
+                //     : this.$refs.HearingNextID.firstError);
+                msg = "服务走向必填！";
               }
             });
           }
@@ -394,6 +397,7 @@ export default {
       }
     },
     successSignCallback(response) {
+      this.$refs.sign.signImage;
       this.$utils.Alert("保存成功");
       this.$router.push("/KangFuRuHuHome");
     }

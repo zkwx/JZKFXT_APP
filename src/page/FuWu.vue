@@ -395,7 +395,7 @@ export default {
         this.Disabled.ID = Disabled.ID;
         this.sign = true;
         this.$utils.Alert("保存成功");
-        _that.$router.push("/KangFuRuHuHome");
+        _that.$router.push("/ZongHeKangFuHome");
       } else {
         await this.$http.put("Disableds/" + this.Disabled.ID, this.Disabled);
         this.sign = true;
@@ -423,7 +423,7 @@ export default {
 
     successSignCallback(response) {
       this.$utils.Alert("保存成功");
-      this.$router.push("/KangFuRuHuHome");
+      this.$router.push("/ZongHeKangFuHome");
     }
   },
   computed: {
