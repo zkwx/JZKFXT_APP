@@ -178,8 +178,8 @@ export default {
         Categories: [],
         Need: true,
         DoorService: "",
-        FirstSign: "",
-        SecondSign: "",
+        DisabledSignUrl: "",
+        UserSignUrl: "",
         UserID: "",
         Disabled_Details: []
       }
@@ -406,24 +406,56 @@ export default {
       let userKey = localStorage.getItem("loginUserBaseInfo");
       var obj = JSON.parse(userKey);
       this.UserID = obj.I;
-      this.$api
-        .postExamRecord(
-          "?ExamID=" +
-            this.Disabled.Categories[0] +
-            "&DisabledID=" +
-            this.Disabled.ID +
-            "&UserID=" +
-            this.UserID
-        )
-        .then(r => {
-          this.$utils.Alert("保存成功");
-           this.$router.push("/ZongHeKangFuHome");
-        });
+
+      var _that = this;
+      //如果未选择，清空后传入后台更新
+      for (let i = 0; i < 6; i++) {
+        if (this.Disabled.Categories.indexOf(i + 1) === -1) {
+          this.Disabled.Disabled_Details[i] = null;
+        }
+      }
+
+      if (!this.Disabled.ID) {
+        //选择身份证号后选择的残疾类别和等级
+        if (this.Disabled.Categories === []) {
+          this.Disabled.Categories = this.$refs.Categories;
+        }
+        if (this.Disabled.CategoryID === null) {
+          this.Disabled.CategoryID = this.$refs.Categories.currentValue[0];
+        }
+        if (this.Disabled.DegreeID === null) {
+          this.Disabled.DegreeID = this.$refs.VisionDegreeID.currentValue;
+        }
+        const Disabled = await this.$http.post("Disableds", this.Disabled);
+        this.Disabled.ID = Disabled.ID;
+        this.sign = true;
+        this.$utils.Alert("保存成功");
+        _that.$router.push("/ZongHeKangFuHome");
+      } else {
+        await this.$http.put("Disableds/" + this.Disabled.ID, this.Disabled);
+        this.sign = true;
+      }
     },
 
-    successSignCallback(response) {
-      this.$utils.Alert("保存成功");
-      this.$router.push("/ZongHeKangFuHome");
+    async successSignCallback(response) {
+      this.Disabled.UserSignUrl = this.$refs.sign.signImage;
+      await this.$http
+        .put("Disableds/" + this.Disabled.ID, this.Disabled)
+        .then(r => {
+          this.$api
+            .postExamRecord(
+              "?ExamID=" +
+                this.Disabled.Categories[0] +
+                "&DisabledID=" +
+                this.Disabled.ID +
+                "&UserID=" +
+                this.UserID
+            )
+            .then(r => {
+              this.$utils.Alert("保存成功");
+              this.$router.push("/ZongHeKangFuHome");
+            });
+        });
     }
   },
   computed: {

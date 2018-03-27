@@ -167,7 +167,7 @@ export default {
         Categories: [],
         Need: true,
         DoorService: "",
-        FirstSign: "",
+        DisabledSignUrl: "",
         SecondSign: "",
         UserID: "",
         Disabled_Details: []
@@ -396,10 +396,21 @@ export default {
         this.sign = true;
       }
     },
-    successSignCallback(response) {
-      this.$refs.sign.signImage;
-      this.$utils.Alert("保存成功");
-      this.$router.push("/KangFuRuHuHome");
+    async successSignCallback(response) {
+      this.Disabled.DisabledSignUrl = this.$refs.sign.signImage;
+      if (!this.Disabled.ID) {
+        await this.$http.post("Disableds", this.Disabled).then(r => {
+          this.$utils.Alert("保存成功");
+          this.$router.push("/KangFuRuHuHome");
+        });
+      } else {
+        await this.$http
+          .put("Disableds/" + this.Disabled.ID, this.Disabled)
+          .then(r => {
+            this.$utils.Alert("保存成功");
+            this.$router.push("/KangFuRuHuHome");
+          });
+      }
     }
   },
   computed: {

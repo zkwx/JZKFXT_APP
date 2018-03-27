@@ -83,7 +83,7 @@ export default {
   data() {
     return {
       sign: false,
-      isView:true,
+      isView: true,
       Sexlist: [{ key: 1, value: "男" }, { key: 2, value: "女" }],
       RelationshipList: [
         { key: 1, value: "父母" },
@@ -167,8 +167,8 @@ export default {
         Categories: [],
         Need: true,
         DoorService: "",
-        FirstSign: "",
-        SecondSign: "",
+        DisabledSignUrl: "",
+        UserSignUrl: "",
         UserID: "",
         Disabled_Details: []
       }
@@ -360,7 +360,7 @@ export default {
       var obj = JSON.parse(userKey);
       //this.Disabled.UserID = obj.I;
       //审核人
-      let auditor =  obj.I;
+      let auditor = obj.I;
       if (!this.Disabled.ID) {
         //选择身份证号后选择的残疾类别和等级
         if (this.Disabled.Categories === []) {
@@ -382,9 +382,14 @@ export default {
         this.sign = true;
       }
     },
-    successSignCallback(response) {
-      this.$utils.Alert("保存成功");
-      this.$router.push("/JiGouPingGuHome");
+    async successSignCallback(response) {
+      this.Disabled.UserSignUrl = this.$refs.sign.signImage;
+      await this.$http
+        .put("Disableds/" + this.Disabled.ID, this.Disabled)
+        .then(r => {
+          this.$utils.Alert("保存成功");
+          this.$router.push("/JiGouPingGuHome");
+        });
     }
   },
   computed: {
