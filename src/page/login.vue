@@ -1,4 +1,5 @@
 <template>
+<div class="login">
 <div :style ="note">
 	<div id="login" >
   <!-- <img :src="background"> -->
@@ -19,10 +20,21 @@
   </div> -->
 	</div>
 </div>
+<div class="foot">
+  <p>西安聚仁汇通医疗科技有限公司</p>
+  <p>陕ICP备18006039号</p>
+</div>
+</div>
 </template>
 <style scoped>
+.login {
+  height: 100%;
+}
 .loginGroup {
   padding: 40px 20px 0 20px;
+}
+.foot{
+  text-align: center;
 }
 </style>
 <script>
