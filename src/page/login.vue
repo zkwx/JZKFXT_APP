@@ -33,7 +33,7 @@
 .loginGroup {
   padding: 40px 20px 0 20px;
 }
-.foot{
+.foot {
   text-align: center;
 }
 </style>
