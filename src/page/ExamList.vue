@@ -44,10 +44,10 @@ export default {
         //{ name: "无障碍" },
         { name: "视力" },
         { name: "听力" },
-        { name: "肢体" },
-        { name: "脑瘫" },
         { name: "偏瘫" },
-        { name: "脊髓损伤" }
+        { name: "脑瘫" },
+        { name: "脊髓" },
+        { name: "肢体" },
       ],
       jiaZhiJiaoXingQiTabs: [
         { name: "长江新里程" },

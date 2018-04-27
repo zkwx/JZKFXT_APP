@@ -31,7 +31,34 @@
       <div>
         <div class="weui-cells__title" id="assistiveType"></div>
         <div>
-            <checklist label-position="left" :options="assistiveName" ref="demoObject" v-model="currentValue" :disabled="IsCheck"></checklist>
+            <!-- <checklist label-position="left" :options="assistiveName" ref="demoObject" v-model="currentValue" :disabled="IsCheck"></checklist> -->
+             <group>
+              <div v-for="(name,assistive) in conditions" :key="assistive">
+                <cell :title='name' is-link :border-intent="false" :arrow-direction="showContent[name] ? 'up' : 'down'" @click.native="showContent[name] = !showContent[name]">
+                  <badge :text='changeNumber(name)'></badge>
+                </cell>
+                <template v-if="showContent[name]">
+                  <div>
+                    <div class="weui-cells weui-cells_checkbox">
+                    <div v-for="(item,assistive) in changeAssistive(name)" :key="assistive">
+                      <label class="weui-cell weui-check_label">
+                          <div class="weui-cell__hd">
+                            <input type="checkbox" class="weui-check" :value="item.key" v-model="currentValue" :disabled="IsCheck">
+                            <i class="weui-icon-checked vux-checklist-icon-checked"></i>
+                          </div>
+                         <div style="width:50%"> 
+                            <img :src="item.img" style="width:100%"/>
+                          </div>
+                          <div class="weui-cell__bd" style="text-align: center;">
+                          <p v-html="item.value"></p>
+                        </div>
+                      </label>
+                  </div>
+                </div>
+               </div>
+                </template>
+              </div>
+            </group>
         </div>
         <div v-if="showView">
            <x-button type="primary" @click.native="finish" :disabled="!showView">完成</x-button>
@@ -63,7 +90,10 @@ import {
   Divider,
   Flexbox,
   FlexboxItem,
-  XTable
+  XTable,
+  Cell,
+  CellBox,
+  Badge
 } from "vux";
 export default {
   name: "FuJuPingGuDetail",
@@ -88,7 +118,10 @@ export default {
     Flexbox,
     FlexboxItem,
     XTable,
-    AppChecklist
+    AppChecklist,
+    Cell,
+    CellBox,
+    Badge
   },
   props: {
     disabledID: String,
@@ -134,6 +167,10 @@ export default {
       assistiveName: [], //筛选之后的辅具名称(用来选择)
       assistiveChange: [], //筛选之后的辅具集合
       currentValue: [], //辅具选择
+      num: 0,
+      showContent: {},
+      img: require("@/assets/icon/暂无图片.jpg"),
+      image: "",
       disabled: {
         ID: null,
         Name: "",
@@ -171,8 +208,11 @@ export default {
       await this.initQuestions();
 
       if (this.IsView) {
-        this.loadAssistiveDevices();
-        this.loadCheckAssistive();
+        await this.loadAssistiveDevices();
+        await this.loadCheckAssistive();
+        for (let i = 0; i < this.conditions.length; i++) {
+          this.changeNumber(this.conditions[i]);
+        }
       }
     },
     //地址
@@ -399,114 +439,6 @@ export default {
         }
       }
     },
-    //上一题
-    Previous() {
-      const question = this.getCurrentQuestion();
-      const checklist = this.getCurrentChecklist();
-      question.show = false;
-      checklist.currentValue = [];
-      let index = 0;
-      this.questionManager.questionsFlow.splice(
-        this.questionManager.currentQuestionsFlowIndex,
-        this.questionManager.questionsFlow.length -
-          this.questionManager.currentQuestionsFlowIndex
-      );
-      this.questionManager.currentQuestionsFlowIndex--;
-      const questionPrevious = this.getCurrentQuestion();
-      questionPrevious.show = true;
-    },
-    //下一题
-    async ToNext() {
-      const exam = this.getCurrentExam();
-      const checklist = this.getCurrentChecklist();
-      const question = this.getCurrentQuestion();
-      for (const optionID of checklist.currentValue) {
-        const option = question.QueryOptions[optionID];
-        const NextQuestionNo = option.NextQuestionNo;
-        //从一张试卷跳到另一张试卷
-        if (option.NextExamID != 0) {
-          if (option.NextExamID != parseInt(exam.examID)) {
-            //当前试卷试题
-            const questions = this.exams[exam.examID];
-
-            //原试卷剩余的问题
-            for (const i in questions) {
-              if (questions[i].QuestionNo > question.QuestionNo) {
-                this.questionManager.questionLast.push({
-                  examID: exam.examID,
-                  questionNo: questions[i].QuestionNo,
-                  messages: checklist.messages
-                });
-              }
-            }
-            question.show = false;
-            //根据试卷ID查找问题
-            await this.bindExams(option.NextExamID);
-            //新试卷的第一题
-            const first = this.exams[option.NextExamID][1];
-            //跳转到新试卷的第一题
-            NextQuestionNo = first.QuestionNo;
-          }
-        }
-        //跳回原试卷
-        if (question.Type != 4 && NextQuestionNo === null) {
-          if (this.State === "0") {
-            if (this.questionManager.questionLast.length > 0) {
-              option.NextExamID = parseInt(this.examID);
-              NextQuestionNo = this.questionManager.questionLast[0].questionNo;
-              this.questionManager.questionLast = [];
-            }
-          }
-        }
-        if (question.Type != 4 && NextQuestionNo) {
-          if (this.State === "0") {
-            //多选题两个选项跳同一个题目时
-            if (
-              this.questionManager.questionsFlow[
-                this.questionManager.questionsFlow.length - 1
-              ].questionNo != NextQuestionNo
-            ) {
-              if (option.NextExamID != 0) {
-                this.questionManager.questionsFlow.push({
-                  examID: option.NextExamID.toString(),
-                  questionNo: NextQuestionNo,
-                  messages: checklist.messages
-                });
-              } else {
-                this.questionManager.questionsFlow.push({
-                  examID: checklist.examID,
-                  questionNo: NextQuestionNo,
-                  messages: checklist.messages
-                });
-              }
-            }
-          }
-        }
-      }
-      const examQuestion = this.questionManager.questionsFlow[
-        this.questionManager.currentQuestionsFlowIndex
-      ];
-
-      if (this.State === "0") {
-        if (question.Type === 4) {
-          examQuestion.options = checklist.currentValue.concat(
-            checklist.currentSubValue
-          );
-        } else {
-          examQuestion.options = checklist.currentValue;
-        }
-      }
-
-      examQuestion.messages = checklist.messages;
-
-      question.show = false;
-
-      this.questionManager.currentQuestionsFlowIndex++;
-      const questionNext = this.getCurrentQuestion();
-      if (questionNext) {
-        questionNext.show = true;
-      }
-    },
     async bindExams(ExamID) {
       const Exam = await this.$api.getExam(ExamID);
       let exams = this.pure(this.exams);
@@ -633,8 +565,31 @@ export default {
             const at = this.assistiveDevices[a];
             //辅具所有信息
             this.assistiveChange.push(at);
+            //辅具显示
+            const type = aty.Type;
+
+            let content = this.pure(this.showContent);
+            if (content[type] != false) {
+              content[type] = false;
+              this.showContent = content;
+            }
+            const path = await this.$http.get(
+              "AssistiveDevices/ShowImagePath",
+              assistMath
+            );
+            if (typeof path === "string") {
+              this.image = path;
+            } else {
+              this.image = this.img;
+            }
             //辅具名称(用来选择)
-            this.assistiveName.push({ key: at.ID, value: at.Name });
+            //this.assistiveName.push(at.Name);
+            this.assistiveName.push({
+              key: aty.ID,
+              value: aty.Name,
+              type: aty.Type,
+              img: this.image
+            });
           }
         } else {
           for (const ty in this.assistiveDevices) {
@@ -648,13 +603,42 @@ export default {
           for (const b in this.conditions) {
             const bt = this.conditions[b];
             //table.innerHTML = bt;
-            for (const a in this.assistiveDevices) {
+            for (let a in this.assistiveDevices) {
               const at = this.assistiveDevices[a];
               if (at.Type === bt) {
                 //辅具所有信息
                 this.assistiveChange.push(at);
+                //辅具显示
+                const type = at.Type;
+
+                let content = this.pure(this.showContent);
+                if (content[type] != false) {
+                  content[type] = false;
+                  this.showContent = content;
+                }
+                //辅具图片
+                let assistMath = {
+                  id: at.ID,
+                  name: at.Name,
+                  type: at.Type
+                };
+                const imgPath = await this.$http.get(
+                  "AssistiveDevices/ShowImagePath",
+                  assistMath
+                );
+                if (typeof imgPath === "string") {
+                  this.image = imgPath;
+                } else {
+                  this.image = this.img;
+                }
                 //辅具名称(用来选择)
-                this.assistiveName.push({ key: at.ID, value: at.Name });
+                //this.assistiveName.push(at.Name);
+                this.assistiveName.push({
+                  key: at.ID,
+                  value: at.Name,
+                  type: at.Type,
+                  img: this.image
+                });
               }
             }
           }
@@ -731,94 +715,62 @@ export default {
       }
     },
     //遍历选项获取选项文本
-    condition(question, optionIDs, assistivesType) {
-      for (const ov of question.Options) {
+    async condition(question, optionIDs, assistivesType) {
+      if (question.Type === 8) {
+        this.conditions = [];
+        for (const ok of optionIDs) {
+          for (const qk of question.Options) {
+            if (qk.key === ok) {
+              var value = qk.value.split(".")[1];
+              if (
+                assistivesType.indexOf(value) > -1 &&
+                this.conditions.indexOf(value) === -1
+              ) {
+                this.conditions.push(value);
+              }
+            }
+          }
+        }
+        return;
+      } else {
         for (const cv of optionIDs) {
-          if (ov.key === cv) {
-            let lv = ov.value;
-            let value = lv.split(".");
-            if (assistivesType.indexOf(value[1]) > -1) {
-              this.conditions.push(value[1]);
+          for (const ov of question.Options) {
+            if (ov.key === cv) {
+              let list = question.QueryOptions[cv].AssistiveDevices;
+              if (list != "") {
+                if (list.indexOf(",") > -1) {
+                  let value = list.split(",");
+                  for (let i = 0; i < value.length; i++) {
+                    const type1 = await this.$api.getAssistiveDevice(
+                      parseInt(value[i])
+                    );
+                    const t = type1.Type;
+                    if (
+                      assistivesType.indexOf(t) > -1 &&
+                      this.conditions.indexOf(t) === -1
+                    ) {
+                      this.conditions.push(t);
+                    }
+                  }
+                } else {
+                  const type2 = await this.$api.getAssistiveDevice(
+                    parseInt(list)
+                  );
+                  const k = type2.Type;
+                  if (
+                    assistivesType.indexOf(k) > -1 &&
+                    this.conditions.indexOf(k) === -1
+                  ) {
+                    this.conditions.push(k);
+                  }
+                }
+              }
             }
           }
         }
       }
     },
 
-    //试卷提交
-    SubmitAnswers() {
-      //最后一题选择下拉添加
-      const question = this.getCurrentQuestion();
-      const checklist = this.getCurrentChecklist();
-
-      const lastQuestion = this.questionManager.questionsFlow[
-        this.questionManager.currentQuestionsFlowIndex
-      ];
-
-      if (question.Type === 5) {
-        lastQuestion.options = [];
-        lastQuestion.messages = checklist.messages;
-      } else if (question.Type === 7) {
-        lastQuestion.options = [];
-        lastQuestion.messages = checklist.images.join(",");
-      } else {
-        lastQuestion.options = checklist.currentValue.concat(
-          checklist.currentSubValue
-        );
-        lastQuestion.messages = checklist.messages;
-      }
-
-      let Answers = [];
-      for (let i = 0; i < this.questionManager.questionsFlow.length; i++) {
-        let que = this.questionManager.questionsFlow[i];
-        Answers.push({
-          ExamID: que.examID,
-          QuestionNo: que.questionNo,
-          OptionIDs: que.options.join(","),
-          disabledID: this.disabled.ID,
-          Other: que.messages
-        });
-      }
-      this.$http.post("Answers/SaveAnswers", Answers).then(r => {
-        this.$utils.Alert("适配成功");
-        this.State = "1";
-        this.loadAssistiveDevices(Answers);
-        this.$router.push("/FuJuPingGuHome");
-      });
-      this.questionManager.questionLast = [];
-    },
-    //提交审核
-    submitExamine() {
-      let assistiveAnswer = [];
-      if (this.assistiveChange.length === 0) {
-        assistiveAnswer.push({
-          DisabledID: this.disabledID,
-          ExamID: this.examID
-        });
-      } else {
-        for (const id of this.currentValue) {
-          for (const all of this.assistiveChange) {
-            if (parseInt(id) === all.ID) {
-              assistiveAnswer.push({
-                ID: all.ID,
-                Name: all.Name,
-                Type: all.Type,
-                DisabledID: this.disabledID,
-                ExamID: this.examID,
-                optionIDs: this.currentValue.join(",")
-              });
-            }
-          }
-        }
-      }
-      this.$http
-        .post("AssistiveAnswers/SaveAnswers", assistiveAnswer)
-        .then(r => {
-          this.$utils.Alert("提交成功", "等待审核");
-          this.State = "2";
-          this.loadCheckAssistive(assistiveAnswer);
-        });
-    },
     async loadCheckAssistive(assistiveAnswer) {
       if (!assistiveAnswer) {
         let sqlAssistiveAnswer = await this.$api.getAssistiveAnswers(
@@ -831,8 +783,9 @@ export default {
           this.currentValue = [];
         } else {
           for (const sql in sqlAssistiveAnswer) {
-            let options = sqlAssistiveAnswer[sql].OptionIDs.split(",");
-            this.currentValue = options;
+            // let options = sqlAssistiveAnswer[sql].OptionIDs.split(",");
+            // this.currentValue = options;
+            this.currentValue.push(sqlAssistiveAnswer[sql].ID);
           }
         }
       } else {
@@ -844,35 +797,6 @@ export default {
     },
     pure(obj) {
       return JSON.parse(JSON.stringify(obj));
-    },
-    //审核未通过
-    examBack() {
-      let assistive = [];
-      assistive.push({
-        ExamID: this.examID,
-        DisabledID: this.disabled.ID
-      });
-      this.$http.post("AssistiveAnswers/DeleteAnswers", assistive).then(r => {
-        this.$utils.Alert("操作成功", "已发回重新评估");
-        this.$router.push("/JiGouPingGuHome");
-      });
-    },
-    //审核通过
-    examNext() {
-      let Key = localStorage.getItem("loginUserBaseInfo");
-      let obj = JSON.parse(Key);
-      let uID = obj.I;
-      let record = [];
-      record.push({
-        ExamID: this.examID,
-        DisabledID: this.disabled.ID,
-        Auditor: uID
-      });
-      this.$http.put("ExamRecords/Modify", record).then(r => {
-        this.$utils.Alert("操作成功", "已通过审核");
-        this.State = "3";
-        this.$router.push("/JiGouPingGuHome");
-      });
     },
     //辅具服务点击完成
     finish() {
@@ -890,6 +814,45 @@ export default {
         this.State = "4";
         this.$router.push("/ZongHeKangFuHome");
       });
+    },
+    changeNumber(type) {
+      let index = 0;
+      let list = [];
+      for (let i = 0; i < this.assistiveName.length; i++) {
+        let assist = this.assistiveName[i];
+        if (type === assist.type) {
+          list.push(assist.key);
+        } else {
+          continue;
+        }
+      }
+      if (this.currentValue.length > 0) {
+        for (let j = 0; j < this.currentValue.length; j++) {
+          for (let i = 0; i < list.length; i++) {
+            if (list[i] === parseInt(this.currentValue[j])) {
+              index += 1;
+            }
+          }
+        }
+      } else {
+        index = 0;
+      }
+      return index;
+    },
+    changeAssistive(type) {
+      let list = [];
+      for (let i = 0; i < this.assistiveName.length; i++) {
+        let t = this.assistiveName[i];
+        if (type === t.type) {
+          list.push({
+            key: t.key,
+            value: t.value,
+            type: t.type,
+            img: t.img
+          });
+        }
+      }
+      return list;
     }
   },
   computed: {

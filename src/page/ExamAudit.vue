@@ -31,7 +31,34 @@
       <div>
         <div class="weui-cells__title" id="assistiveType"></div>
         <div>
-            <checklist label-position="left" :options="assistiveName" ref="demoObject" v-model="currentValue" :disabled="IsCheck"></checklist>
+            <!-- <checklist label-position="left" :options="assistiveName" ref="demoObject" v-model="currentValue" :disabled="IsCheck"></checklist> -->
+          <group>
+              <div v-for="(name,assistive) in conditions" :key="assistive">
+                <cell :title='name' is-link :border-intent="false" :arrow-direction="showContent[name] ? 'up' : 'down'" @click.native="showContent[name] = !showContent[name]">
+                  <badge :text='changeNumber(name)'></badge>
+                </cell>
+                <template v-if="showContent[name]">
+                  <div>
+                    <div class="weui-cells weui-cells_checkbox">
+                    <div v-for="(item,assistive) in changeAssistive(name)" :key="assistive">
+                      <label class="weui-cell weui-check_label">
+                          <div class="weui-cell__hd">
+                            <input type="checkbox" class="weui-check" :value="item.key" v-model="currentValue" :disabled="IsCheck">
+                            <i class="weui-icon-checked vux-checklist-icon-checked"></i>
+                          </div>
+                         <div style="width:50%"> 
+                            <img :src="item.img" style="width:100%"/>
+                          </div>
+                          <div class="weui-cell__bd" style="text-align: center;">
+                          <p v-html="item.value"></p>
+                        </div>
+                      </label>
+                  </div>
+                </div>
+               </div>
+                </template>
+              </div>
+            </group>
         </div>
         <div v-if="!showView">
         <x-button type="primary"  @click.native="examChange"  :disabled="canAdopt">修改</x-button>
@@ -68,7 +95,10 @@ import {
   Divider,
   Flexbox,
   FlexboxItem,
-  XTable
+  XTable,
+  Cell,
+  CellBox,
+  Badge
 } from "vux";
 import { userInfo } from "os";
 export default {
@@ -94,7 +124,10 @@ export default {
     Flexbox,
     FlexboxItem,
     XTable,
-    AppChecklist
+    AppChecklist,
+    Cell,
+    CellBox,
+    Badge
   },
   props: {
     disabledID: String,
@@ -103,6 +136,8 @@ export default {
   },
   data() {
     return {
+      num: 0,
+      showContent: {},
       showQuestion: true,
       State: this.state,
       exams: {}, //{examID,questions}
@@ -158,7 +193,9 @@ export default {
         Address: null,
         disabled_Details: []
       },
-      IsCheck: false
+      IsCheck: false,
+      img: require("@/assets/icon/暂无图片.jpg"),
+      image: ""
     };
   },
   created() {
@@ -178,8 +215,11 @@ export default {
       await this.initQuestions();
 
       if (this.IsView) {
-        this.loadAssistiveDevices();
-        this.loadCheckAssistive();
+        await this.loadAssistiveDevices();
+        await this.loadCheckAssistive();
+        for (let i = 0; i < this.conditions.length; i++) {
+          this.changeNumber(this.conditions[i]);
+        }
       }
       //辅具是否可选
       if (this.State != "1") {
@@ -592,8 +632,8 @@ export default {
         if (!this.IsView) {
           //做完之后直接查看
           exama = this.questionManager.questionsFlow[key];
-          questions = this.exams[exama.examID];
-          question = questions[exama.questionNo];
+          questions = this.exams[exama.ExamID];
+          question = questions[exama.QuestionNo];
           //辅具查询(答案选项，答案记录数据，问题集合)
           await this.assistiveList(optionIDs, exama, questions);
           //数组转换
@@ -640,12 +680,35 @@ export default {
       if (this.assistiveDevices.length > 0) {
         //筛选
         if (this.conditions.length === 0) {
-          for (const a in this.assistiveDevices) {
-            const at = this.assistiveDevices[a];
+          for (let a in this.assistiveDevices) {
+            const aty = this.assistiveDevices[a];
             //辅具所有信息
-            this.assistiveChange.push(at);
+            this.assistiveChange.push(aty);
+            //辅具显示
+            const type = aty.Type;
+
+            let content = this.pure(this.showContent);
+            if (content[type] != false) {
+              content[type] = false;
+              this.showContent = content;
+            }
+            const path = await this.$http.get(
+              "AssistiveDevices/ShowImagePath",
+              assistMath
+            );
+            if (typeof path === "string") {
+              this.image = path;
+            } else {
+              this.image = this.img;
+            }
             //辅具名称(用来选择)
-            this.assistiveName.push({ key: at.ID, value: at.Name });
+            //this.assistiveName.push(at.Name);
+            this.assistiveName.push({
+              key: aty.ID,
+              value: aty.Name,
+              type: aty.Type,
+              img: this.image
+            });
           }
         } else {
           for (const ty in this.assistiveDevices) {
@@ -659,13 +722,42 @@ export default {
           for (const b in this.conditions) {
             const bt = this.conditions[b];
             //table.innerHTML = bt;
-            for (const a in this.assistiveDevices) {
+            for (let a in this.assistiveDevices) {
               const at = this.assistiveDevices[a];
               if (at.Type === bt) {
                 //辅具所有信息
                 this.assistiveChange.push(at);
+                //辅具显示
+                const type = at.Type;
+
+                let content = this.pure(this.showContent);
+                if (content[type] != false) {
+                  content[type] = false;
+                  this.showContent = content;
+                }
+                //辅具图片
+                let assistMath = {
+                  id: at.ID,
+                  name: at.Name,
+                  type: at.Type
+                };
+                const imgPath = await this.$http.get(
+                  "AssistiveDevices/ShowImagePath",
+                  assistMath
+                );
+                if (typeof imgPath === "string") {
+                  this.image = imgPath;
+                } else {
+                  this.image = this.img;
+                }
                 //辅具名称(用来选择)
-                this.assistiveName.push({ key: at.ID, value: at.Name });
+                //this.assistiveName.push(at.Name);
+                this.assistiveName.push({
+                  key: at.ID,
+                  value: at.Name,
+                  type: at.Type,
+                  img: this.image
+                });
               }
             }
           }
@@ -742,14 +834,56 @@ export default {
       }
     },
     //遍历选项获取选项文本
-    condition(question, optionIDs, assistivesType) {
-      for (const ov of question.Options) {
+    async condition(question, optionIDs, assistivesType) {
+      if (question.Type === 8) {
+        this.conditions = [];
+        for (const ok of optionIDs) {
+          for (const qk of question.Options) {
+            if (qk.key === ok) {
+              var value = qk.value.split(".")[1];
+              if (
+                assistivesType.indexOf(value) > -1 &&
+                this.conditions.indexOf(value) === -1
+              ) {
+                this.conditions.push(value);
+              }
+            }
+          }
+        }
+        return;
+      } else {
         for (const cv of optionIDs) {
-          if (ov.key === cv) {
-            let lv = ov.value;
-            let value = lv.split(".");
-            if (assistivesType.indexOf(value[1]) > -1) {
-              this.conditions.push(value[1]);
+          for (const ov of question.Options) {
+            if (ov.key === cv) {
+              let list = question.QueryOptions[cv].AssistiveDevices;
+              if (list != "") {
+                if (list.indexOf(",") > -1) {
+                  let value = list.split(",");
+                  for (let i = 0; i < value.length; i++) {
+                    const type1 = await this.$api.getAssistiveDevice(
+                      parseInt(value[i])
+                    );
+                    const t = type1.Type;
+                    if (
+                      assistivesType.indexOf(t) > -1 &&
+                      this.conditions.indexOf(t) === -1
+                    ) {
+                      this.conditions.push(t);
+                    }
+                  }
+                } else {
+                  const type2 = await this.$api.getAssistiveDevice(
+                    parseInt(list)
+                  );
+                  const k = type2.Type;
+                  if (
+                    assistivesType.indexOf(k) > -1 &&
+                    this.conditions.indexOf(k) === -1
+                  ) {
+                    this.conditions.push(k);
+                  }
+                }
+              }
             }
           }
         }
@@ -842,8 +976,9 @@ export default {
           this.currentValue = [];
         } else {
           for (const sql in sqlAssistiveAnswer) {
-            let options = sqlAssistiveAnswer[sql].OptionIDs.split(",");
-            this.currentValue = options;
+            // let options = sqlAssistiveAnswer[sql].OptionIDs.split(",");
+            // this.currentValue = options;
+            this.currentValue.push(sqlAssistiveAnswer[sql].ID);
           }
         }
       } else {
@@ -916,6 +1051,45 @@ export default {
             this.$router.push("/JiGouPingGuHome");
           });
         });
+    },
+    changeNumber(type) {
+      let index = 0;
+      let list = [];
+      for (let i = 0; i < this.assistiveName.length; i++) {
+        let assist = this.assistiveName[i];
+        if (type === assist.type) {
+          list.push(assist.key);
+        } else {
+          continue;
+        }
+      }
+      if (this.currentValue.length > 0) {
+        for (let j = 0; j < this.currentValue.length; j++) {
+          for (let i = 0; i < list.length; i++) {
+            if (list[i] === parseInt(this.currentValue[j])) {
+              index += 1;
+            }
+          }
+        }
+      } else {
+        index = 0;
+      }
+      return index;
+    },
+    changeAssistive(type) {
+      let list = [];
+      for (let i = 0; i < this.assistiveName.length; i++) {
+        let t = this.assistiveName[i];
+        if (type === t.type) {
+          list.push({
+            key: t.key,
+            value: t.value,
+            type: t.type,
+            img: t.img
+          });
+        }
+      }
+      return list;
     }
   },
   computed: {

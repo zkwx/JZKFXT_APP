@@ -3,7 +3,7 @@
 <div :style ="note">
 	<div id="login" >
   <!-- <img :src="background"> -->
-      <h1 style="text-align:center;">精准康复系统</h1>
+      <h2 style="text-align:center;padding-top: 30px;">基层精准康复辅助服务系统</h2>
 		<form v-on:submit.prevent="submit">
             <group label-width="70px" class="loginGroup">
             <x-input title="用户名" v-model="user.UserName" placeholder="请输入你的用户名" ref="UserNameRef" required></x-input>
@@ -31,7 +31,7 @@
   height: 100%;
 }
 .loginGroup {
-  padding: 40px 20px 0 20px;
+  padding: 40px 50px 0 50px;
 }
 .foot {
   text-align: center;

@@ -46,6 +46,7 @@
       </group>
       <div style="padding: 0 15px;">
         <x-button type="primary" @click.native="submit" :disabled="isSave">保存</x-button>
+        <x-button type="primary" @click.native="remove" :disabled="isDele">删除</x-button>
       </div>
     </div>
     <app-sign v-if="sign" :DisabledID="Disabled.ID" @success="successSignCallback" ref="sign"></app-sign>
@@ -64,6 +65,7 @@ import {
   PopupPicker
 } from "vux";
 import AppSign from "@/components/AppSign";
+import { isDate } from "util";
 export default {
   name: "KangFuRuHuDetail",
   components: {
@@ -84,6 +86,7 @@ export default {
     return {
       sign: false,
       isSave: false,
+      isDele: false,
       Sexlist: [{ key: 1, value: "男" }, { key: 2, value: "女" }],
       RelationshipList: [
         { key: 1, value: "父母" },
@@ -184,6 +187,7 @@ export default {
       if (this.Disabled.ID) {
         this.getDisabled(this.Disabled.ID);
       } else {
+        this.isDele = true;
         this.Disabled.Disabled_Details = this.DefaultDetails;
       }
       //填充选项列表
@@ -220,22 +224,49 @@ export default {
         });
         r.Disabled_Details = details;
         _this.Disabled = r;
-        this.$api
-          .getExamRecord(
-            "?ExamID=" +
-              _this.Disabled.Categories[0] +
-              "&disabledID=" +
-              _this.Disabled.ID
-          )
-          .then(r => {
-            if (r.State > 0) {
-              this.isSave = true;
-            }
-          });
+        if (_this.Disabled.Categories[0] === 4) {
+          //3、偏瘫  4、脑瘫  5、脊髓  6、肢体综合
+          var eid = [3, 4, 5, 6];
+          for (let a = 0; a < eid.length; a++) {
+            this.$api
+              .getExamRecord(
+                "?ExamID=" + eid[a] + "&disabledID=" + _this.Disabled.ID
+              )
+              .then(r => {
+                if (r.State > 0) {
+                  this.isSave = true;
+                  this.isDele = true;
+                }
+              });
+          }
+        } else {
+          this.$api
+            .getExamRecord(
+              "?ExamID=" +
+                _this.Disabled.Categories[0] +
+                "&disabledID=" +
+                _this.Disabled.ID
+            )
+            .then(r => {
+              if (r.State > 0) {
+                this.isSave = true;
+                this.isDele = true;
+              }
+            });
+        }
       });
     },
     change(val, label) {
       console.log("change", val, label);
+    },
+    async remove() {
+      var num = await this.$http.delete("Disableds/" + this.Disabled.ID);
+      if (num === this.Disabled.ID) {
+        this.$utils.Alert("删除失败", "该患者无法删除!");
+      } else {
+        this.$utils.Alert("删除成功", "该患者已删除!");
+        this.$router.push("/KangFuRuHuHome");
+      }
     },
     async submit() {
       //表单验证
@@ -384,7 +415,14 @@ export default {
           this.Disabled.CategoryID = this.$refs.Categories.currentValue[0];
         }
         if (this.Disabled.DegreeID === null) {
-          this.Disabled.DegreeID = this.$refs.VisionDegreeID.currentValue;
+          //this.Disabled.DegreeID = this.$refs.VisionDegreeID.currentValue;
+          for (let i = 0; i < this.Disabled.Disabled_Details.length; i++) {
+            if (this.Disabled.Disabled_Details[i] != null) {
+              this.Disabled.DegreeID = this.Disabled.Disabled_Details[
+                i
+              ].DegreeID;
+            }
+          }
         }
         const Disabled = await this.$http.post("Disableds", this.Disabled);
         this.Disabled.ID = Disabled.ID;
@@ -392,6 +430,9 @@ export default {
         this.$utils.Alert("保存成功");
         _that.$router.push("/KangFuRuHuHome");
       } else {
+        if (this.Disabled.Categories[0] != this.Disabled.CategoryID) {
+          this.Disabled.CategoryID = this.Disabled.Categories[0];
+        }
         await this.$http.put("Disableds/" + this.Disabled.ID, this.Disabled);
         this.sign = true;
       }
