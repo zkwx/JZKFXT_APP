@@ -86,6 +86,9 @@
                           <p v-html="item.value"></p>
                         </div>
                       </label>
+
+                     <app-number :jian="item.key" :title="item.value" @on-change="numberChange"></app-number>
+
                   </div>
                 </div>
                </div>
@@ -104,6 +107,7 @@
 <script>
 import Vue from "vue";
 import AppChecklist from "@/components/AppChecklist";
+import AppNumber from "@/components/AppNumber";
 import {
   XHeader,
   Group,
@@ -125,7 +129,8 @@ import {
   XTable,
   Cell,
   CellBox,
-  Badge
+  Badge,
+  InlineXNumber
 } from "vux";
 export default {
   name: "FuJuPingGuDetail",
@@ -153,7 +158,9 @@ export default {
     AppChecklist,
     Cell,
     CellBox,
-    Badge
+    Badge,
+    InlineXNumber,
+    AppNumber
   },
   props: {
     disabledID: String,
@@ -162,6 +169,7 @@ export default {
   },
   data() {
     return {
+      assistiveNumber: 1,
       num: 0,
       showContent: {},
       showQuestion: false,
@@ -201,6 +209,7 @@ export default {
       assistiveName: [], //筛选之后的辅具名称(用来选择)
       assistiveChange: [], //筛选之后的辅具集合
       currentValue: [], //辅具选择
+      currentNumber: [], //选择辅具数量
       endDate: "", //致残时间 最大选择时间
       img: require("@/assets/icon/暂无图片.jpg"),
       image: "",
@@ -346,44 +355,6 @@ export default {
           this.noDisability(examID, questionNo);
           return;
         }
-      }
-    },
-    assistiveCurrentValue(list, optionIds, type) {
-      if (this.state === "1") {
-        for (let k = 0; k < this.assistiveName.length; k++) {
-          if (this.assistiveName[k].type === type) {
-            if (this.currentValue.indexOf(this.assistiveName[k].key) > -1) {
-              this.currentValue.splice(
-                this.currentValue.indexOf(this.assistiveName[k].key),
-                1
-              );
-            }
-          } else {
-            continue;
-          }
-        }
-        if (optionIds.length > 0) {
-          for (let i = 0; i < list.length; i++) {
-            let assist = list[i].id;
-            if (this.currentValue.indexOf(assist) === -1) {
-              this.currentValue.push(assist);
-            }
-          }
-        }
-        return;
-      } else {
-        // var list = [];
-        // for (let j = 0; j < optionIds.length; j++) {
-        //   for (let mk = 0; mk < this.assistiveName.length; mk++) {
-        //     if (optionIds[j] === this.assistiveName[mk].key) {
-        //       if (this.assistiveName[mk].type === type) {
-        //         list.push(this.assistiveName[mk].key);
-        //       }
-        //     }
-        //   }
-        // }
-        // this.currentValue = list;
-        return;
       }
     },
     changeNumber(type) {
@@ -1082,7 +1053,7 @@ export default {
         });
       }
       this.$http.post("Answers/SaveAnswers", Answers).then(r => {
-        this.$utils.Alert("适配成功");
+        this.$utils.Alert("任务完成");
         this.State = "1";
         this.loadAssistiveDevices(Answers);
         //this.$router.push("/FuJuPingGuHome");
@@ -1107,9 +1078,17 @@ export default {
                 Type: all.Type,
                 DisabledID: this.disabledID,
                 ExamID: this.examID,
-                optionIDs: this.currentValue.join(",")
+                optionIDs: this.currentValue.join(","),
+                Number: 1
               });
             }
+          }
+        }
+      }
+      for (let q = 0; q < assistiveAnswer.length; q++) {
+        for (let w = 0; w < this.currentNumber.length; w++) {
+          if (assistiveAnswer[q].ID === this.currentNumber[w].id) {
+            assistiveAnswer[q].Number = this.currentNumber[w].number;
           }
         }
       }
@@ -1162,6 +1141,33 @@ export default {
     },
     pure(obj) {
       return JSON.parse(JSON.stringify(obj));
+    },
+    numberChange(title, jian, number) {
+      let flag = false;
+      if (this.currentNumber.length > 0) {
+        for (let i = 0; i < this.currentNumber.length; i++) {
+          if (this.currentNumber[i].id == jian) {
+            this.currentNumber[i].number = number;
+            flag = true;
+            break;
+          }
+        }
+      } else {
+        this.currentNumber.push({
+          id: jian,
+          name: title,
+          number: number
+        });
+        flag = true;
+      }
+
+      if (!flag) {
+        this.currentNumber.push({
+          id: jian,
+          name: title,
+          number: number
+        });
+      }
     }
   },
   computed: {
