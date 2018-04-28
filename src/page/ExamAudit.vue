@@ -53,6 +53,7 @@
                           <p v-html="item.value"></p>
                         </div>
                       </label>
+                       <app-number :disabledID="disabledID" :examID="examID" :item="item" :jian="item.key" :title="item.value" :display="assistiveDisabled" @on-change="numberChange"></app-number>
                   </div>
                 </div>
                </div>
@@ -77,6 +78,7 @@
 <script>
 import Vue from "vue";
 import AppChecklist from "@/components/AppChecklist";
+import AppNumber from "@/components/AppNumber";
 import {
   XHeader,
   Group,
@@ -127,7 +129,8 @@ export default {
     AppChecklist,
     Cell,
     CellBox,
-    Badge
+    Badge,
+    AppNumber
   },
   props: {
     disabledID: String,
@@ -137,6 +140,7 @@ export default {
   data() {
     return {
       num: 0,
+      showNumber: false,
       showContent: {},
       showQuestion: true,
       State: this.state,
@@ -175,6 +179,7 @@ export default {
       assistiveName: [], //筛选之后的辅具名称(用来选择)
       assistiveChange: [], //筛选之后的辅具集合
       currentValue: [], //辅具选择
+      currentNumber: [],
       disabled: {
         ID: null,
         Name: "",
@@ -890,80 +895,6 @@ export default {
       }
     },
 
-    //试卷提交
-    SubmitAnswers() {
-      //最后一题选择下拉添加
-      const question = this.getCurrentQuestion();
-      const checklist = this.getCurrentChecklist();
-
-      const lastQuestion = this.questionManager.questionsFlow[
-        this.questionManager.currentQuestionsFlowIndex
-      ];
-
-      if (question.Type === 5) {
-        lastQuestion.options = [];
-        lastQuestion.messages = checklist.messages;
-      } else if (question.Type === 7) {
-        lastQuestion.options = [];
-        lastQuestion.messages = checklist.images.join(",");
-      } else {
-        lastQuestion.options = checklist.currentValue.concat(
-          checklist.currentSubValue
-        );
-        lastQuestion.messages = checklist.messages;
-      }
-
-      let Answers = [];
-      for (let i = 0; i < this.questionManager.questionsFlow.length; i++) {
-        let que = this.questionManager.questionsFlow[i];
-        Answers.push({
-          ExamID: que.examID,
-          QuestionNo: que.questionNo,
-          OptionIDs: que.options.join(","),
-          disabledID: this.disabled.ID,
-          Other: que.messages
-        });
-      }
-      this.$http.post("Answers/SaveAnswers", Answers).then(r => {
-        this.$utils.Alert("适配成功");
-        this.State = "1";
-        this.loadAssistiveDevices(Answers);
-        this.$router.push("/FuJuPingGuHome");
-      });
-      this.questionManager.questionLast = [];
-    },
-    //提交审核
-    submitExamine() {
-      let assistiveAnswer = [];
-      if (this.assistiveChange.length === 0) {
-        assistiveAnswer.push({
-          DisabledID: this.disabledID,
-          ExamID: this.examID
-        });
-      } else {
-        for (const id of this.currentValue) {
-          for (const all of this.assistiveChange) {
-            if (parseInt(id) === all.ID) {
-              assistiveAnswer.push({
-                ID: all.ID,
-                Name: all.Name,
-                Type: all.Type,
-                DisabledID: this.disabledID,
-                ExamID: this.examID,
-                optionIDs: this.currentValue.join(",")
-              });
-            }
-          }
-        }
-      }
-      this.$http
-        .post("AssistiveAnswers/SaveAnswers", assistiveAnswer)
-        .then(r => {
-          this.$utils.Alert("提交成功", "等待审核");
-          this.State = "2";
-          this.loadCheckAssistive(assistiveAnswer);
-        });
-    },
     async loadCheckAssistive(assistiveAnswer) {
       if (!assistiveAnswer) {
         let sqlAssistiveAnswer = await this.$api.getAssistiveAnswers(
@@ -994,6 +925,7 @@ export default {
     //审核修改
     examChange() {
       this.IsCheck = false;
+      this.showNumber = true;
     },
     //审核未通过
     examBack() {
@@ -1036,9 +968,17 @@ export default {
                 Type: all.Type,
                 DisabledID: this.disabledID,
                 ExamID: this.examID,
-                optionIDs: this.currentValue.join(",")
+                optionIDs: this.currentValue.join(","),
+                Number: 1
               });
             }
+          }
+        }
+      }
+      for (let q = 0; q < assistiveAnswer.length; q++) {
+        for (let w = 0; w < this.currentNumber.length; w++) {
+          if (assistiveAnswer[q].ID === this.currentNumber[w].id) {
+            assistiveAnswer[q].Number = this.currentNumber[w].number;
           }
         }
       }
@@ -1090,6 +1030,33 @@ export default {
         }
       }
       return list;
+    },
+    numberChange(title, jian, number) {
+      let flag = false;
+      if (this.currentNumber.length > 0) {
+        for (let i = 0; i < this.currentNumber.length; i++) {
+          if (this.currentNumber[i].id == jian) {
+            this.currentNumber[i].number = number;
+            flag = true;
+            break;
+          }
+        }
+      } else {
+        this.currentNumber.push({
+          id: jian,
+          name: title,
+          number: number
+        });
+        flag = true;
+      }
+
+      if (!flag) {
+        this.currentNumber.push({
+          id: jian,
+          name: title,
+          number: number
+        });
+      }
     }
   },
   computed: {
@@ -1119,6 +1086,13 @@ export default {
     IsView() {
       if (this.State != "0") {
         return true;
+      }
+    },
+    assistiveDisabled() {
+      if (this.State === "1") {
+        return !this.showNumber;
+      } else {
+        return this.showNumber;
       }
     }
   },

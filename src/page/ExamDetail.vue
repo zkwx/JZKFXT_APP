@@ -84,20 +84,27 @@
                           </div>
                           <div class="weui-cell__bd" style="text-align: center;">
                           <p v-html="item.value"></p>
+                          <!-- <p v-html="'单价：'+(item.price+1)"></p> -->
                         </div>
                       </label>
-
-                     <app-number :jian="item.key" :title="item.value" @on-change="numberChange"></app-number>
-
+                     <app-number :disabledID="disabledID" :examID="examID" :item="item" :jian="item.key" :title="item.value" :display="assistiveDisabled" @on-change="numberChange"></app-number>
                   </div>
                 </div>
                </div>
                 </template>
               </div>
             </group>
+
+              <!-- <div>
+                  <cell title="总价">
+                     <x-input v-model="total" text-align="right" :disabled="true"></x-input>
+                  </cell>
+              </div> -->
+
         </div>
         <div>
         <x-button type="primary"  @click.native="submitExamine" :disabled="!canSubmit" :value="status">{{status}}</x-button>
+        <x-button type="primary"  @click.native="backExamine" :disabled="!canBack">撤回</x-button>
         </div>
       </div>
     </div>
@@ -169,8 +176,8 @@ export default {
   },
   data() {
     return {
+      total: 0,
       assistiveNumber: 1,
-      num: 0,
       showContent: {},
       showQuestion: false,
       State: this.state,
@@ -769,7 +776,8 @@ export default {
               key: aty.ID,
               value: aty.Name,
               type: aty.Type,
-              img: this.image
+              img: this.image,
+              price: aty.Price
             });
           }
         } else {
@@ -818,7 +826,8 @@ export default {
                   key: at.ID,
                   value: at.Name,
                   type: at.Type,
-                  img: this.image
+                  img: this.image,
+                  price: at.Price
                 });
               }
             }
@@ -1101,6 +1110,19 @@ export default {
           this.$router.push("/FuJuPingGuHome");
         });
     },
+    //撤回审核
+    backExamine() {
+      let record = {
+        ExamID: this.examID,
+        DisabledID: this.disabled.ID
+      };
+      this.$http.post("ExamRecords/BackExam", record).then(x => {
+        this.$utils.Alert("撤回成功");
+        this.State = "2";
+        this.$router.push("/FuJuPingGuHome");
+      });
+    },
+
     async loadCheckAssistive(assistiveAnswer) {
       if (!assistiveAnswer) {
         let sqlAssistiveAnswer = await this.$api.getAssistiveAnswers(
@@ -1133,7 +1155,8 @@ export default {
             key: t.key,
             value: t.value,
             type: t.type,
-            img: t.img
+            img: t.img,
+            price: t.price
           });
         }
       }
@@ -1179,6 +1202,13 @@ export default {
         this.disabled.IDNumber
       );
       return age;
+    },
+    assistiveDisabled() {
+      if (this.State === "1") {
+        return true;
+      } else {
+        return false;
+      }
     },
     //下一题按钮的使用
     canNext() {
@@ -1301,13 +1331,20 @@ export default {
       }
       return false;
     },
+    //辅具撤回按钮使用
+    canBack() {
+      if (this.State === "2") {
+        return true;
+      }
+      return false;
+    },
     status() {
       if (this.State === "1") {
         return "提交审批";
       } else if (this.State === "2") {
         return "待审核";
       } else if (this.State === "3") {
-        return "已通过审核";
+        return "待完成";
       }
     },
     //试卷是否做过

@@ -31,7 +31,6 @@
       <div>
         <div class="weui-cells__title" id="assistiveType"></div>
         <div>
-            <!-- <checklist label-position="left" :options="assistiveName" ref="demoObject" v-model="currentValue" :disabled="IsCheck"></checklist> -->
              <group>
               <div v-for="(name,assistive) in conditions" :key="assistive">
                 <cell :title='name' is-link :border-intent="false" :arrow-direction="showContent[name] ? 'up' : 'down'" @click.native="showContent[name] = !showContent[name]">
@@ -53,6 +52,7 @@
                           <p v-html="item.value"></p>
                         </div>
                       </label>
+                       <app-number :disabledID="disabledID" :examID="examID" :item="item" :jian="item.key" :title="item.value" :display="assistiveDisabled" @on-change="numberChange"></app-number>
                   </div>
                 </div>
                </div>
@@ -72,6 +72,7 @@
 <script>
 import Vue from "vue";
 import AppChecklist from "@/components/AppChecklist";
+import AppNumber from "@/components/AppNumber";
 import {
   XHeader,
   Group,
@@ -121,7 +122,8 @@ export default {
     AppChecklist,
     Cell,
     CellBox,
-    Badge
+    Badge,
+    AppNumber
   },
   props: {
     disabledID: String,
@@ -167,6 +169,8 @@ export default {
       assistiveName: [], //筛选之后的辅具名称(用来选择)
       assistiveChange: [], //筛选之后的辅具集合
       currentValue: [], //辅具选择
+      currentNumber: [],
+      showNumber: false,
       num: 0,
       showContent: {},
       img: require("@/assets/icon/暂无图片.jpg"),
@@ -853,6 +857,33 @@ export default {
         }
       }
       return list;
+    },
+    numberChange(title, jian, number) {
+      let flag = false;
+      if (this.currentNumber.length > 0) {
+        for (let i = 0; i < this.currentNumber.length; i++) {
+          if (this.currentNumber[i].id == jian) {
+            this.currentNumber[i].number = number;
+            flag = true;
+            break;
+          }
+        }
+      } else {
+        this.currentNumber.push({
+          id: jian,
+          name: title,
+          number: number
+        });
+        flag = true;
+      }
+
+      if (!flag) {
+        this.currentNumber.push({
+          id: jian,
+          name: title,
+          number: number
+        });
+      }
     }
   },
   computed: {
@@ -889,6 +920,13 @@ export default {
     IsCheck() {
       if (this.State != "1") {
         return true;
+      }
+    },
+    assistiveDisabled() {
+      if (this.State === "1") {
+        return !this.showNumber;
+      } else {
+        return this.showNumber;
       }
     }
   },

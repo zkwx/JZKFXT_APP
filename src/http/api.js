@@ -69,8 +69,8 @@ export default {
     async loginUser(param) {
         return await http.get('User', param);
     },
-    async getUser(id){
-        return await http.get("Users/"+id);
+    async getUser(id) {
+        return await http.get("Users/" + id);
     },
     //查询患者(进行中)
     async getConduct(param) {
@@ -83,5 +83,9 @@ export default {
     //查询用户权限
     async getRole(id) {
         return await http.get('Roles/' + id);
+    },
+    //查询辅具数量
+    async getAssistNumber(param) {
+        return await http.get("AssistiveAnswers" + param);
     },
 }
