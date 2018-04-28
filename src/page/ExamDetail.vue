@@ -84,7 +84,7 @@
                           </div>
                           <div class="weui-cell__bd" style="text-align: center;">
                           <p v-html="item.value"></p>
-                          <!-- <p v-html="'单价：'+(item.price+1)"></p> -->
+                          <p v-html="'单价：'+item.price+'元'"></p>
                         </div>
                       </label>
                      <app-number :disabledID="disabledID" :examID="examID" :item="item" :jian="item.key" :title="item.value" :display="assistiveDisabled" @on-change="numberChange"></app-number>
@@ -95,12 +95,12 @@
               </div>
             </group>
 
-              <!-- <div>
-                  <cell title="总价">
-                     <x-input v-model="total" text-align="right" :disabled="true"></x-input>
-                  </cell>
-              </div> -->
-
+              <div>
+                  <group>
+                     <x-input title="总价" v-model="total"  text-align="center" :disabled="true"></x-input>
+                  </group>
+              </div>
+              
         </div>
         <div>
         <x-button type="primary"  @click.native="submitExamine" :disabled="!canSubmit" :value="status">{{status}}</x-button>
@@ -217,6 +217,7 @@ export default {
       assistiveChange: [], //筛选之后的辅具集合
       currentValue: [], //辅具选择
       currentNumber: [], //选择辅具数量
+      assistNumber: [],
       endDate: "", //致残时间 最大选择时间
       img: require("@/assets/icon/暂无图片.jpg"),
       image: "",
@@ -1088,7 +1089,9 @@ export default {
                 DisabledID: this.disabledID,
                 ExamID: this.examID,
                 optionIDs: this.currentValue.join(","),
-                Number: 1
+                Number: 1,
+                Price: all.Price,
+                Total: 0
               });
             }
           }
@@ -1098,6 +1101,8 @@ export default {
         for (let w = 0; w < this.currentNumber.length; w++) {
           if (assistiveAnswer[q].ID === this.currentNumber[w].id) {
             assistiveAnswer[q].Number = this.currentNumber[w].number;
+            assistiveAnswer[q].Total =
+              this.currentNumber[w].number * assistiveAnswer[q].Price;
           }
         }
       }
@@ -1135,6 +1140,7 @@ export default {
             // let options = sqlAssistiveAnswer[sql].OptionIDs.split(",");
             // this.currentValue = options;
             this.currentValue.push(sqlAssistiveAnswer[sql].ID);
+            this.total = this.total + sqlAssistiveAnswer[sql].Total;
           }
         }
       } else {
@@ -1142,6 +1148,7 @@ export default {
           if (assistiveAnswer[s].optionIDs != undefined) {
             let options = assistiveAnswer[s].optionIDs.split(",");
             this.currentValue = options;
+            this.total = this.total + assistiveAnswer[s].Total;
           }
         }
       }
@@ -1166,6 +1173,7 @@ export default {
       return JSON.parse(JSON.stringify(obj));
     },
     numberChange(title, jian, number) {
+      this.assistNumber.push(number);
       let flag = false;
       if (this.currentNumber.length > 0) {
         for (let i = 0; i < this.currentNumber.length; i++) {
@@ -1371,6 +1379,75 @@ export default {
       } else {
         this.disabled.CategoryID = null;
         this.disabled.DegreeID = null;
+      }
+    },
+    currentValue() {
+      let to = 0;
+      if (this.currentValue.length > 0) {
+        let assistiveAnswer = [];
+        for (const id of this.currentValue) {
+          for (const all of this.assistiveChange) {
+            if (parseInt(id) === all.ID) {
+              assistiveAnswer.push({
+                ID: all.ID,
+                Name: all.Name,
+                Type: all.Type,
+                DisabledID: this.disabledID,
+                ExamID: this.examID,
+                optionIDs: this.currentValue.join(","),
+                Number: 1,
+                price: all.Price
+              });
+            }
+          }
+        }
+
+        for (let q = 0; q < assistiveAnswer.length; q++) {
+          for (let w = 0; w < this.currentNumber.length; w++) {
+            if (assistiveAnswer[q].ID === this.currentNumber[w].id) {
+              assistiveAnswer[q].Number = this.currentNumber[w].number;
+            }
+          }
+        }
+
+        for (let i = 0; i < assistiveAnswer.length; i++) {
+          let price = assistiveAnswer[i].Number * assistiveAnswer[i].price;
+          this.total = to + price;
+        }
+      }
+    },
+    assistNumber() {
+      let to = 0;
+      let assistiveAnswer = [];
+      if (this.currentValue.length > 0) {
+        for (const id of this.currentValue) {
+          for (const all of this.assistiveChange) {
+            if (parseInt(id) === all.ID) {
+              assistiveAnswer.push({
+                ID: all.ID,
+                Name: all.Name,
+                Type: all.Type,
+                DisabledID: this.disabledID,
+                ExamID: this.examID,
+                optionIDs: this.currentValue.join(","),
+                Number: 1,
+                price: all.Price
+              });
+            }
+          }
+        }
+        for (let q = 0; q < assistiveAnswer.length; q++) {
+          for (let w = 0; w < this.currentNumber.length; w++) {
+            if (assistiveAnswer[q].ID === this.currentNumber[w].id) {
+              assistiveAnswer[q].Number = this.currentNumber[w].number;
+            }
+          }
+        }
+
+        for (let i = 0; i < assistiveAnswer.length; i++) {
+          let price = assistiveAnswer[i].Number * assistiveAnswer[i].price;
+          this.total = to + price;
+        }
       }
     }
   }
