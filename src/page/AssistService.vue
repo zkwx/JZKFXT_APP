@@ -50,6 +50,7 @@
                           </div>
                           <div class="weui-cell__bd" style="text-align: center;">
                           <p v-html="item.value"></p>
+                          <p v-html="'单价：'+item.price+'元'"></p>
                         </div>
                       </label>
                        <app-number :disabledID="disabledID" :examID="examID" :item="item" :jian="item.key" :title="item.value" :display="assistiveDisabled" @on-change="numberChange"></app-number>
@@ -59,6 +60,13 @@
                 </template>
               </div>
             </group>
+
+              <div>
+                  <group>
+                     <x-input title="总价" v-model="total"  text-align="center" :disabled="true"></x-input>
+                  </group>
+              </div>
+
         </div>
         <div v-if="showView">
            <x-button type="primary" @click.native="finish" :disabled="!showView">完成</x-button>
@@ -132,6 +140,7 @@ export default {
   },
   data() {
     return {
+      total: 0,
       showQuestion: true,
       State: this.state,
       exams: {}, //{examID,questions}
@@ -170,6 +179,7 @@ export default {
       assistiveChange: [], //筛选之后的辅具集合
       currentValue: [], //辅具选择
       currentNumber: [],
+      assistNumber: [],
       showNumber: false,
       num: 0,
       showContent: {},
@@ -592,7 +602,8 @@ export default {
               key: aty.ID,
               value: aty.Name,
               type: aty.Type,
-              img: this.image
+              img: this.image,
+              price: aty.Price
             });
           }
         } else {
@@ -641,7 +652,8 @@ export default {
                   key: at.ID,
                   value: at.Name,
                   type: at.Type,
-                  img: this.image
+                  img: this.image,
+                  price: at.Price
                 });
               }
             }
@@ -790,12 +802,14 @@ export default {
             // let options = sqlAssistiveAnswer[sql].OptionIDs.split(",");
             // this.currentValue = options;
             this.currentValue.push(sqlAssistiveAnswer[sql].ID);
+            this.total = this.total + sqlAssistiveAnswer[sql].Total;
           }
         }
       } else {
         for (const s in assistiveAnswer) {
           let options = assistiveAnswer[s].OptionIDs.split(",");
           this.currentValue = options;
+          this.total = this.total + assistiveAnswer[s].Total;
         }
       }
     },
@@ -852,13 +866,15 @@ export default {
             key: t.key,
             value: t.value,
             type: t.type,
-            img: t.img
+            img: t.img,
+            price: t.price
           });
         }
       }
       return list;
     },
     numberChange(title, jian, number) {
+      this.assistNumber.push(number);
       let flag = false;
       if (this.currentNumber.length > 0) {
         for (let i = 0; i < this.currentNumber.length; i++) {
@@ -940,6 +956,76 @@ export default {
       } else {
         this.disabled.CategoryID = null;
         this.disabled.DegreeID = null;
+      }
+    },
+    currentValue() {
+      let to = 0;
+      if (this.currentValue.length > 0) {
+        let assistiveAnswer = [];
+        for (const id of this.currentValue) {
+          for (const all of this.assistiveChange) {
+            if (parseInt(id) === all.ID) {
+              assistiveAnswer.push({
+                ID: all.ID,
+                Name: all.Name,
+                Type: all.Type,
+                DisabledID: this.disabledID,
+                ExamID: this.examID,
+                optionIDs: this.currentValue.join(","),
+                Number: 1,
+                price: all.Price
+              });
+            }
+          }
+        }
+        if (this.currentNumber.length > 0) {
+          for (let q = 0; q < assistiveAnswer.length; q++) {
+            for (let w = 0; w < this.currentNumber.length; w++) {
+              if (assistiveAnswer[q].ID === this.currentNumber[w].id) {
+                assistiveAnswer[q].Number = this.currentNumber[w].number;
+              }
+            }
+          }
+
+          for (let i = 0; i < assistiveAnswer.length; i++) {
+            let price = assistiveAnswer[i].Number * assistiveAnswer[i].price;
+            this.total = to + price;
+          }
+        }
+      }
+    },
+    assistNumber() {
+      let to = 0;
+      let assistiveAnswer = [];
+      if (this.currentValue.length > 0) {
+        for (const id of this.currentValue) {
+          for (const all of this.assistiveChange) {
+            if (parseInt(id) === all.ID) {
+              assistiveAnswer.push({
+                ID: all.ID,
+                Name: all.Name,
+                Type: all.Type,
+                DisabledID: this.disabledID,
+                ExamID: this.examID,
+                optionIDs: this.currentValue.join(","),
+                Number: 1,
+                price: all.Price
+              });
+            }
+          }
+        }
+        for (let q = 0; q < assistiveAnswer.length; q++) {
+          for (let w = 0; w < this.currentNumber.length; w++) {
+            if (assistiveAnswer[q].ID === this.currentNumber[w].id) {
+              assistiveAnswer[q].Number = this.currentNumber[w].number;
+            }
+          }
+        }
+
+        for (let i = 0; i < assistiveAnswer.length; i++) {
+          let price = assistiveAnswer[i].Number * assistiveAnswer[i].price;
+          this.total = to + price;
+        }
       }
     }
   }

@@ -196,44 +196,79 @@ export default {
             });
         }
       } else {
-        var date = new Date();
-        let sm;
         if (recode.FinishTime != null) {
-          sm =
-            parseInt(recode.FinishTime.split("-")[1].replace(/^0+/, "")) +
-            parseInt(recode.FinishTime.split("-")[0]) * 12;
-        }
-        let fm =
-          parseInt(
-            date
-              .toLocaleDateString()
-              .split("/")[1]
-              .replace(/^0+/, "")
-          ) +
-          parseInt(date.toLocaleDateString().split("/")[0]) * 12;
-        let sf = fm - sm;
-        if (this.State === "4" && this.examID < 9) {
-          if (sf < 1) {
-           this.$utils.Alert("操作失败", "未到回访时间");
-          } else if (sf >= 1 && sf < 6) {
-            examId = 9;
-            let param = { ExamID: examId, DisabledID: this.disabled.ID };
-            recode1 = await this.$http
-              .get("ExamRecords/Select", param)
-              .then(r => {
-                vstate = r.State;
-              });
-          } else if (sf >= 6) {
-            examId = 10;
-            let param = { ExamID: examId, DisabledID: this.disabled.ID };
-            recode1 = await this.$http
-              .get("ExamRecords/Select", param)
-              .then(r => {
-                vstate = r.State;
-              });
+          if (this.State === "4" && this.examID < 9) {
+            var bng = new Date(recode.FinishTime);
+            var end = new Date();
+
+            if (bng.getFullYear() > end.getFullYear()) {
+              this.$utils.Alert("操作失败", "时间格式出错");
+            } else {
+              if (bng.getMonth() + 1 > end.getMonth() + 1) {
+                this.$utils.Alert("操作失败", "时间格式出错");
+              } else if (bng.getMonth() + 1 === end.getMonth() + 1) {
+                this.$utils.Alert("操作失败", "未到回访时间");
+              } else {
+                if (end.getMonth() + 1 - (bng.getMonth() + 1) === 1) {
+                  if (end.getDate() < bng.getDate()) {
+                    this.$utils.Alert("操作失败", "未到回访时间");
+                  } else {
+                    examId = 9;
+                    let param = {
+                      ExamID: examId,
+                      DisabledID: this.disabled.ID
+                    };
+                    recode1 = await this.$http
+                      .get("ExamRecords/Select", param)
+                      .then(r => {
+                        vstate = r.State;
+                      });
+                  }
+                } else if (
+                  end.getMonth() + 1 - (bng.getMonth() + 1) > 1 &&
+                  end.getMonth() + 1 - (bng.getMonth() + 1) < 6
+                ) {
+                  examId = 9;
+                  let param = {
+                    ExamID: examId,
+                    DisabledID: this.disabled.ID
+                  };
+                  recode1 = await this.$http
+                    .get("ExamRecords/Select", param)
+                    .then(r => {
+                      vstate = r.State;
+                    });
+                } else if (end.getMonth() + 1 - (bng.getMonth() + 1) >= 6) {
+                  if (end.getDate() < bng.getDate()) {
+                    examId = 9;
+                    let param = {
+                      ExamID: examId,
+                      DisabledID: this.disabled.ID
+                    };
+                    recode1 = await this.$http
+                      .get("ExamRecords/Select", param)
+                      .then(r => {
+                        vstate = r.State;
+                      });
+                  } else {
+                    examId = 10;
+                    let param = {
+                      ExamID: examId,
+                      DisabledID: this.disabled.ID
+                    };
+                    recode1 = await this.$http
+                      .get("ExamRecords/Select", param)
+                      .then(r => {
+                        vstate = r.State;
+                      });
+                  }
+                }
+              }
+            }
           }
         }
       }
+
       await this.bindExams(this.examID);
 
       //重新答题时，遍历答过的题目，清空选项

@@ -1,6 +1,6 @@
 <template>
   <div>
-    <group title="评估适配系统" label-width="6em" label-margin-right="1em" v-if="showQuestion===false">
+    <group title="评估适配系统" label-width="6em" label-margin-right="1em" v-if="showQuestion===false && sign===false">
       <x-input title="姓名" v-model="disabled.Name" required :disabled="IsView"></x-input>
       <selector title="性别" v-model="disabled.Sex" required :options="Sexlist" :readonly="IsView"></selector>
       <x-switch title="有无残疾证" v-model="disabled.HasCertificate" :disabled="IsView"></x-switch>
@@ -16,7 +16,7 @@
       <x-input title="体重" v-model="disabled.Weight" :disabled="IsView"></x-input>
       <x-input title="联系电话" v-model="disabled.Tel" :disabled="IsView"></x-input>
       <x-input title="Email" v-model="disabled.Email" :disabled="IsView"></x-input>
-      <x-address title="地址" v-model="Addresses" :list="addressData" placeholder="请选择地址" value-text-align="left" :readonly="IsView"></x-address>
+      <x-address title="地址" v-model="Addresses" :list="addressData" placeholder="请选择地址" value-text-align="left" :disabled="IsView"></x-address>
       <x-button v-if="!IsView" type="primary" @click.native="submit">评估</x-button>
       <div v-transfer-dom>
         <x-dialog v-model="showScrollBox" hide-on-blur >
@@ -38,7 +38,7 @@
         </x-dialog>
       </div>
     </group>
-    <div v-if="showQuestion||IsView">
+    <div v-if="showQuestion|| IsView">
       <div v-for="(questions,examID) in exams" :key="examID">
         <div v-for="(question,QuestionNo) in questions" :key="QuestionNo">
           <app-checklist v-show="question.show" required :examID="examID" :ref="'checklist'+examID+QuestionNo" :question="question" :questions="questions" :options="question.Options" label-position="left" :max="question.Type===1?1:question.Type===8?3:10" @on-change="optionChange" :disabled="IsView"></app-checklist>
@@ -59,6 +59,9 @@
         </flexbox>
       </div>
     </div>
+
+    <app-sign v-if="sign" :DisabledID="disabled.ID" @success="successSignCallback" ref="sign"></app-sign>
+    
     <div v-show="showAssistiveDevicesTable || IsView">
       <div class="weui-cells__title">辅具列表</div>
       <div>
@@ -115,6 +118,7 @@
 import Vue from "vue";
 import AppChecklist from "@/components/AppChecklist";
 import AppNumber from "@/components/AppNumber";
+import AppSign from "@/components/AppSign";
 import {
   XHeader,
   Group,
@@ -167,7 +171,8 @@ export default {
     CellBox,
     Badge,
     InlineXNumber,
-    AppNumber
+    AppNumber,
+    AppSign
   },
   props: {
     disabledID: String,
@@ -176,6 +181,8 @@ export default {
   },
   data() {
     return {
+      Answers: [],
+      sign: false,
       total: 0,
       assistiveNumber: 1,
       showContent: {},
@@ -237,6 +244,9 @@ export default {
         Weight: null,
         Email: "",
         Address: null,
+        DisabledSignUrl: "",
+        UserSignUrl: "",
+        UserID: "",
         disabled_Details: []
       }
     };
@@ -659,13 +669,17 @@ export default {
           _this.showScrollBox = true;
         });
       } else {
-        this.$http
-          .put("disableds/" + this.disabled.ID, this.disabled)
-          .then(r => {
-            let result = r;
-            _this.initQuestions();
-            _this.showScrollBox = true;
-          });
+        if (this.Addresses.length === 0) {
+          this.$utils.Alert("评估出错", "请填写地址");
+        } else {
+          this.$http
+            .put("disableds/" + this.disabled.ID, this.disabled)
+            .then(r => {
+              let result = r;
+              _this.initQuestions();
+              _this.showScrollBox = true;
+            });
+        }
       }
     },
     //根据答案查找辅具
@@ -993,7 +1007,7 @@ export default {
         lastQuestion.messages = checklist.messages;
       }
 
-      let Answers = [];
+      //let Answers = [];
       let area = null;
       for (let i = 0; i < this.questionManager.questionsFlow.length; i++) {
         let que = this.questionManager.questionsFlow[i];
@@ -1053,7 +1067,7 @@ export default {
         } else {
           area = null;
         }
-        Answers.push({
+        this.Answers.push({
           ExamID: que.examID,
           QuestionNo: que.questionNo,
           OptionIDs: que.options.join(","),
@@ -1062,13 +1076,34 @@ export default {
           Area: area
         });
       }
-      this.$http.post("Answers/SaveAnswers", Answers).then(r => {
-        this.$utils.Alert("任务完成");
-        this.State = "1";
-        this.loadAssistiveDevices(Answers);
-        //this.$router.push("/FuJuPingGuHome");
+      this.showQuestion = false;
+      this.sign = true;
+      // this.$http.post("Answers/SaveAnswers", Answers).then(r => {
+      //   this.$utils.Alert("任务完成");
+      //   this.State = "1";
+      //   this.loadAssistiveDevices(Answers);
+      // });
+      // this.questionManager.questionLast = [];
+    },
+    //签名
+    async successSignCallback(response) {
+      this.disabled.UserSignUrl = this.$refs.sign.signImage;
+      let param = {
+        disabledID: this.disabled.ID,
+        userSignUrl: this.disabled.UserSignUrl
+      };
+      let flag;
+
+      await this.$http.get("Disableds/SaveUserSign", param).then(r => {
+        flag = r;
       });
-      this.questionManager.questionLast = [];
+      if (flag === this.disabled.ID) {
+        this.$http.post("Answers/SaveAnswers", this.Answers).then(r => {
+          this.$utils.Alert("保存成功");
+          this.questionManager.questionLast = [];
+          this.$router.push("/FuJuPingGuHome");
+        });
+      }
     },
     //提交审核
     submitExamine() {

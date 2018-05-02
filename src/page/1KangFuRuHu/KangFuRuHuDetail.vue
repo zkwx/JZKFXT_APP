@@ -171,7 +171,7 @@ export default {
         Need: true,
         DoorService: "",
         DisabledSignUrl: "",
-        SecondSign: "",
+        UserSignUrl: "",
         UserID: "",
         Disabled_Details: []
       }
@@ -366,25 +366,10 @@ export default {
             _this.Disabled.Categories.forEach(function(item, i) {
               let detail = _this.Disabled.Disabled_Details[item - 1];
               if (!detail.DegreeID) {
-                // msg =
-                //   this.$refs.HearingDegreeID.title +
-                //   (this.$refs.HearingDegreeID.firstError == null
-                //     ? "必填哦"
-                //     : this.$refs.HearingDegreeID.firstError);
                 msg = "残疾等级必填！";
               } else if (!detail.RehabilitationID) {
-                // msg =
-                //   this.$refs.HearingRehabilitationIDs.title +
-                //   (this.$refs.HearingRehabilitationIDs.firstError == null
-                //     ? "必填哦"
-                //     : this.$refs.HearingRehabilitationIDs.firstError);
                 msg = "康复需求必填！";
               } else if (!detail.NextID) {
-                // msg =
-                //   this.$refs.HearingNextID.title +
-                //   (this.$refs.HearingNextID.firstError == null
-                //     ? "必填哦"
-                //     : this.$refs.HearingNextID.firstError);
                 msg = "服务走向必填！";
               }
             });
@@ -415,7 +400,6 @@ export default {
           this.Disabled.CategoryID = this.$refs.Categories.currentValue[0];
         }
         if (this.Disabled.DegreeID === null) {
-          //this.Disabled.DegreeID = this.$refs.VisionDegreeID.currentValue;
           for (let i = 0; i < this.Disabled.Disabled_Details.length; i++) {
             if (this.Disabled.Disabled_Details[i] != null) {
               this.Disabled.DegreeID = this.Disabled.Disabled_Details[
@@ -427,8 +411,8 @@ export default {
         const Disabled = await this.$http.post("Disableds", this.Disabled);
         this.Disabled.ID = Disabled.ID;
         this.sign = true;
-        this.$utils.Alert("保存成功");
-        _that.$router.push("/KangFuRuHuHome");
+        // this.$utils.Alert("保存成功");
+        // _that.$router.push("/KangFuRuHuHome");
       } else {
         if (this.Disabled.Categories[0] != this.Disabled.CategoryID) {
           this.Disabled.CategoryID = this.Disabled.Categories[0];
