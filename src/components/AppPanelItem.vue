@@ -15,6 +15,7 @@
         <img class="icon" :src="item.Sex===1?sex.male:sex.female"/>
         </span>
       <p class="weui-media-box__desc">联系方式 - {{item.Phone}}<br></p>
+       <p class="weui-media-box__desc">地址 - {{Address}}<br></p>
     </div>
     <div v-if="type==='exam'">
       <span><img class="cell-icon" :src="exam"/>{{item.Exam.Name}}</span>
@@ -38,7 +39,7 @@
   </div>
 </template>
 <script>
-import { Panel } from "vux";
+import { Panel, ChinaAddressV4Data, Value2nameFilter as value2name } from "vux";
 export default {
   name: "AppPanel",
   components: {
@@ -62,7 +63,9 @@ export default {
       },
       exam: require("@/assets/icon/exam.png"),
       state: null,
-      name: ""
+      name: "",
+      Address: "",
+      Addresses: []
     };
   },
   created() {
@@ -74,22 +77,33 @@ export default {
       var userID = JSON.parse(user).I;
       let examName;
       let disabledID;
-      if (!this.item.Category || !this.item.ID) {
-        examName = this.item.Exam.Name;
-        disabledID = this.item.DisabledID;
-      } else {
-        examName = this.item.Category;
-        disabledID = this.item.ID;
+      if (this.type != "user") {
+        if (!this.item.Category || !this.item.ID) {
+          examName = this.item.Exam.Name;
+          disabledID = this.item.DisabledID;
+        } else {
+          examName = this.item.Category;
+          disabledID = this.item.ID;
+        }
+        let exam = {
+          ExamName: examName,
+          DisabledID: disabledID,
+          userID: userID
+        };
+        this.$http.get("Disableds/Exam", exam).then(r => {
+          this.state = r[0].State;
+          this.name = r[0].Exam.Name;
+        });
       }
-      let exam = {
-        ExamName: examName,
-        DisabledID: disabledID,
-        userID: userID
-      };
-      this.$http.get("Disableds/Exam", exam).then(r => {
-        this.state = r[0].State;
-        this.name = r[0].Exam.Name;
-      });
+      //用户地址
+      if (this.item.Address) {
+        this.Addresses = [
+          this.item.Address.slice(0, 2) + "0000",
+          this.item.Address.slice(0, 4) + "00",
+          this.item.Address
+        ];
+      }
+      this.Address = value2name(this.Addresses, ChinaAddressV4Data);
     },
     onClick() {
       this.$router.push(this.link);

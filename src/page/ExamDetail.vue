@@ -16,7 +16,12 @@
       <x-input title="体重" v-model="disabled.Weight" :disabled="IsView"></x-input>
       <x-input title="联系电话" v-model="disabled.Tel" :disabled="IsView"></x-input>
       <x-input title="Email" v-model="disabled.Email" :disabled="IsView"></x-input>
+ <div v-show="!IsView">
       <x-address title="地址" v-model="Addresses" :list="addressData" placeholder="请选择地址" value-text-align="left" :disabled="IsView"></x-address>
+  </div>
+   <div v-show="IsView">
+ <cell title="区域" :value="getName(Addresses)"></cell>
+ </div>
       <x-button v-if="!IsView" type="primary" @click.native="submit">评估</x-button>
       <div v-transfer-dom>
         <x-dialog v-model="showScrollBox" hide-on-blur >
@@ -141,7 +146,8 @@ import {
   Cell,
   CellBox,
   Badge,
-  InlineXNumber
+  InlineXNumber,
+  Value2nameFilter as value2name
 } from "vux";
 export default {
   name: "FuJuPingGuDetail",
@@ -1234,6 +1240,9 @@ export default {
           number: number
         });
       }
+    },
+    getName(value) {
+      return value2name(value, ChinaAddressV4Data);
     }
   },
   computed: {

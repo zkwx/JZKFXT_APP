@@ -3,20 +3,21 @@
 		<div class="me">
 			<group class="infos" gutter=0>
          <div class="avatar" @click="imageChoose">
-            <img :src="user.img">
+            <img :src="user.Img">
             <img class="imageUpload" src="../assets/icon/imageUpload.png">
           </div>
-          <p>{{user.realName}}</p>
+          <p>{{user.RealName}}</p>
           <div class="paddingbottom"></div>
           <input type="file" accept="image" @change="imageChange" v-show="false" ref="file">
 			</group>
       <group title="个人信息">
-        <x-input title="登录名" v-model="user.userName" text-align="right" ref="cun" :readonly="!IsEdit"></x-input>
-         <x-input title="密码" type="password" v-model="user.password" text-align="right" ref="cpw" v-show="isView"></x-input>
-        <x-input title="姓名" v-model="user.realName" text-align="right" ref="crn"></x-input>
-       <selector title="性别" placeholder="请选择性别" v-model="user.sex" required ref="Sex" :options="Sexlist"></selector>
-        <x-input title="手机号" v-model="user.phone" text-align="right" ref="cp"></x-input>
-        <x-input title="身份证号" v-model="user.idNumber" text-align="right" ref="cin"></x-input>
+        <x-input title="登录名" v-model="user.UserName" text-align="right" ref="cun" :readonly="!IsEdit"></x-input>
+         <x-input title="密码" type="password" v-model="user.Password" text-align="right" ref="cpw" v-show="isView"></x-input>
+        <x-input title="姓名" v-model="user.RealName" text-align="right" ref="crn"></x-input>
+       <selector title="性别" placeholder="请选择性别" v-model="user.Sex" required ref="Sex" :options="Sexlist"></selector>
+        <x-input title="手机号" v-model="user.Phone" text-align="right" ref="cp"></x-input>
+         <x-address title="地址" v-model="Addresses" :list="addressData" placeholder="请选择地址" value-text-align="right"></x-address>
+        <x-input title="身份证号" v-model="user.IDNumber" text-align="right" ref="cin"></x-input>
         <x-input title="年龄" :value="age" Disabled ref="Age" :readonly="true" text-align="right"></x-input>
       </group>
       <!-- <group title="角色与区域">
@@ -42,7 +43,9 @@ import {
   Cell,
   Checklist,
   XButton,
-  Selector
+  Selector,
+  XAddress,
+  ChinaAddressV4Data
 } from "vux";
 export default {
   name: "profile",
@@ -53,7 +56,9 @@ export default {
     Cell,
     Checklist,
     XButton,
-    Selector
+    Selector,
+    XAddress,
+    ChinaAddressV4Data
   },
   props: {
     userID: String
@@ -65,20 +70,24 @@ export default {
       Sexlist: [{ key: 1, value: "男" }, { key: 2, value: "女" }],
       Roles: [],
       user: {
-        id: "",
-        userName: "",
-        password: "",
-        realName: "",
-        sex: null,
-        phone: "",
-        idNumber: "",
+        ID: "",
+        UserName: "",
+        Password: "",
+        RealName: "",
+        Sex: null,
+        Phone: "",
+        IDNumber: "",
         Roles: [],
-        roleID: null,
-        img: require("@/assets/icon/avatar-male.png")
+        RoleID: null,
+        Address: null,
+        Address: [],
+        Img: require("@/assets/icon/avatar-male.png")
       },
       fuJuShangMenList: [],
       index: 0,
-      images: []
+      images: [],
+      Addresses: [],
+      addressData: ChinaAddressV4Data
     };
   },
   created() {
@@ -89,22 +98,30 @@ export default {
       var uid = this.userID;
       if (uid) {
         this.$api.getUser(uid).then(r => {
-          this.user.id = r.ID;
+          this.user.ID = r.ID;
           //登录名
-          this.user.userName = r.UserName;
+          this.user.UserName = r.UserName;
           //用户真实姓名
-          this.user.realName = r.RealName;
+          this.user.RealName = r.RealName;
           //用户电话
-          this.user.phone = r.Phone;
+          this.user.Phone = r.Phone;
           //性别
-          this.user.sex = r.Sex;
+          this.user.Sex = r.Sex;
+          //用户地址
+          if (r.Address != null) {
+            this.Addresses = [
+              r.Address.slice(0, 2) + "0000",
+              r.Address.slice(0, 4) + "00",
+              r.Address
+            ];
+          }
           //身份证号
-          this.user.idNumber = r.IDNumber;
+          this.user.IDNumber = r.IDNumber;
           //权限
           this.user.Roles.push(r.RoleID);
           //头像
           if (r.Img != "") {
-            this.user.img = r.Img;
+            this.user.Img = r.Img;
           }
         });
         this.$api.getRoles({ forFuJuShangMen: true }).then(res => {
@@ -128,7 +145,7 @@ export default {
       let url = this.getObjectURL(file);
       this.imageUpload(file).then(data => {
         //this.user.img = url;
-        this.user.img = data;
+        this.user.Img = data;
       });
     },
     imageUpload(file) {
@@ -161,7 +178,7 @@ export default {
               UserName: this.$refs.cun.value.trim()
             };
             let u = await this.$http.get("User/Name", n);
-            if (u!="true") {
+            if (u != "true") {
               msg = this.$refs.cun.title + "已存在！";
             } else {
               if (this.$refs.cpw.value.trim() === "") {
@@ -190,7 +207,7 @@ export default {
                   for (let i = 0; i < list.length; i++) {
                     if (
                       list[i].Phone === this.$refs.cp.value &&
-                      list[i].ID != this.user.id
+                      list[i].ID != this.user.ID
                     ) {
                       msg = this.$refs.cp.title + "已存在！";
                     }
@@ -211,8 +228,8 @@ export default {
               let li = await this.$http.get("Users");
               for (let i = 0; i < li.length; i++) {
                 if (
-                  li[i].idNumber === this.user.idNumber &&
-                  li[i].ID != this.user.id
+                  li[i].IDNumber === this.user.IDNumber &&
+                  li[i].ID != this.user.ID
                 ) {
                   msg = this.$refs.cin.title + "已存在！";
                   break;
@@ -221,35 +238,42 @@ export default {
             }
           }
         }
+        if (msg === "") {
+          if (this.Addresses.length === 0) {
+            msg = "请填写地址！";
+          }
+        }
       }
       if (msg === "") {
         if (!this.userID) {
           if (this.$refs.re.getFullValue().length === 0) {
             msg = this.$refs.re.title + "必选哦";
           } else {
-            this.user.roleID = this.user.Roles[0];
+            this.user.RoleID = this.user.Roles[0];
           }
         } else {
-          this.user.roleID = this.user.Roles[0];
+          this.user.RoleID = this.user.Roles[0];
         }
       }
       if (msg === "") {
+        this.user.Address = this.Addresses[2];
         if (!this.userID) {
           var addUser = {
-            UserName: this.user.userName,
-            Password: this.user.password,
-            RealName: this.user.realName,
-            Phone: this.user.phone,
-            RoleID: this.user.roleID,
-            Sex: this.user.sex,
-            IDNumber: this.user.idNumber,
-            Img: this.user.img
+            UserName: this.user.UserName,
+            Password: this.user.Password,
+            RealName: this.user.RealName,
+            Phone: this.user.Phone,
+            RoleID: this.user.RoleID,
+            Sex: this.user.Sex,
+            IDNumber: this.user.IDNumber,
+            Img: this.user.Img,
+            Address: this.user.Address
           };
           this.$http.post("Users", addUser).then(r => {
             this.$router.push("/profile/all");
           });
         } else {
-          this.$http.put("ChangeUser", this.user).then(r => {
+          this.$http.put("Users/" + this.user.ID, this.user).then(r => {
             this.$router.push("/profile/all");
           });
         }
@@ -271,7 +295,7 @@ export default {
   },
   computed: {
     age() {
-      let age = this.$utils.CalcAge(false, "", this.user.idNumber);
+      let age = this.$utils.CalcAge(false, "", this.user.IDNumber);
       return age;
     }
   },

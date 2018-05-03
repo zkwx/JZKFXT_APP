@@ -3,18 +3,19 @@
 		<div class="me">
 			<group class="infos" gutter=0>
           <div class="avatar" @click="imageChoose">
-            <img :src="user.img">
+            <img :src="user.Img">
             <img class="imageUpload" src="../assets/icon/imageUpload.png">
           </div>
-          <p>{{user.name}}</p>
+          <p>{{user.RealName}}</p>
           <div class="paddingbottom"></div>
           <input type="file" accept="image" @change="imageChange" v-show="false" ref="file">
 			</group>
       <group title="个人信息">
-        <x-input title="姓名" v-model="user.realName" text-align="right" ref="cn"></x-input>
-         <selector title="性别" v-model="user.sex" ref="Sex" :options="Sexlist"></selector>
-        <x-input title="手机号" v-model="user.phone" text-align="right" ref="cp"></x-input>
-        <x-input title="身份证号" v-model="user.idNumber" text-align="right" ref="cin"></x-input>
+        <x-input title="姓名" v-model="user.RealName" text-align="right" ref="cn"></x-input>
+         <selector title="性别" v-model="user.Sex" ref="Sex" :options="Sexlist"></selector>
+        <x-input title="手机号" v-model="user.Phone" text-align="right" ref="cp"></x-input>
+        <x-input title="身份证号" v-model="user.IDNumber" text-align="right" ref="cin"></x-input>
+       <x-address title="地址" v-model="Addresses" :list="addressData" placeholder="请选择地址" value-text-align="right"></x-address>
       </group>
       <!-- 
       <group title="参与者权限">
@@ -38,7 +39,9 @@ import {
   Cell,
   Checklist,
   XButton,
-  Selector
+  Selector,
+  XAddress,
+  ChinaAddressV4Data
 } from "vux";
 export default {
   name: "profile",
@@ -49,7 +52,9 @@ export default {
     Cell,
     Checklist,
     XButton,
-    Selector
+    Selector,
+    XAddress,
+    ChinaAddressV4Data
   },
   data() {
     return {
@@ -57,45 +62,59 @@ export default {
       Roles: [],
       Sexlist: [{ key: 1, value: "男" }, { key: 2, value: "女" }],
       user: {
-        id: "",
-        realName: "",
-        phone: "",
-        sex: null,
-        idNumber: "",
-        roleID: null,
+        ID: "",
+        UserName: "",
+        RealName: "",
+        Phone: "",
+        Sex: null,
+        IDNumber: "",
+        RoleID: null,
+        Address: null,
+        Address: [],
         //Roles: [1, 2],
-        img: require("@/assets/icon/avatar-male.png")
+        Img: require("@/assets/icon/avatar-male.png")
       },
       role: {
         name: "",
         description: "",
         duty: ""
       },
+      Addresses: [],
       fuJuShangMenList: [],
       index: 0,
-      images: []
+      images: [],
+      addressData: ChinaAddressV4Data
     };
   },
   created() {
     this.initData();
   },
   methods: {
-    initData() {
+    async initData() {
       const userKey = localStorage.getItem("loginUserBaseInfo");
       var obj = JSON.parse(userKey);
       var uid = obj.I;
-      this.$api.getUser(uid).then(r => {
-        this.user.id = r.ID;
-        //用户姓名
-        this.user.realName = r.RealName;
+      await this.$api.getUser(uid).then(r => {
+        this.user.ID = r.ID;
+        this.user.UserName = r.UserName;
+        //用户姓名(真实姓名)
+        this.user.RealName = r.RealName;
         //用户电话
-        this.user.phone = r.Phone;
-        this.user.sex = r.Sex;
-        this.user.idNumber = r.IDNumber;
-        this.user.roleID = r.RoleID;
+        this.user.Phone = r.Phone;
+        this.user.Sex = r.Sex;
+        this.user.IDNumber = r.IDNumber;
+        this.user.RoleID = r.RoleID;
+        //用户地址
+        if (r.Addresses != null) {
+          this.Addresses = [
+            this.user.Address.slice(0, 2) + "0000",
+            this.user.Address.slice(0, 4) + "00",
+            this.user.Address
+          ];
+        }
         //头像
         if (r.Img != "") {
-          this.user.img = r.Img;
+          this.user.Img = r.Img;
         }
         //用户角色
         this.$api.getRole(r.RoleID).then(r => {
@@ -116,7 +135,7 @@ export default {
       let url = this.getObjectURL(file);
       this.imageUpload(file).then(data => {
         //this.user.img = url;
-        this.user.img = data;
+        this.user.Img = data;
       });
     },
     imageUpload(file) {
@@ -155,7 +174,7 @@ export default {
               for (let i = 0; i < list.length; i++) {
                 if (
                   list[i].Phone === this.$refs.cp.value &&
-                  list[i].ID != this.user.id
+                  list[i].ID != this.user.ID
                 ) {
                   msg = this.$refs.cp.title + "已存在！";
                 }
@@ -176,7 +195,7 @@ export default {
               for (let i = 0; i < li.length; i++) {
                 if (
                   li[i].IDNumber === this.$refs.cin.value &&
-                  li[i].ID != this.user.id
+                  li[i].ID != this.user.ID
                 ) {
                   msg = this.$refs.cin.title + "已存在！";
                 }
@@ -184,15 +203,15 @@ export default {
             }
           }
         }
+        if (msg === "") {
+          if (this.Addresses.length === 0) {
+            msg = "请填写地址！";
+          }
+        }
       }
       if (msg === "") {
-        // var newUser = {
-        //   ID: this.user.id,
-        //   RealName: this.$refs.cn.value,
-        //   phone: this.$refs.cp.value,
-        //   Img: this.user.img
-        // };
-        this.$http.put("ChangeUser", this.user).then(r => {
+        this.user.Address = this.Addresses[2];
+        this.$http.put("Users/" + this.user.ID, this.user).then(r => {
           this.$router.push("/profile");
         });
       } else {

@@ -16,7 +16,12 @@
       <x-input title="体重" v-model="disabled.Weight" :disabled="IsView"></x-input>
       <x-input title="联系电话" v-model="disabled.Tel" :disabled="IsView"></x-input>
       <x-input title="Email" v-model="disabled.Email" :disabled="IsView"></x-input>
-      <x-address title="地址" v-model="Addresses" :list="addressData" placeholder="请选择地址" value-text-align="left" :readonly="IsView"></x-address>
+      <div v-show="!IsView">
+      <x-address title="地址" v-model="Addresses" :list="addressData" placeholder="请选择地址" value-text-align="left" :disabled="IsView"></x-address>
+  </div>
+   <div v-show="IsView">
+ <cell title="区域" :value="getName(Addresses)"></cell>
+ </div>
     </group>
   <div>
     <div v-if="showQuestion || IsView">
@@ -108,7 +113,8 @@ import {
   XTable,
   Cell,
   CellBox,
-  Badge
+  Badge,
+  Value2nameFilter as value2name
 } from "vux";
 import { userInfo } from "os";
 export default {
@@ -1075,7 +1081,10 @@ export default {
           number: number
         });
       }
-    }
+    },
+     getName (value) {
+      return value2name(value, ChinaAddressV4Data)
+    },
   },
   computed: {
     //年龄计算

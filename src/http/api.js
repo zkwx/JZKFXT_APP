@@ -72,14 +72,6 @@ export default {
     async getUser(id) {
         return await http.get("Users/" + id);
     },
-    //查询患者(进行中)
-    async getConduct(param) {
-        return await http.get('Disabled/Conduct', param);
-    },
-    //查询患者(完成)
-    async getFinish(param) {
-        return await http.get('Disabled/Finish', param);
-    },
     //查询用户权限
     async getRole(id) {
         return await http.get('Roles/' + id);

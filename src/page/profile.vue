@@ -3,30 +3,35 @@
 		<div class="me">
 			<group class="infos" gutter=0>
           <div class="avatar">
-            <img :src="user.img">
+            <img :src="user.Img">
           </div>
-					<p>{{user.name}}</p>
-          <p>{{user.phone}}</p>
+					<p>{{user.RealName}}</p>
+          <p>{{user.Phone}}</p>
            <router-link to="/profile/all" class="guan" v-show="all">管理</router-link>
           <router-link to="/profile/edit" class="edit">设置</router-link>
-					<flexbox :gutter="0" class="infos-flex" v-show="isShow">
+					<!-- <flexbox :gutter="0" class="infos-flex" v-show="isShow">
 						<flexbox-item class="infos-flex-item vux-1px-r">
 							<div>
-								<p>{{disabled.conduct}}</p>
-								<label>{{disabled.conVal}}</label>
+								<p>1</p>
+								<label>1</label>
 							</div>
 						</flexbox-item>
 						<flexbox-item class="infos-flex-item vux-1px-r">
 							<div>
-								<p>{{disabled.finish}}</p>
-								<label>{{disabled.finVal}}</label>
+								<p>2</p>
+								<label>2</label>
 							</div>
 						</flexbox-item>
-					</flexbox>
+					</flexbox> -->
 			</group>
-			<group title="角色">
+			<group title="角色" >
 				<cell title="角色">{{role.name}}</cell>
+        <div v-show="false">
+          <x-address title="地址" v-model="Addresses" :list="addressData" placeholder="请选择地址" value-text-align="right"></x-address>
+        </div>
+        <cell title="区域" :value="getName(Addresses)"></cell>
 			</group>
+    
 			<group title="描述">
 				<!-- <checklist v-model="user.Roles" :options="Roles" disabled label-position="left"></checklist> -->
 				<cell value-align="left">{{role.description}}</cell>
@@ -46,7 +51,10 @@ import {
   FlexboxItem,
   Cell,
   Checklist,
-  XButton
+  XButton,
+  XAddress,
+  ChinaAddressV4Data,
+  Value2nameFilter as value2name
 } from "vux";
 export default {
   name: "profile",
@@ -57,97 +65,87 @@ export default {
     Group,
     Cell,
     Checklist,
-    XButton
+    XButton,
+    XAddress,
+    ChinaAddressV4Data
   },
   data() {
     return {
       //Roles: [],
+      value: [],
       user: {
-        name: "",
-        phone: "",
-        real: "",
-        roleID: "",
+        ID: "",
+        UserName: "",
+        RealName: "",
+        Phone: "",
+        Sex: null,
+        IDNumber: "",
+        RoleID: null,
+        Address: null,
+        Address: [],
         //Roles: [1, 2],
-        img: require("@/assets/icon/avatar-male.png")
-      },
-      disabled: {
-        conduct: "",
-        conVal: "",
-        finish: "",
-        finVal: ""
+        Img: require("@/assets/icon/avatar-male.png")
       },
       role: {
         name: "",
         description: "",
         duty: ""
       },
-      isShow: false
+      isShow: false,
+      Addresses: [],
+      addressData: ChinaAddressV4Data
     };
   },
   created() {
     this.initData();
   },
   methods: {
-    initData() {
+    async initData() {
       const userKey = localStorage.getItem("loginUserBaseInfo");
       var obj = JSON.parse(userKey);
       let id = obj.I;
       let role = obj.R;
-      this.$api.getUser(id).then(r => {
-        this.user.name = r.RealName;
+      await this.$api.getUser(id).then(r => {
+        this.user.ID = r.ID;
+        this.user.UserName = r.UserName;
+        //用户姓名(真实姓名)
+        this.user.RealName = r.RealName;
         //用户电话
-        this.user.phone = r.Phone;
-        this.user.roleID = r.RoleID;
+        this.user.Phone = r.Phone;
+        this.user.Sex = r.Sex;
+        this.user.IDNumber = r.IDNumber;
+        this.user.RoleID = r.RoleID;
+        //用户地址
+        if (r.Address != null) {
+          this.Addresses = [
+            r.Address.slice(0, 2) + "0000",
+            r.Address.slice(0, 4) + "00",
+            r.Address
+          ];
+        }
         //头像
         if (r.Img != "") {
-          this.user.img = r.Img;
+          this.user.Img = r.Img;
         }
         //用户角色
-        this.$api.getRole(this.user.roleID).then(r => {
+        this.$api.getRole(this.user.RoleID).then(r => {
           this.role.name = r.RoleName;
           this.role.description = r.Description;
           this.role.duty = r.Duty;
         });
       });
-      if (role < 3) {
-        this.isShow = true;
-        this.disabled.conVal = "进行中患者";
-        this.disabled.finVal = "已完成患者";
-      }
-      // else if (role > 2 && role < 10) {
-      //   this.disabled.conVal = "待审核患者";
-      //   this.disabled.finVal = "已审核患者";
-      // } else if (role > 9) {
-      //   this.disabled.conVal = "待完成患者";
-      //   this.disabled.finVal = "已完成患者";
-      // }
-      var user = {
-        id: id,
-        role: role
-      };
-      this.$api.getConduct(user).then(r => {
-        if (r > 0) {
-          this.disabled.conduct = r;
-        } else {
-          this.disabled.conduct = r.data;
-        }
-      });
-      this.$api.getFinish(user).then(x => {
-        if (x > 0) {
-          this.disabled.finish = x;
-        } else {
-          this.disabled.finish = x.data;
-        }
-      });
       //参与者权限
       // this.$api.getRoles({ forFuJuShangMen: true }).then(res => {
       //   this.Roles = res.slice(0, 2);
       // });
+    },
+    getName(value) {
+      return value2name(value, ChinaAddressV4Data);
     }
   },
   computed: {
     all() {
-      if (this.user.roleID === 12) {
+      if (this.user.RoleID === 12) {
         return true;
       } else {
         return false;
