@@ -47,7 +47,7 @@ export default {
         { name: "偏瘫" },
         { name: "脑瘫" },
         { name: "脊髓" },
-        { name: "肢体" },
+        { name: "肢体" }
       ],
       jiaZhiJiaoXingQiTabs: [
         { name: "长江新里程" },
@@ -84,6 +84,7 @@ export default {
           break;
         case "userTabs":
           this.tabs = this.userTabs;
+          break;
         default:
           break;
       }

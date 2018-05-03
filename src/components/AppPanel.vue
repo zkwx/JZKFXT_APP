@@ -53,6 +53,8 @@ export default {
         clink = "/" + this.link + "/" + item.ID;
       } else if (this.type === "info") {
         clink = "/" + this.link + "/" + item.ID;
+      } else if (this.type === "no") {
+        clink = this.link + "/" + item.ID;
       }
       return clink;
     },

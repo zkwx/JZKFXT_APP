@@ -25,7 +25,7 @@
       <span v-if="item.State===4" style="color: #078006">待回访</span>
       <span v-if="item.State===5" style="color: #078006">已完成</span>
     </div>
-     <div v-if="type==='info'">
+     <div v-if="type==='info' || type ==='no'">
       <span><img class="cell-icon" :src="exam"/>{{this.name}}</span>
       <span v-if="state===0" style="color: #5bc0de">待评估</span>
       <span v-if="state===1" style="color: #127e9e">已评估</span>
@@ -72,9 +72,18 @@ export default {
     initData() {
       let user = localStorage.getItem("loginUserBaseInfo");
       var userID = JSON.parse(user).I;
+      let examName;
+      let disabledID;
+      if (!this.item.Category || !this.item.ID) {
+        examName = this.item.Exam.Name;
+        disabledID = this.item.DisabledID;
+      } else {
+        examName = this.item.Category;
+        disabledID = this.item.ID;
+      }
       let exam = {
-        ExamName: this.item.Category,
-        DisabledID: this.item.ID,
+        ExamName: examName,
+        DisabledID: disabledID,
         userID: userID
       };
       this.$http.get("Disableds/Exam", exam).then(r => {

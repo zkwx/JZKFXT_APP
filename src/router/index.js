@@ -27,6 +27,10 @@ export default new Router({
         component: resolve => require(['page/ExamList'], resolve),
         props: true
     }, {
+        path: '/DisabledList/:examBy/:name/:displayType',
+        component: resolve => require(['page/DisabledList'], resolve),
+        props: true
+    },{
         //评估试题
         path: '/ExamDetail',
         component: resolve => require(['page/ExamDetail'], resolve),
