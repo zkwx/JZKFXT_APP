@@ -16,12 +16,12 @@
       <x-input title="体重" v-model="disabled.Weight" :disabled="IsView"></x-input>
       <x-input title="联系电话" v-model="disabled.Tel" :disabled="IsView"></x-input>
       <x-input title="Email" v-model="disabled.Email" :disabled="IsView"></x-input>
- <div v-show="!IsView">
-      <x-address title="地址" v-model="Addresses" :list="addressData" placeholder="请选择地址" value-text-align="left" :disabled="IsView"></x-address>
-  </div>
-   <div v-show="IsView">
- <cell title="区域" :value="getName(Addresses)"></cell>
- </div>
+      <div v-show="!IsView">
+        <x-address title="地址" v-model="Addresses" :list="addressData" placeholder="请选择地址" value-text-align="left" :disabled="IsView"></x-address>
+      </div>
+      <div v-show="IsView">
+        <cell title="区域" :value="getName(Addresses)"></cell>
+      </div>
       <x-button v-if="!IsView" type="primary" @click.native="submit">评估</x-button>
       <div v-transfer-dom>
         <x-dialog v-model="showScrollBox" hide-on-blur >
@@ -231,6 +231,7 @@ export default {
       currentValue: [], //辅具选择
       currentNumber: [], //选择辅具数量
       assistNumber: [],
+      assistiveAnswer: [],
       endDate: "", //致残时间 最大选择时间
       img: require("@/assets/icon/暂无图片.jpg"),
       image: "",
@@ -1083,13 +1084,13 @@ export default {
         });
       }
       this.showQuestion = false;
-      this.sign = true;
-      // this.$http.post("Answers/SaveAnswers", Answers).then(r => {
-      //   this.$utils.Alert("任务完成");
-      //   this.State = "1";
-      //   this.loadAssistiveDevices(Answers);
-      // });
-      // this.questionManager.questionLast = [];
+      // this.sign = true;
+      this.$http.post("Answers/SaveAnswers", this.Answers).then(r => {
+        this.$utils.Alert("任务完成");
+        this.State = "1";
+        this.loadAssistiveDevices(this.Answers);
+      });
+      this.questionManager.questionLast = [];
     },
     //签名
     async successSignCallback(response) {
@@ -1104,18 +1105,20 @@ export default {
         flag = r;
       });
       if (flag === this.disabled.ID) {
-        this.$http.post("Answers/SaveAnswers", this.Answers).then(r => {
-          this.$utils.Alert("保存成功");
-          this.questionManager.questionLast = [];
-          this.$router.push("/FuJuPingGuHome");
-        });
+        this.$http
+          .post("AssistiveAnswers/SaveAnswers", this.assistiveAnswer)
+          .then(r => {
+            this.$utils.Alert("提交成功", "等待审核");
+            this.State = "2";
+            this.$router.push("/FuJuPingGuHome");
+          });
       }
     },
     //提交审核
     submitExamine() {
-      let assistiveAnswer = [];
+      // let assistiveAnswer = [];
       if (this.assistiveChange.length === 0) {
-        assistiveAnswer.push({
+        this.assistiveAnswer.push({
           DisabledID: this.disabledID,
           ExamID: this.examID
         });
@@ -1123,7 +1126,7 @@ export default {
         for (const id of this.currentValue) {
           for (const all of this.assistiveChange) {
             if (parseInt(id) === all.ID) {
-              assistiveAnswer.push({
+              this.assistiveAnswer.push({
                 ID: all.ID,
                 Name: all.Name,
                 Type: all.Type,
@@ -1138,23 +1141,26 @@ export default {
           }
         }
       }
-      for (let q = 0; q < assistiveAnswer.length; q++) {
+      for (let q = 0; q < this.assistiveAnswer.length; q++) {
         for (let w = 0; w < this.currentNumber.length; w++) {
-          if (assistiveAnswer[q].ID === this.currentNumber[w].id) {
-            assistiveAnswer[q].Number = this.currentNumber[w].number;
-            assistiveAnswer[q].Total =
+          if (this.assistiveAnswer[q].ID === this.currentNumber[w].id) {
+            this.assistiveAnswer[q].Number = this.currentNumber[w].number;
+            this.assistiveAnswer[q].Total =
               this.currentNumber[w].number * assistiveAnswer[q].Price;
           }
         }
       }
-      this.$http
-        .post("AssistiveAnswers/SaveAnswers", assistiveAnswer)
-        .then(r => {
-          this.$utils.Alert("提交成功", "等待审核");
-          this.State = "2";
-          this.loadCheckAssistive(assistiveAnswer);
-          this.$router.push("/FuJuPingGuHome");
-        });
+      this.sign = true;
+      this.showAssistiveDevicesTable = false;
+      this.showQuestion = false;
+      // this.$http
+      //   .post("AssistiveAnswers/SaveAnswers", this.assistiveAnswer)
+      //   .then(r => {
+      //     this.$utils.Alert("提交成功", "等待审核");
+      //     this.State = "2";
+      //     this.loadCheckAssistive(this.assistiveAnswer);
+      //     this.$router.push("/FuJuPingGuHome");
+      //   });
     },
     //撤回审核
     backExamine() {
@@ -1402,6 +1408,9 @@ export default {
     //试卷是否做过
     IsView() {
       if (this.State != "0") {
+        if (this.sign === true) {
+          return false;
+        }
         return true;
       }
       return false;

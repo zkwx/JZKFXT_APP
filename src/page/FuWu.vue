@@ -432,7 +432,7 @@ export default {
         this.$utils.Alert("保存成功");
         _that.$router.push("/ZongHeKangFuHome");
       } else {
-        await this.$http.put("Disableds/" + this.Disabled.ID, this.Disabled);
+        // await this.$http.put("Disableds/" + this.Disabled.ID, this.Disabled);
         this.sign = true;
       }
     },

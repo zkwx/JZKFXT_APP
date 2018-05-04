@@ -44,9 +44,11 @@ export default {
   methods: {
     async initData() {
       var it = this.item;
+      
       var list = await this.$api.getAssistNumber(
         "?ExamID=" + this.examID + "&DisabledID=" + this.disabledID
       );
+
       if (this.item.key) {
         for (let k = 0; k < list.length; k++) {
           if (list[k].ID === this.item.key) {

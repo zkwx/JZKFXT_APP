@@ -91,17 +91,14 @@ export default {
             list["已入户"] = this.okList;
           }
         } else {
+          let flag = false;
           for (let i = 0; i < ele.length; i++) {
-            for (let j = 0; j < ele.length - 1 - i; j++) {
-              if (ele[j].FinishTime < ele[j + 1].FinishTime) {
-                temp = ele[j + 1];
-                ele[j + 1] = ele[j];
-                ele[j] = temp;
-              }
+            if (ele[i].State != 0) {
+              flag = true;
             }
           }
-          let mState = ele[0].State;
-          if (mState === 0) {
+
+          if (!flag) {
             this.noList.push(ele[0]);
             list["未入户"] = this.noList;
           } else {

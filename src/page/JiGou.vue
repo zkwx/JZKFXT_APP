@@ -44,8 +44,58 @@
           <selector v-if="Disabled.Need" title="服务走向" placeholder="请选择服务走向" v-model="Disabled.Disabled_Details[5].NextID" :options="Nexts" direction="right" required ref="SpiritNextID"></selector>
         </group>
       </group>
+
       <div style="padding: 0 15px;">
         <x-button type="primary" @click.native="submit">保存</x-button>
+      </div>
+
+      <div>
+         <div class="weui-cells__title">辅具列表</div>
+         <div>
+        <div>
+            <group>
+              <div v-for="(name,assistive) in conditions" :key="assistive">
+                <cell :title='name' is-link :border-intent="false" :arrow-direction="showContent[name] ? 'up' : 'down'" @click.native="showContent[name] = !showContent[name]">
+                  <badge :text='changeNumber(name)'></badge>
+                </cell>
+                <template v-if="showContent[name]">
+                  <div>
+                    <div class="weui-cells weui-cells_checkbox">
+                    <div v-for="(item,assistive) in changeAssistive(name)" :key="assistive">
+                      <label class="weui-cell weui-check_label">
+                          <div class="weui-cell__hd">
+                            <input type="checkbox" class="weui-check" :value="item.key" v-model="currentValue" :disabled="IsCheck">
+                            <i class="weui-icon-checked vux-checklist-icon-checked"></i>
+                          </div>
+                          <div style="width:50%"> 
+                            <img :src="item.img" style="width:100%"/>
+                          </div>
+                          <div class="weui-cell__bd" style="text-align: center;">
+                          <p v-html="item.value"></p>
+                          <p v-html="'单价：'+item.price+'元'"></p>
+                        </div>
+                      </label>
+                     <app-number :disabledID="disabledID" :examID="examID" :item="item" :jian="item.key" :title="item.value" :display="assistiveDisabled" @on-change="numberChange"></app-number>
+                  </div>
+                </div>
+               </div>
+                </template>
+              </div>
+            </group>
+
+              <div>
+                  <group>
+                     <x-input title="总价" v-model="total"  text-align="center" :disabled="true"></x-input>
+                  </group>
+              </div>
+              
+        </div>
+        <!-- <div>
+        <x-button type="primary"  @click.native="submitExamine">提交</x-button>
+        </div> -->
+      </div>
+
+
       </div>
     </div>
     <app-sign v-if="sign" :DisabledID="Disabled.ID" @success="successSignCallback" ref="sign"></app-sign>
@@ -61,9 +111,15 @@ import {
   Selector,
   XSwitch,
   XButton,
-  PopupPicker
+  PopupPicker,
+  Cell,
+  CellBox,
+  Badge,
+  InlineXNumber
 } from "vux";
 import AppSign from "@/components/AppSign";
+import AppNumber from "@/components/AppNumber";
+import { escape } from "querystring";
 export default {
   name: "KangFuRuHuDetail",
   components: {
@@ -75,15 +131,33 @@ export default {
     XSwitch,
     XButton,
     PopupPicker,
-    AppSign
+    AppSign,
+    AppNumber,
+    Cell,
+    CellBox,
+    Badge,
+    InlineXNumber
   },
   props: {
-    disabledID: String
+    disabledID: String,
+    examID: String,
+    state: String
   },
   data() {
     return {
       sign: false,
       isView: true,
+      total: 0,
+      assistiveDevices: [], //所有辅具
+      assistiveName: [], //辅具选择
+      conditions: [], //辅具类型
+      showContent: {},
+      currentValue: [], //辅具选择
+      currentNumber: [],
+      assistNumber: [],
+      assistiveAnswer: [],
+      img: require("@/assets/icon/暂无图片.jpg"),
+      image: "",
       Sexlist: [{ key: 1, value: "男" }, { key: 2, value: "女" }],
       RelationshipList: [
         { key: 1, value: "父母" },
@@ -179,7 +253,7 @@ export default {
     this.initData();
   },
   methods: {
-    initData() {
+    async initData() {
       //绑定人员基本信息
       if (this.Disabled.ID) {
         this.getDisabled(this.Disabled.ID);
@@ -200,6 +274,48 @@ export default {
       this.$api.getNexts().then(r => {
         this.Nexts = r;
       });
+      await this.$api.getAllAssistives().then(r => {
+        this.assistiveDevices = r;
+        for (let i = 0; i < r.length; i++) {
+          if (this.conditions.indexOf(r[i].Type) === -1) {
+            this.conditions.push(r[i].Type);
+          }
+        }
+      });
+      if (this.conditions.length > 0) {
+        for (let j = 0; j < this.assistiveDevices.length; j++) {
+          //辅具所有信息
+          let content = this.pure(this.showContent);
+          let ast = this.assistiveDevices[j];
+          if (content[ast.Type] != false) {
+            content[ast.Type] = false;
+            this.showContent = content;
+          }
+          //辅具图片
+          let assistMath = {
+            id: ast.ID,
+            name: ast.Name,
+            type: ast.Type
+          };
+          const path = await this.$http.get(
+            "AssistiveDevices/ShowImagePath",
+            assistMath
+          );
+          if (typeof path === "string") {
+            this.image = path;
+          } else {
+            this.image = this.img;
+          }
+          //辅具名称(用来选择)
+          this.assistiveName.push({
+            key: ast.ID,
+            value: ast.Name,
+            type: ast.Type,
+            img: this.image,
+            price: ast.Price
+          });
+        }
+      }
     },
     getDisabled(id) {
       var _this = this;
@@ -222,12 +338,47 @@ export default {
         _this.Disabled = r;
       });
     },
+    async getAssistive() {
+      if (this.assistiveDevices.length.length > 0) {
+        for (let j = 0; j < this.assistiveDevices.length; j++) {
+          let content = this.pure(this.showContent);
+          let ast = this.assistiveDevices[j];
+          if (content[ast.Type] != false) {
+            content[ast.Type] = false;
+            this.showContent = content;
+          }
+          //辅具图片
+          let assistMath = {
+            id: ast.ID,
+            name: ast.Name,
+            type: ast.Type
+          };
+          const path = await this.$http.get(
+            "AssistiveDevices/ShowImagePath",
+            assistMath
+          );
+          if (typeof path === "string") {
+            this.image = path;
+          } else {
+            this.image = this.img;
+          }
+          //辅具名称(用来选择)
+          this.assistiveName.push({
+            key: ast.ID,
+            value: ast.Name,
+            type: ast.Type,
+            img: this.image,
+            price: ast.Price
+          });
+        }
+      }
+    },
     change(val, label) {
       console.log("change", val, label);
     },
     async submit() {
       //表单验证
-      if (true) {
+      if (false) {
         var msg = "";
         //患者姓名
         if (!this.$refs.Name.valid || this.$refs.Name.value == "") {
@@ -378,18 +529,137 @@ export default {
         this.$utils.Alert("保存成功");
         _that.$router.push("/JiGouPingGuHome");
       } else {
-        await this.$http.put("Disableds/" + this.Disabled.ID, this.Disabled);
-        this.sign = true;
+        let num;
+        for (let n = 0; n < this.Disabled.Disabled_Details.length; n++) {
+          const next = this.Disabled.Disabled_Details[n];
+          if (next != null) {
+            num = n;
+          }
+        }
+        if (this.Disabled.Disabled_Details[num].NextID === 2) {
+          if (this.currentValue.length === 0) {
+            this.$utils.Alert("保存出错", "请先选择辅具");
+          } else {
+            this.sign = true;
+          }
+        } else {
+          this.currentValue = [];
+          this.sign = true;
+        }
       }
     },
     async successSignCallback(response) {
       this.Disabled.UserSignUrl = this.$refs.sign.signImage;
+      if (this.currentValue.length != 0) {
+        for (const id of this.currentValue) {
+          for (const all of this.assistiveDevices) {
+            if (parseInt(id) === all.ID) {
+              this.assistiveAnswer.push({
+                ID: all.ID,
+                Name: all.Name,
+                Type: all.Type,
+                DisabledID: this.disabledID,
+                ExamID: this.examID,
+                optionIDs: this.currentValue.join(","),
+                Number: 1,
+                Price: all.Price,
+                Total: 0
+              });
+            }
+          }
+        }
+      }
+      for (let q = 0; q < this.assistiveAnswer.length; q++) {
+        for (let w = 0; w < this.currentNumber.length; w++) {
+          if (this.assistiveAnswer[q].ID === this.currentNumber[w].id) {
+            this.assistiveAnswer[q].Number = this.currentNumber[w].number;
+            this.assistiveAnswer[q].Total =
+              this.currentNumber[w].number * assistiveAnswer[q].Price;
+          }
+        }
+        await this.$http
+          .post("AssistiveAnswers/SaveAnswers", this.assistiveAnswer)
+          .then(r => {
+            this.State = "3";
+          });
+      }
       await this.$http
         .put("Disableds/" + this.Disabled.ID, this.Disabled)
         .then(r => {
           this.$utils.Alert("保存成功");
           this.$router.push("/JiGouPingGuHome");
         });
+    },
+    changeNumber(type) {
+      let index = 0;
+      let list = [];
+      for (let i = 0; i < this.assistiveName.length; i++) {
+        let assist = this.assistiveName[i];
+        if (type === assist.type) {
+          list.push(assist.key);
+        } else {
+          continue;
+        }
+      }
+      if (this.currentValue.length > 0) {
+        for (let j = 0; j < this.currentValue.length; j++) {
+          for (let i = 0; i < list.length; i++) {
+            if (list[i] === this.currentValue[j]) {
+              index += 1;
+            }
+          }
+        }
+      } else {
+        index = 0;
+      }
+      return index;
+    },
+    changeAssistive(type) {
+      let list = [];
+      for (let i = 0; i < this.assistiveName.length; i++) {
+        let t = this.assistiveName[i];
+        if (type === t.type) {
+          list.push({
+            key: t.key,
+            value: t.value,
+            type: t.type,
+            img: t.img,
+            price: t.price
+          });
+        }
+      }
+      return list;
+    },
+    numberChange(title, jian, number) {
+      this.assistNumber.push(number);
+      let flag = false;
+      if (this.currentNumber.length > 0) {
+        for (let i = 0; i < this.currentNumber.length; i++) {
+          if (this.currentNumber[i].id == jian) {
+            this.currentNumber[i].number = number;
+            flag = true;
+            break;
+          }
+        }
+      } else {
+        this.currentNumber.push({
+          id: jian,
+          name: title,
+          number: number
+        });
+        flag = true;
+      }
+
+      if (!flag) {
+        this.currentNumber.push({
+          id: jian,
+          name: title,
+          number: number
+        });
+      }
+    },
+    pure(obj) {
+      return JSON.parse(JSON.stringify(obj));
     }
   },
   computed: {
@@ -401,6 +671,14 @@ export default {
         this.Disabled.IDNumber
       );
       return age;
+    },
+    //辅具是否可选
+    IsCheck() {
+      return false;
+    },
+    //数量增减按钮
+    assistiveDisabled() {
+      return true;
     },
     canChoose() {
       // return !this.Disabled.HasCertificate || this.Disabled.CategoryID === 7;
@@ -437,6 +715,76 @@ export default {
         });
       },
       deep: true
+    },
+
+    currentValue() {
+      let to = 0;
+      if (this.currentValue.length > 0) {
+        let assistiveAnswer = [];
+        for (const id of this.currentValue) {
+          for (const all of this.assistiveDevices) {
+            if (parseInt(id) === all.ID) {
+              assistiveAnswer.push({
+                ID: all.ID,
+                Name: all.Name,
+                Type: all.Type,
+                DisabledID: this.disabledID,
+                ExamID: this.examID,
+                optionIDs: this.currentValue.join(","),
+                Number: 1,
+                price: all.Price
+              });
+            }
+          }
+        }
+
+        for (let q = 0; q < assistiveAnswer.length; q++) {
+          for (let w = 0; w < this.currentNumber.length; w++) {
+            if (assistiveAnswer[q].ID === this.currentNumber[w].id) {
+              assistiveAnswer[q].Number = this.currentNumber[w].number;
+            }
+          }
+        }
+
+        for (let i = 0; i < assistiveAnswer.length; i++) {
+          let price = assistiveAnswer[i].Number * assistiveAnswer[i].price;
+          this.total = to + price;
+        }
+      }
+    },
+    assistNumber() {
+      let to = 0;
+      let assistiveAnswer = [];
+      if (this.currentValue.length > 0) {
+        for (const id of this.currentValue) {
+          for (const all of this.assistiveDevices) {
+            if (parseInt(id) === all.ID) {
+              assistiveAnswer.push({
+                ID: all.ID,
+                Name: all.Name,
+                Type: all.Type,
+                DisabledID: this.disabledID,
+                ExamID: this.examID,
+                optionIDs: this.currentValue.join(","),
+                Number: 1,
+                price: all.Price
+              });
+            }
+          }
+        }
+        for (let q = 0; q < assistiveAnswer.length; q++) {
+          for (let w = 0; w < this.currentNumber.length; w++) {
+            if (assistiveAnswer[q].ID === this.currentNumber[w].id) {
+              assistiveAnswer[q].Number = this.currentNumber[w].number;
+            }
+          }
+        }
+
+        for (let i = 0; i < assistiveAnswer.length; i++) {
+          let price = assistiveAnswer[i].Number * assistiveAnswer[i].price;
+          this.total = to + price;
+        }
+      }
     }
   }
 };
