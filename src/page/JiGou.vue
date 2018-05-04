@@ -148,6 +148,7 @@ export default {
       sign: false,
       isView: true,
       total: 0,
+      nextID: 0,
       assistiveDevices: [], //所有辅具
       assistiveName: [], //辅具选择
       conditions: [], //辅具类型
@@ -339,7 +340,7 @@ export default {
       });
     },
     async getAssistive() {
-      if (this.assistiveDevices.length.length > 0) {
+      if (this.assistiveDevices.length > 0) {
         for (let j = 0; j < this.assistiveDevices.length; j++) {
           let content = this.pure(this.showContent);
           let ast = this.assistiveDevices[j];
@@ -529,14 +530,13 @@ export default {
         this.$utils.Alert("保存成功");
         _that.$router.push("/JiGouPingGuHome");
       } else {
-        let num;
         for (let n = 0; n < this.Disabled.Disabled_Details.length; n++) {
           const next = this.Disabled.Disabled_Details[n];
           if (next != null) {
-            num = n;
+            this.nextID = next.NextID;
           }
         }
-        if (this.Disabled.Disabled_Details[num].NextID === 2) {
+        if (this.nextID === 2) {
           if (this.currentValue.length === 0) {
             this.$utils.Alert("保存出错", "请先选择辅具");
           } else {
@@ -550,7 +550,7 @@ export default {
     },
     async successSignCallback(response) {
       this.Disabled.UserSignUrl = this.$refs.sign.signImage;
-      if (this.currentValue.length != 0) {
+      if (this.currentValue.length != 0 && this.nextID === 2) {
         for (const id of this.currentValue) {
           for (const all of this.assistiveDevices) {
             if (parseInt(id) === all.ID) {
