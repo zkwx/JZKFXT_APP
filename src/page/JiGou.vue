@@ -51,7 +51,6 @@
 
       <div>
          <div class="weui-cells__title">辅具列表</div>
-         <div>
         <div>
             <group>
               <div v-for="(name,assistive) in conditions" :key="assistive">
@@ -75,7 +74,7 @@
                           <p v-html="'单价：'+item.price+'元'"></p>
                         </div>
                       </label>
-                     <app-number :disabledID="disabledID" :examID="examID" :item="item" :jian="item.key" :title="item.value" :display="assistiveDisabled" @on-change="numberChange"></app-number>
+                     <app-number :disabledID="disabledID" :state="State" :examID="examID" :item="item" :jian="item.key" :title="item.value" :display="assistiveDisabled" @on-change="numberChange"></app-number>
                   </div>
                 </div>
                </div>
@@ -93,7 +92,6 @@
         <!-- <div>
         <x-button type="primary"  @click.native="submitExamine">提交</x-button>
         </div> -->
-      </div>
 
 
       </div>
@@ -149,6 +147,7 @@ export default {
       isView: true,
       total: 0,
       nextID: 0,
+      State: this.state,
       assistiveDevices: [], //所有辅具
       assistiveName: [], //辅具选择
       conditions: [], //辅具类型
@@ -283,6 +282,7 @@ export default {
           }
         }
       });
+
       if (this.conditions.length > 0) {
         for (let j = 0; j < this.assistiveDevices.length; j++) {
           //辅具所有信息
@@ -338,41 +338,6 @@ export default {
         r.Disabled_Details = details;
         _this.Disabled = r;
       });
-    },
-    async getAssistive() {
-      if (this.assistiveDevices.length > 0) {
-        for (let j = 0; j < this.assistiveDevices.length; j++) {
-          let content = this.pure(this.showContent);
-          let ast = this.assistiveDevices[j];
-          if (content[ast.Type] != false) {
-            content[ast.Type] = false;
-            this.showContent = content;
-          }
-          //辅具图片
-          let assistMath = {
-            id: ast.ID,
-            name: ast.Name,
-            type: ast.Type
-          };
-          const path = await this.$http.get(
-            "AssistiveDevices/ShowImagePath",
-            assistMath
-          );
-          if (typeof path === "string") {
-            this.image = path;
-          } else {
-            this.image = this.img;
-          }
-          //辅具名称(用来选择)
-          this.assistiveName.push({
-            key: ast.ID,
-            value: ast.Name,
-            type: ast.Type,
-            img: this.image,
-            price: ast.Price
-          });
-        }
-      }
     },
     change(val, label) {
       console.log("change", val, label);
@@ -568,13 +533,13 @@ export default {
             }
           }
         }
-      }
-      for (let q = 0; q < this.assistiveAnswer.length; q++) {
-        for (let w = 0; w < this.currentNumber.length; w++) {
-          if (this.assistiveAnswer[q].ID === this.currentNumber[w].id) {
-            this.assistiveAnswer[q].Number = this.currentNumber[w].number;
-            this.assistiveAnswer[q].Total =
-              this.currentNumber[w].number * assistiveAnswer[q].Price;
+        for (let q = 0; q < this.assistiveAnswer.length; q++) {
+          for (let w = 0; w < this.currentNumber.length; w++) {
+            if (this.assistiveAnswer[q].ID === this.currentNumber[w].id) {
+              this.assistiveAnswer[q].Number = this.currentNumber[w].number;
+              this.assistiveAnswer[q].Total =
+                this.currentNumber[w].number * this.assistiveAnswer[q].Price;
+            }
           }
         }
         await this.$http
@@ -583,12 +548,22 @@ export default {
             this.State = "3";
           });
       }
-      await this.$http
-        .put("Disableds/" + this.Disabled.ID, this.Disabled)
-        .then(r => {
-          this.$utils.Alert("保存成功");
-          this.$router.push("/JiGouPingGuHome");
-        });
+      if (this.State === "3") {
+        let param =
+          "?examID=" +
+          this.examID +
+          "&disabledID=" +
+          this.Disabled.ID +
+          "&nextID=" +
+          this.nextID;
+        await this.$http.put("ExamRecords/ChangeExamNext" + param);
+        await this.$http
+          .put("Disableds/" + this.Disabled.ID, this.Disabled)
+          .then(r => {
+            this.$utils.Alert("保存成功");
+            this.$router.push("/JiGouPingGuHome");
+          });
+      }
     },
     changeNumber(type) {
       let index = 0;
@@ -674,10 +649,16 @@ export default {
     },
     //辅具是否可选
     IsCheck() {
+      if (this.State != "2") {
+        return true;
+      }
       return false;
     },
     //数量增减按钮
     assistiveDisabled() {
+      if (this.State != "2") {
+        return false;
+      }
       return true;
     },
     canChoose() {
@@ -720,7 +701,7 @@ export default {
     currentValue() {
       let to = 0;
       if (this.currentValue.length > 0) {
-        let assistiveAnswer = [];
+        const assistiveAnswer = [];
         for (const id of this.currentValue) {
           for (const all of this.assistiveDevices) {
             if (parseInt(id) === all.ID) {
@@ -746,8 +727,8 @@ export default {
           }
         }
 
-        for (let i = 0; i < assistiveAnswer.length; i++) {
-          let price = assistiveAnswer[i].Number * assistiveAnswer[i].price;
+        for (let k = 0; k < assistiveAnswer.length; k++) {
+          let price = assistiveAnswer[k].Number * assistiveAnswer[k].price;
           this.total = to + price;
         }
       }
