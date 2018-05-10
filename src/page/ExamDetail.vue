@@ -1068,6 +1068,8 @@ export default {
             area = "矫形器";
           } else if (queChange.indexOf("无障碍环境") != -1) {
             area = "无障碍改造";
+          } else if (queChange.indexOf("假肢") != -1) {
+            area = "其它假肢";
           }
         } else if (tp == 4 && que.examID == "8") {
           area = "无障碍改造";
@@ -1309,15 +1311,16 @@ export default {
           checklisto.currentValue.length > 0 &&
           questiono.Options.length > 0
         ) {
+          let canSum = false;
           for (const optionID of checklisto.currentValue) {
             const option = questiono.QueryOptions[optionID];
             const NextQuestionNo = option.NextQuestionNo;
             if (option.NextExamID != 0) {
               //试卷跳转
-              return false;
+              canSum = false;
             } else if (questiono.Type != 4 && NextQuestionNo) {
               //问题类型不为 4 且有下一题
-              return false;
+              canSum = false;
             } else if (
               questiono.QuestionNo !=
               this.questionManager.questionsFlow[
@@ -1325,17 +1328,18 @@ export default {
               ].questionNo
             ) {
               //当前题目不是最后一题（多选题）
-              return false;
+              canSum = false;
             } else if (
               this.questionManager.questionLast.length > 0 &&
               checklisto.examID != this.examID
             ) {
               //试卷跳回下一题
-              return false;
+              canSum = false;
             } else {
-              return true;
+              canSum = true;
             }
           }
+          return canSum;
         }
         if (
           checklisto &&
