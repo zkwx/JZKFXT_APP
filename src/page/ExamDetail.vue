@@ -111,7 +111,8 @@
               
         </div>
         <div>
-        <x-button type="primary"  @click.native="submitExamine" :disabled="!canSubmit" :value="status">{{status}}</x-button>
+        <x-button type="primary"  @click.native="submitExamine" :disabled="!canSubmit">审核</x-button>
+          <x-button type="primary"  @click.native="backState" :disabled="!canState">重新评估</x-button>
         <x-button type="primary"  @click.native="backExamine" :disabled="!canBack">撤回</x-button>
         </div>
       </div>
@@ -702,9 +703,29 @@ export default {
       }
       //数据库查询答案
       if (!answers) {
+        const showRecord = await this.$api.getExamRecord(
+          "?ExamID=" + this.examID + "&disabledID=" + this.disabled.ID
+        );
         answers = await this.$api.getAnswers(
           "?ExamID=" + this.examID + "&disabledID=" + this.disabled.ID
         );
+        if (parseInt(showRecord.ShowExam) != 0) {
+          const examAnswer = await this.$api.getAnswers(
+            "?ExamID=" + showRecord.ShowExam + "&disabledID=" + this.disabled.ID
+          );
+
+          for (let ea = 0; ea < examAnswer.length; ea++) {
+            answers.push({
+              Area: examAnswer[ea].Area,
+              DisabledID: examAnswer[ea].DisabledID,
+              ExamID: examAnswer[ea].ExamID,
+              ID: examAnswer[ea].ID,
+              OptionIDs: examAnswer[ea].OptionIDs,
+              Other: examAnswer[ea].Other,
+              QuestionNo: examAnswer[ea].QuestionNo
+            });
+          }
+        }
       }
       this.assistiveDevices = [];
       //答案列表
@@ -744,6 +765,9 @@ export default {
         } else {
           //从数据库查询
           exama = answers[key];
+          if (this.exams[exama.ExamID] === undefined) {
+            await this.bindExams(exama.ExamID);
+          }
           questions = this.exams[exama.ExamID];
           question = questions[exama.QuestionNo];
 
@@ -1016,6 +1040,7 @@ export default {
 
       //let Answers = [];
       let area = null;
+      let showExam = 0;
       for (let i = 0; i < this.questionManager.questionsFlow.length; i++) {
         let que = this.questionManager.questionsFlow[i];
         let tp = this.exams[que.examID][que.questionNo].Type;
@@ -1044,8 +1069,10 @@ export default {
           }
           if (flag) {
             area = "其它假肢";
+            showExam = 7;
           } else {
             area = "长江新里程";
+            showExam = 7;
           }
         } else if (tp === 8) {
           //判断答案中矫形器和无障碍转存
@@ -1068,13 +1095,17 @@ export default {
             area = "矫形器";
           } else if (queChange.indexOf("无障碍环境") != -1) {
             area = "无障碍改造";
+            showExam = 8;
           } else if (queChange.indexOf("假肢") != -1) {
             area = "其它假肢";
+            showExam = 7;
           }
         } else if (tp == 4 && que.examID == "8") {
           area = "无障碍改造";
+          showExam = 8;
         } else {
           area = null;
+          showExam = 0;
         }
         this.Answers.push({
           ExamID: que.examID,
@@ -1082,7 +1113,8 @@ export default {
           OptionIDs: que.options.join(","),
           disabledID: this.disabled.ID,
           Other: que.messages,
-          Area: area
+          Area: area,
+          showExam: showExam
         });
       }
       this.showQuestion = false;
@@ -1163,6 +1195,18 @@ export default {
       //     this.loadCheckAssistive(this.assistiveAnswer);
       //     this.$router.push("/FuJuPingGuHome");
       //   });
+    },
+    //重新评估
+    backState() {
+      let exRecord = {
+        ExamID: this.examID,
+        DisabledID: this.disabled.ID
+      };
+        this.$http.post("ExamRecords/BackState", exRecord).then(x => {
+        this.$utils.Alert("请重新进行评估");
+        this.State = "2";
+        this.$router.push("/FuJuPingGuHome");
+      });
     },
     //撤回审核
     backExamine() {
@@ -1400,14 +1444,12 @@ export default {
       }
       return false;
     },
-    status() {
+    //重新评估按钮使用
+    canState() {
       if (this.State === "1") {
-        return "提交审批";
-      } else if (this.State === "2") {
-        return "待审核";
-      } else if (this.State === "3") {
-        return "待完成";
+        return true;
       }
+      return false;
     },
     //试卷是否做过
     IsView() {
