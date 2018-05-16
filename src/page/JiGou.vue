@@ -554,7 +554,11 @@ export default {
             this.State = "3";
           });
       }
-      if (this.State === "3" || this.nextID != 2 ||(this.currentValue.length===0&&this.nextID===2)) {
+      if (
+        this.State === "3" ||
+        this.nextID != 2 ||
+        (this.currentValue.length === 0 && this.nextID === 2)
+      ) {
         let param =
           "?examID=" +
           this.examID +
@@ -565,7 +569,11 @@ export default {
 
         let flag;
 
-        await this.$http.get("Disableds/SaveUserSign", param).then(r => {
+        let parName = {
+          disabledID: this.disabled.ID,
+          userSignUrl: this.Disabled.UserSignUrl
+        };
+        await this.$http.get("Disableds/SaveUserSign", parName).then(r => {
           flag = r;
         });
 

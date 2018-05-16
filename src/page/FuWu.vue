@@ -568,11 +568,15 @@ export default {
       this.sf = true;
       this.sign = true;
     },
-  
+
     async successSignCallback(response) {
       this.Disabled.UserSignUrl = this.$refs.sign.signImage;
       let flag;
-      await this.$http.get("Disableds/SaveUserSign", param).then(r => {
+      let parName = {
+        disabledID: this.disabled.ID,
+        userSignUrl: this.Disabled.UserSignUrl
+      };
+      await this.$http.get("Disableds/SaveUserSign", parName).then(r => {
         flag = r;
       });
       if (flag === this.Disabled.ID) {
