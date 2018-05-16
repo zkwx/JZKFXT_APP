@@ -254,6 +254,12 @@ export default {
   },
   methods: {
     async initData() {
+      for (let n = 0; n < this.Disabled.Disabled_Details.length; n++) {
+        const next = this.Disabled.Disabled_Details[n];
+        if (next != null) {
+          next.NextID = 1;
+        }
+      }
       //绑定人员基本信息
       if (this.Disabled.ID) {
         this.getDisabled(this.Disabled.ID);
@@ -548,7 +554,7 @@ export default {
             this.State = "3";
           });
       }
-      if (this.State === "3") {
+      if (this.State === "3" || this.nextID != 2 ||(this.currentValue.length===0&&this.nextID===2)) {
         let param =
           "?examID=" +
           this.examID +
@@ -556,13 +562,25 @@ export default {
           this.Disabled.ID +
           "&nextID=" +
           this.nextID;
-        await this.$http.put("ExamRecords/ChangeExamNext" + param);
-        await this.$http
-          .put("Disableds/" + this.Disabled.ID, this.Disabled)
-          .then(r => {
+
+        let flag;
+
+        await this.$http.get("Disableds/SaveUserSign", param).then(r => {
+          flag = r;
+        });
+
+        if (flag === this.Disabled.ID) {
+          await this.$http.put("ExamRecords/ChangeExamNext" + param).then(r => {
             this.$utils.Alert("保存成功");
             this.$router.push("/JiGouPingGuHome");
           });
+        }
+        // await this.$http
+        //   .put("Disableds/" + this.Disabled.ID, this.Disabled)
+        //   .then(r => {
+        //     this.$utils.Alert("保存成功");
+        //     this.$router.push("/JiGouPingGuHome");
+        //   });
       }
     },
     changeNumber(type) {

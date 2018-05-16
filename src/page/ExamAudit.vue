@@ -668,7 +668,7 @@ export default {
           );
 
           //遍历选项获取选项文本
-          await this.condition(question, optionIDs, assistivesType);
+          await this.condition(question, optionIDs, assistivesType,answers);
           question.show = true;
         } else {
           //从数据库查询
@@ -692,7 +692,7 @@ export default {
           );
 
           //遍历选项获取选项文本
-          await this.condition(question, optionIDs, assistivesType);
+          await this.condition(question, optionIDs, assistivesType,answers);
           question.show = true;
         }
       }
@@ -856,12 +856,27 @@ export default {
       }
     },
     //遍历选项获取选项文本
-    async condition(question, optionIDs, assistivesType) {
-      if (question.Type === 8) {
+    async condition(question, optionIDs, assistivesType,answers) {
+      let fg = false;
+      let aw = {};
+      let que = {};
+      for (let qt = 0; qt < answers.length; qt++) {
+        if (this.exams[answers[qt].ExamID] === undefined) {
+          await this.bindExams(answers[qt].ExamID);
+        }
+        if (this.exams[answers[qt].ExamID][answers[qt].QuestionNo].Type === 8) {
+          fg = true;
+          aw = answers[qt];
+          que = this.exams[answers[qt].ExamID][answers[qt].QuestionNo];
+          // aw = this.exams[answers[qt].ExamID][answers[qt].QuestionNo];
+        }
+      }
+      if (fg) {
         this.conditions = [];
-        for (const ok of optionIDs) {
-          for (const qk of question.Options) {
-            if (qk.key === ok) {
+        let opt = aw.OptionIDs.split(",");
+        for (const ok of opt) {
+          for (const qk of que.Options) {
+            if (qk.key === parseInt(ok)) {
               var value = qk.value.split(".")[1];
               if (
                 assistivesType.indexOf(value) > -1 &&
@@ -872,7 +887,6 @@ export default {
             }
           }
         }
-        return;
       } else {
         for (const cv of optionIDs) {
           for (const ov of question.Options) {

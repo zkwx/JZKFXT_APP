@@ -153,6 +153,7 @@ export default {
       isView: true,
       total: 0,
       nextID: 0,
+      sf: false,
       State: this.state,
       assistiveDevices: [], //所有辅具
       assistiveName: [], //辅具选择
@@ -264,6 +265,14 @@ export default {
   methods: {
     async initData() {
       //绑定人员基本信息
+
+      for (let n = 0; n < this.Disabled.Disabled_Details.length; n++) {
+        const next = this.Disabled.Disabled_Details[n];
+        if (next != null) {
+          next.NextID = 2;
+        }
+      }
+
       if (this.Disabled.ID) {
         this.getDisabled(this.Disabled.ID);
       } else {
@@ -543,53 +552,39 @@ export default {
         _that.$router.push("/ZongHeKangFuHome");
       } else {
         // await this.$http.put("Disableds/" + this.Disabled.ID, this.Disabled);
+
+        for (let n = 0; n < this.Disabled.Disabled_Details.length; n++) {
+          const next = this.Disabled.Disabled_Details[n];
+          if (next != null) {
+            this.nextID = next.NextID;
+          }
+        }
+        this.sf = false;
         this.sign = true;
       }
     },
 
     async finish() {
-      var _that = this;
-      //如果未选择，清空后传入后台更新
-      for (let i = 0; i < 6; i++) {
-        if (this.Disabled.Categories.indexOf(i + 1) === -1) {
-          this.Disabled.Disabled_Details[i] = null;
-        }
-      }
-
-      if (!this.Disabled.ID) {
-        //选择身份证号后选择的残疾类别和等级
-        if (this.Disabled.Categories === []) {
-          this.Disabled.Categories = this.$refs.Categories;
-        }
-        if (this.Disabled.CategoryID === null) {
-          this.Disabled.CategoryID = this.$refs.Categories.currentValue[0];
-        }
-        if (this.Disabled.DegreeID === null) {
-          this.Disabled.DegreeID = this.$refs.VisionDegreeID.currentValue;
-        }
-        const Disabled = await this.$http.post("Disableds", this.Disabled);
-        this.Disabled.ID = Disabled.ID;
-        this.sign = true;
-        this.$utils.Alert("保存成功");
-        _that.$router.push("/ZongHeKangFuHome");
-      } else {
-        // await this.$http.put("Disableds/" + this.Disabled.ID, this.Disabled);
-        this.sign = true;
-      }
+      this.sf = true;
+      this.sign = true;
     },
-
+  
     async successSignCallback(response) {
-      let userKey = localStorage.getItem("loginUserBaseInfo");
-      var obj = JSON.parse(userKey);
-      this.UserID = obj.I;
       this.Disabled.UserSignUrl = this.$refs.sign.signImage;
-      await this.$http
-        .put("Disableds/" + this.Disabled.ID, this.Disabled)
-        .then(r => {
+      let flag;
+      await this.$http.get("Disableds/SaveUserSign", param).then(r => {
+        flag = r;
+      });
+      if (flag === this.Disabled.ID) {
+        if (this.sf) {
+          //完成
+          let userKey = localStorage.getItem("loginUserBaseInfo");
+          var obj = JSON.parse(userKey);
+          this.UserID = obj.I;
           this.$api
             .postExamRecord(
               "?ExamID=" +
-                this.Disabled.Categories[0] +
+                this.examID +
                 "&DisabledID=" +
                 this.Disabled.ID +
                 "&UserID=" +
@@ -599,7 +594,21 @@ export default {
               this.$utils.Alert("保存成功");
               this.$router.push("/ZongHeKangFuHome");
             });
-        });
+        } else {
+          //转存
+          let param =
+            "?examID=" +
+            this.examID +
+            "&disabledID=" +
+            this.Disabled.ID +
+            "&nextID=" +
+            this.nextID;
+          await this.$http.put("ExamRecords/ChangeExamNext" + param).then(r => {
+            this.$utils.Alert("保存成功");
+            this.$router.push("/ZongHeKangFuHome");
+          });
+        }
+      }
     },
     changeNumber(type) {
       let index = 0;

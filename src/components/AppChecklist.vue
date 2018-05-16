@@ -3,7 +3,7 @@
     <b><p style="font-size:20px;padding:0.8em;"><span style="color:#428bca;" v-text="getQuestionDesc()"></span><br>{{question.QuestionNo}}.{{question.QuestionText}}</p></b>
     <div :class="disabled ? 'vux-checklist-disabled' : ''">
       <!--单选和多选-->
-      <div v-if="question.Type<=2||question.Type===6||question.Type===8" class="weui-cells weui-cells_checkbox">
+      <div v-if="question.Type<=2||question.Type===8" class="weui-cells weui-cells_checkbox">
         <label class="weui-cell weui-check_label" :class="{'vux-checklist-label-left': labelPosition === 'left'}" :for="`checkbox_${uuid}_${index}`" v-for="(one, index) in currentOptions" :key="index" v-show="getShow(one)">
           <div class="weui-cell__hd">
             <input type="checkbox" class="weui-check" :name="`vux-checkbox-${uuid}`" :value="getKey(one)" v-model="currentValue" :id="disabled ? '' : `checkbox_${uuid}_${index}`" :disabled="isDisabled(getKey(one))">
@@ -13,6 +13,45 @@
             <p v-html="getValue(one)"></p>
           </div>
         </label>
+      </div>
+      <!-- 残疾部位选择 -->
+       <div v-if="question.Type===6" class="weui-cells weui-cells_checkbox">
+
+        <label class="weui-cell weui-check_label" :class="{'vux-checklist-label-left': labelPosition === 'left'}" :for="`checkbox_${uuid}_${index}`" v-for="(one, index) in currentOptions" :key="index" v-show="getShow(one)">
+          <div class="weui-cell__hd">
+            <input type="checkbox" class="weui-check" :name="`vux-checkbox-${uuid}`" :value="getKey(one)" v-model="currentValue" :id="disabled ? '' : `checkbox_${uuid}_${index}`" :disabled="isDisabled(getKey(one))">
+            <i class="weui-icon-checked vux-checklist-icon-checked"></i>
+          </div>
+          <div class="weui-cell__bd">
+            <p v-html="getValue(one)"></p>
+          </div>
+        </label>
+
+        <!-- 图片 -->
+        <!-- <img :src="test" border="0" usemap="#planetmap" style="width:100%"/>
+        <map name="planetmap" id="planetmap">
+          <area shape="circle" coords="133,133,30" @click="clickImg('右肩膀')"/>
+          <area shape="circle" coords="259,138,30" @click="clickImg('左肩膀')">
+        </map> -->
+        <!-- 文字 -->
+        <!-- <swipeout>
+          <swipeout-item :disabled="disabled" ref="swipeoutItem" :right-menu-width="210" :sensitivity="15">
+            <div slot="right-menu">
+              <swipeout-button @click.native="clickImg('fav')" type="primary" :width="70">{{'Fav'}}</swipeout-button>
+              <swipeout-button @click.native="clickImg('delete')" type="warn" :width="70">{{'Delete'}}</swipeout-button>
+              <swipeout-button @click.native="clickImg('ignore')" type="default" :width="70">{{'Ignore'}}</swipeout-button>
+            </div>
+            <div slot="left-menu">
+              <swipeout-button @click.native="clickImg('fav')" type="primary">{{'Fav'}}</swipeout-button>
+              <swipeout-button @click.native="clickImg('delete')" type="warn">{{'Delete'}}</swipeout-button>
+            </div>
+            <div slot="content" class="demo-content vux-1px-b">
+              now 
+            </div>
+          </swipeout-item>
+        </swipeout> -->
+
+
       </div>
       <!--单选和多选end-->
       <!--选择后的下拉-->
@@ -91,7 +130,15 @@
 <script>
 import uuidMixin from "./mixin_uuid";
 import { getValue, getLabels, getKey, getShow } from "./object-filter";
-import { Tip, Icon, Group, XTextarea } from "vux";
+import {
+  Tip,
+  Icon,
+  Group,
+  XTextarea,
+  Swipeout,
+  SwipeoutItem,
+  SwipeoutButton
+} from "vux";
 
 export default {
   name: "app-checklist",
@@ -99,7 +146,10 @@ export default {
     Tip,
     Icon,
     Group,
-    XTextarea
+    XTextarea,
+    Swipeout,
+    SwipeoutItem,
+    SwipeoutButton
   },
   filters: {
     getValue,
@@ -149,7 +199,8 @@ export default {
       tempValue: "", // used only for radio mode
       tempSubValue: "", // used only for radio mode
       images: [],
-      fileExist: false
+      fileExist: false,
+      test: require("@/assets/icon/change.png")
       // img: null
     };
   },
@@ -177,6 +228,9 @@ export default {
     getValue,
     getKey,
     getShow,
+    clickImg(e) {
+      this.$utils.Alert(e);
+    },
     imageChange(e) {
       let $target = e.target || e.dataTransfer || e.srcElement;
       if (!$target.files.length) return;
@@ -224,14 +278,14 @@ export default {
     //获取下一题的选项
     getNextOptions(one) {
       let questionNo = this.question.QueryOptions[getKey(one)].NextQuestionNo;
-      if(!questionNo) return null
+      if (!questionNo) return null;
       let options = this.questions[questionNo].Options;
       return options;
     },
     //获取下一题的类型
     getType(one) {
       let questionNo = this.question.QueryOptions[getKey(one)].NextQuestionNo;
-      if(!questionNo) return null
+      if (!questionNo) return null;
       let types = this.questions[questionNo].Type;
       return types;
     },

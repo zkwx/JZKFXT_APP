@@ -303,13 +303,15 @@ export default {
     //初始化问题
     async initQuestions() {
       await this.bindExams(this.examID);
-
       //重新答题时，遍历答过的题目，清空选项
       if (this.questionManager.questionsFlow.length > 1) {
         for (const question of this.questionManager.questionsFlow) {
-          const currentChecklist =
-            "checklist" + this.examID + question.questionNo;
-          this.$refs[currentChecklist][0].currentValue = [];
+          if (question.options && question.options.length > 0) {
+            const currentChecklist =
+              "checklist" + this.examID + question.questionNo;
+            this.$refs[currentChecklist][0].currentValue = [];
+          }
+          this.exams[question.examID][question.questionNo].show = false;
         }
       }
 
@@ -703,29 +705,29 @@ export default {
       }
       //数据库查询答案
       if (!answers) {
-        const showRecord = await this.$api.getExamRecord(
-          "?ExamID=" + this.examID + "&disabledID=" + this.disabled.ID
-        );
+        // const showRecord = await this.$api.getExamRecord(
+        //   "?ExamID=" + this.examID + "&disabledID=" + this.disabled.ID
+        // );
         answers = await this.$api.getAnswers(
           "?ExamID=" + this.examID + "&disabledID=" + this.disabled.ID
         );
-        if (parseInt(showRecord.ShowExam) != 0) {
-          const examAnswer = await this.$api.getAnswers(
-            "?ExamID=" + showRecord.ShowExam + "&disabledID=" + this.disabled.ID
-          );
+        // if (parseInt(showRecord.ShowExam) != 0) {
+        //   const examAnswer = await this.$api.getAnswers(
+        //     "?ExamID=" + showRecord.ShowExam + "&disabledID=" + this.disabled.ID
+        //   );
 
-          for (let ea = 0; ea < examAnswer.length; ea++) {
-            answers.push({
-              Area: examAnswer[ea].Area,
-              DisabledID: examAnswer[ea].DisabledID,
-              ExamID: examAnswer[ea].ExamID,
-              ID: examAnswer[ea].ID,
-              OptionIDs: examAnswer[ea].OptionIDs,
-              Other: examAnswer[ea].Other,
-              QuestionNo: examAnswer[ea].QuestionNo
-            });
-          }
-        }
+        //   for (let ea = 0; ea < examAnswer.length; ea++) {
+        //     answers.push({
+        //       Area: examAnswer[ea].Area,
+        //       DisabledID: examAnswer[ea].DisabledID,
+        //       ExamID: examAnswer[ea].ExamID,
+        //       ID: examAnswer[ea].ID,
+        //       OptionIDs: examAnswer[ea].OptionIDs,
+        //       Other: examAnswer[ea].Other,
+        //       QuestionNo: examAnswer[ea].QuestionNo
+        //     });
+        //   }
+        // }
       }
       this.assistiveDevices = [];
       //答案列表
@@ -760,7 +762,7 @@ export default {
           );
 
           //遍历选项获取选项文本
-          await this.condition(question, optionIDs, assistivesType);
+          await this.condition(question, optionIDs, assistivesType, answers);
           question.show = true;
         } else {
           //从数据库查询
@@ -787,7 +789,7 @@ export default {
           );
 
           //遍历选项获取选项文本
-          await this.condition(question, optionIDs, assistivesType);
+          await this.condition(question, optionIDs, assistivesType, answers);
           question.show = true;
         }
       }
@@ -959,12 +961,27 @@ export default {
       }
     },
     //遍历选项获取选项文本
-    async condition(question, optionIDs, assistivesType) {
-      if (question.Type === 8) {
+    async condition(question, optionIDs, assistivesType, answers) {
+      let fg = false;
+      let aw = {};
+      let que = {};
+      for (let qt = 0; qt < answers.length; qt++) {
+        if (this.exams[answers[qt].ExamID] === undefined) {
+          await this.bindExams(answers[qt].ExamID);
+        }
+        if (this.exams[answers[qt].ExamID][answers[qt].QuestionNo].Type === 8) {
+          fg = true;
+          aw = answers[qt];
+          que = this.exams[answers[qt].ExamID][answers[qt].QuestionNo];
+          // aw = this.exams[answers[qt].ExamID][answers[qt].QuestionNo];
+        }
+      }
+      if (fg) {
         this.conditions = [];
-        for (const ok of optionIDs) {
-          for (const qk of question.Options) {
-            if (qk.key === ok) {
+        let opt = aw.OptionIDs.split(",");
+        for (const ok of opt) {
+          for (const qk of que.Options) {
+            if (qk.key === parseInt(ok)) {
               var value = qk.value.split(".")[1];
               if (
                 assistivesType.indexOf(value) > -1 &&
@@ -975,7 +992,6 @@ export default {
             }
           }
         }
-        return;
       } else {
         for (const cv of optionIDs) {
           for (const ov of question.Options) {
@@ -1114,7 +1130,8 @@ export default {
           disabledID: this.disabled.ID,
           Other: que.messages,
           Area: area,
-          showExam: showExam
+          showExam: showExam,
+          FirstExam: this.examID
         });
       }
       this.showQuestion = false;
@@ -1202,7 +1219,7 @@ export default {
         ExamID: this.examID,
         DisabledID: this.disabled.ID
       };
-        this.$http.post("ExamRecords/BackState", exRecord).then(x => {
+      this.$http.post("ExamRecords/BackState", exRecord).then(x => {
         this.$utils.Alert("请重新进行评估");
         this.State = "2";
         this.$router.push("/FuJuPingGuHome");
@@ -1362,9 +1379,11 @@ export default {
             if (option.NextExamID != 0) {
               //试卷跳转
               canSum = false;
+              break;
             } else if (questiono.Type != 4 && NextQuestionNo) {
               //问题类型不为 4 且有下一题
               canSum = false;
+              break;
             } else if (
               questiono.QuestionNo !=
               this.questionManager.questionsFlow[
@@ -1373,12 +1392,14 @@ export default {
             ) {
               //当前题目不是最后一题（多选题）
               canSum = false;
+              break;
             } else if (
               this.questionManager.questionLast.length > 0 &&
               checklisto.examID != this.examID
             ) {
               //试卷跳回下一题
               canSum = false;
+              break;
             } else {
               canSum = true;
             }
@@ -1555,5 +1576,4 @@ export default {
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
-
 </style>

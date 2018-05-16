@@ -149,7 +149,7 @@ export default {
       this.DisabilityReasons = await this.$api.getDisabilityReasons(2);
       if (this.disabled.ID != null) {
         this.getDisabled(this.disabled.ID);
-        localStorage.removeItem(this.disabled.ID);
+        // localStorage.removeItem(this.disabled.ID);
       }
       await this.initQuestions();
 
@@ -288,16 +288,21 @@ export default {
           messages: ""
         });
 
-        let ex = JSON.parse(localStorage.getItem("loginUserBaseInfo"));
-        if (!ex) {
-          debugger;
-          localStorage.setItem(this.disabled.ID, JSON.stringify(this.examID));
-        }
+        // let ex = JSON.parse(localStorage.getItem("loginUserBaseInfo"));
+        // if (!ex) {
+        //   localStorage.setItem(this.disabled.ID, JSON.stringify(this.examID));
+        // }
 
         this.$router.push({
           path: "/AssistVisit/" + this.disabled.ID + "/" + examId + "/" + vstate
         });
-        location.reload();
+        // if (examId === 9 && vstate == "4") {
+        //   this.$utils.Alert("已回访", "未到第二次回访时间");
+        //   setTimeout(() => {
+        //     location.reload();
+        //   }, 3000);
+        // }
+         location.reload();
       } else {
         this.questionManager.questionsFlow.push({
           examID: this.examID,
@@ -318,10 +323,13 @@ export default {
       return exam;
     },
     //获取当前问题
-    getCurrentQuestion() {
+    async getCurrentQuestion() {
       const exam = this.questionManager.questionsFlow[
         this.questionManager.currentQuestionsFlowIndex
       ];
+      if (this.exams[exam.examID] === undefined) {
+        await this.bindExams(exam.examID);
+      }
       const questions = this.exams[exam.examID];
       const question = questions[exam.questionNo];
       return question;
@@ -663,9 +671,9 @@ export default {
     },
     //根据答案查找辅具
     async loadAssistiveDevices(answers) {
-      // //所有辅具
-      // const assistives = await this.$api.getAllAssistives();
-      // //所有辅具类型
+      //所有辅具
+      //const assistives = await this.$api.getAllAssistives();
+      //所有辅具类型
       // const assistivesType = [];
       // for (const t of assistives) {
       //   if (assistivesType.indexOf(t.Type) === -1) {
@@ -696,9 +704,12 @@ export default {
           //做完之后直接查看
           exama = this.questionManager.questionsFlow[key];
           questions = this.exams[exama.examID];
+          if (this.exams[exama.ExamID] === undefined) {
+            await this.bindExams(exama.ExamID);
+          }
           question = questions[exama.questionNo];
           //辅具查询(答案选项，答案记录数据，问题集合)
-          //await this.assistiveList(optionIDs, exama, questions);
+          // await this.assistiveList(optionIDs, exama, questions);
           //数组转换
           this.arrayChange(questionKey, question, optionIDs, twoOptionIDs);
           //问题选择的选项
@@ -711,18 +722,21 @@ export default {
           );
 
           //遍历选项获取选项文本
-          //await this.condition(question, optionIDs, assistivesType);
+          //await this.condition(question, optionIDs, assistivesType,answers);
           question.show = true;
         } else {
           //从数据库查询
           exama = answers[key];
+          if (this.exams[exama.ExamID] === undefined) {
+            await this.bindExams(exama.ExamID);
+          }
           questions = this.exams[exama.ExamID];
           question = questions[exama.QuestionNo];
 
           //辅具查询(答案选项，答案记录数据，问题集合)
-          // if (optionIDs != "") {
+          //  if (optionIDs != "") {
           //   await this.assistiveList(optionIDs, exama, questions);
-          // }
+          //  }
           //数组转换
           this.arrayChange(questionKey, question, optionIDs, twoOptionIDs);
           //问题选择的选项
@@ -735,20 +749,44 @@ export default {
           );
 
           //遍历选项获取选项文本
-          //await this.condition(question, optionIDs, assistivesType);
+          //await this.condition(question, optionIDs, assistivesType,answers);
           question.show = true;
         }
       }
 
-      // if (this.assistiveDevices.length > 0) {
+      //  if (this.assistiveDevices.length > 0) {
       //   //筛选
       //   if (this.conditions.length === 0) {
       //     for (const a in this.assistiveDevices) {
       //       const at = this.assistiveDevices[a];
       //       //辅具所有信息
       //       this.assistiveChange.push(at);
+      //       //辅具显示
+      //       const type = aty.Type;
+
+      //       let content = this.pure(this.showContent);
+      //       if (content[type] != false) {
+      //         content[type] = false;
+      //         this.showContent = content;
+      //       }
+      //       const path = await this.$http.get(
+      //         "AssistiveDevices/ShowImagePath",
+      //         assistMath
+      //       );
+      //       if (typeof path === "string") {
+      //         this.image = path;
+      //       } else {
+      //         this.image = this.img;
+      //       }
       //       //辅具名称(用来选择)
-      //       this.assistiveName.push(at.Name);
+      //       //this.assistiveName.push(at.Name);
+      //       this.assistiveName.push({
+      //         key: aty.ID,
+      //         value: aty.Name,
+      //         type: aty.Type,
+      //         img: this.image,
+      //         price: aty.Price
+      //       });
       //     }
       //   } else {
       //     for (const ty in this.assistiveDevices) {
@@ -762,13 +800,43 @@ export default {
       //     for (const b in this.conditions) {
       //       const bt = this.conditions[b];
       //       //table.innerHTML = bt;
-      //       for (const a in this.assistiveDevices) {
+      //       for (let a in this.assistiveDevices) {
       //         const at = this.assistiveDevices[a];
       //         if (at.Type === bt) {
       //           //辅具所有信息
       //           this.assistiveChange.push(at);
+      //           //辅具显示
+      //           const type = at.Type;
+
+      //           let content = this.pure(this.showContent);
+      //           if (content[type] != false) {
+      //             content[type] = false;
+      //             this.showContent = content;
+      //           }
+      //           //辅具图片
+      //           let assistMath = {
+      //             id: at.ID,
+      //             name: at.Name,
+      //             type: at.Type
+      //           };
+      //           const imgPath = await this.$http.get(
+      //             "AssistiveDevices/ShowImagePath",
+      //             assistMath
+      //           );
+      //           if (typeof imgPath === "string") {
+      //             this.image = imgPath;
+      //           } else {
+      //             this.image = this.img;
+      //           }
       //           //辅具名称(用来选择)
-      //           this.assistiveName.push(at.Name);
+      //           //this.assistiveName.push(at.Name);
+      //           this.assistiveName.push({
+      //             key: at.ID,
+      //             value: at.Name,
+      //             type: at.Type,
+      //             img: this.image,
+      //             price: at.Price
+      //           });
       //         }
       //       }
       //     }
@@ -854,14 +922,69 @@ export default {
     //   }
     // },
     //遍历选项获取选项文本
-    // condition(question, optionIDs, assistivesType) {
-    //   for (const ov of question.Options) {
+    // async condition(question, optionIDs, assistivesType, answers) {
+    //   let fg = false;
+    //   let aw = {};
+    //   let que = {};
+    //   for (let qt = 0; qt < answers.length; qt++) {
+    //     if (this.exams[answers[qt].ExamID] === undefined) {
+    //       await this.bindExams(answers[qt].ExamID);
+    //     }
+    //     if (this.exams[answers[qt].ExamID][answers[qt].QuestionNo].Type === 8) {
+    //       fg = true;
+    //       aw = answers[qt];
+    //       que = this.exams[answers[qt].ExamID][answers[qt].QuestionNo];
+    //     }
+    //   }
+    //   if (fg) {
+    //     this.conditions = [];
+    //     let opt = aw.OptionIDs.split(",");
+    //     for (const ok of opt) {
+    //       for (const qk of que.Options) {
+    //         if (qk.key === parseInt(ok)) {
+    //           var value = qk.value.split(".")[1];
+    //           if (
+    //             assistivesType.indexOf(value) > -1 &&
+    //             this.conditions.indexOf(value) === -1
+    //           ) {
+    //             this.conditions.push(value);
+    //           }
+    //         }
+    //       }
+    //     }
+    //   } else {
     //     for (const cv of optionIDs) {
-    //       if (ov.key === cv) {
-    //         let lv = ov.value;
-    //         let value = lv.split(".");
-    //         if (assistivesType.indexOf(value[1]) > -1) {
-    //           this.conditions.push(value[1]);
+    //       for (const ov of question.Options) {
+    //         if (ov.key === cv) {
+    //           let list = question.QueryOptions[cv].AssistiveDevices;
+    //           if (list != "") {
+    //             if (list.indexOf(",") > -1) {
+    //               let value = list.split(",");
+    //               for (let i = 0; i < value.length; i++) {
+    //                 const type1 = await this.$api.getAssistiveDevice(
+    //                   parseInt(value[i])
+    //                 );
+    //                 const t = type1.Type;
+    //                 if (
+    //                   assistivesType.indexOf(t) > -1 &&
+    //                   this.conditions.indexOf(t) === -1
+    //                 ) {
+    //                   this.conditions.push(t);
+    //                 }
+    //               }
+    //             } else {
+    //               const type2 = await this.$api.getAssistiveDevice(
+    //                 parseInt(list)
+    //               );
+    //               const k = type2.Type;
+    //               if (
+    //                 assistivesType.indexOf(k) > -1 &&
+    //                 this.conditions.indexOf(k) === -1
+    //               ) {
+    //                 this.conditions.push(k);
+    //               }
+    //             }
+    //           }
     //         }
     //       }
     //     }
@@ -903,15 +1026,15 @@ export default {
         });
       }
       this.$http.post("Answers/SaveAnswers", Answers).then(r => {
-        let ex = JSON.parse(localStorage.getItem("loginUserBaseInfo"));
+        // let ex = JSON.parse(localStorage.getItem("loginUserBaseInfo"));
         let exam = {
-          ExamID: ex,
+          ExamID: this.examID,
           DisabledID: this.disabled.ID
         };
         this.$http.post("ExamRecords/ChangeState", exam).then(x => {
           this.$utils.Alert("提交成功");
           this.State = "4";
-          localStorage.removeItem(this.disabled.ID);
+          // localStorage.removeItem(this.disabled.ID);
         });
         this.loadAssistiveDevices(Answers);
         //this.$router.push("/FuJuPingGuHome");
@@ -1114,5 +1237,4 @@ export default {
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
-
 </style>
