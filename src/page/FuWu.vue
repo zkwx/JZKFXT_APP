@@ -573,7 +573,7 @@ export default {
       this.Disabled.UserSignUrl = this.$refs.sign.signImage;
       let flag;
       let parName = {
-        disabledID: this.disabled.ID,
+        disabledID: this.Disabled.ID,
         userSignUrl: this.Disabled.UserSignUrl
       };
       await this.$http.get("Disableds/SaveUserSign", parName).then(r => {
