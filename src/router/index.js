@@ -30,14 +30,15 @@ export default new Router({
         path: '/DisabledList/:examBy/:name/:displayType',
         component: resolve => require(['page/DisabledList'], resolve),
         props: true
-    },{
+    }, {
         //评估试题
         path: '/ExamDetail',
         component: resolve => require(['page/ExamDetail'], resolve),
     }, {
         path: '/ExamDetail/:disabledID/:examID/:state',
         component: resolve => require(['page/ExamDetail'], resolve),
-        props: true
+        props: true,
+        meta: { navShow: true, role: [1, 2, 12] },
     }, {
         //评估审核
         path: '/ExamAudit',
@@ -61,7 +62,8 @@ export default new Router({
     }, {
         path: '/AssistVisit/:disabledID/:examID/:state',
         component: resolve => require(['page/AssistVisit'], resolve),
-        props: true
+        props: true,
+        meta: { navShow: true, role: [1, 2, 12] },
     }, {
         //机构评估
         path: '/JiGou',
@@ -69,7 +71,8 @@ export default new Router({
     }, {
         path: '/JiGou/:disabledID/:examID/:state',
         component: resolve => require(['page/JiGou'], resolve),
-        props: true
+        props: true,
+        meta: { navShow: true, role: [3, 4, 5, 6, 7, 8, 9, 12] },
     }, {
         //康复服务
         path: '/FuWu',

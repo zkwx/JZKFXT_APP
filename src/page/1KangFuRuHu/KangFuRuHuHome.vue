@@ -63,7 +63,6 @@ export default {
   },
   methods: {
     async initData() {
-      //this.$api.getDisableds().then(res => { this.list = res })
       let user = localStorage.getItem("loginUserBaseInfo");
       var userID = JSON.parse(user);
       var json = {
@@ -72,7 +71,7 @@ export default {
       await this.$api.getDisableds(json).then(res => {
         this.list = res;
       });
-    },
+    }
   }
 };
 </script>

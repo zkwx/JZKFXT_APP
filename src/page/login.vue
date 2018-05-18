@@ -64,21 +64,6 @@ export default {
   },
   methods: {
     submit() {
-      // var valid = this.$refs.UserNameRef.valid && this.$refs.PasswordRef.valid
-      // if(valid){
-      //     var formData = this.user;
-      //     this.$http.get('Users', formData, r => {
-      //         var result = r.data;
-      //         console.log(r);
-      //         this.$router.push('KangFuRuHuHome')
-      //     },r=>{
-      //         this.$vux.alert.show({
-      //             title: '登录失败',
-      //             content: '用户名或密码错误。'
-      //         })
-      //         console.log(r);
-      //     })
-      // }
       var msg = "";
       if (true) {
         if (this.$refs.UserNameRef.value === "") {
@@ -97,7 +82,6 @@ export default {
               R: r.RoleID
             };
             localStorage.setItem("loginUserBaseInfo", JSON.stringify(User));
-            //localStorage.setItem(r.ID, JSON.stringify(User));
             //若验证成功跳转
             if (r.RoleID > 0 && r.RoleID < 3) {
               var redirect = decodeURIComponent(
@@ -113,7 +97,7 @@ export default {
               );
             } else {
               var redirect = decodeURIComponent(
-                this.$route.query.redirect || "/KangFuRuHuHome"
+                this.$route.query.redirect || "/profile"
               );
             }
 

@@ -254,12 +254,6 @@ export default {
   },
   methods: {
     async initData() {
-      for (let n = 0; n < this.Disabled.Disabled_Details.length; n++) {
-        const next = this.Disabled.Disabled_Details[n];
-        if (next != null) {
-          next.NextID = 1;
-        }
-      }
       //绑定人员基本信息
       if (this.Disabled.ID) {
         this.getDisabled(this.Disabled.ID);
@@ -338,6 +332,7 @@ export default {
                 item.RehabilitationID.toString()
               ];
             }
+            item.NextID = 1;
             details[item.CategoryID - 1] = item;
           }
         });

@@ -1,6 +1,6 @@
 <template>
   <div>
-    <b><p style="font-size:20px;padding:0.8em;"><span style="color:#428bca;" v-text="getQuestionDesc()"></span><br>{{question.QuestionNo}}.{{question.QuestionText}}</p></b>
+    <b><p style="font-size:20px;padding:0.2em;"><span style="color:#428bca;" v-text="getQuestionDesc()"></span><br>{{question.QuestionNo}}.{{question.QuestionText}}</p></b>
     <div :class="disabled ? 'vux-checklist-disabled' : ''">
       <!--单选和多选-->
       <div v-if="question.Type<=2||question.Type===8" class="weui-cells weui-cells_checkbox">
@@ -30,29 +30,35 @@
         <!-- 图片 -->
         <!-- <img :src="test" border="0" usemap="#planetmap" style="width:100%"/>
         <map name="planetmap" id="planetmap">
-          <area shape="circle" coords="133,133,30" @click="clickImg('右肩膀')"/>
-          <area shape="circle" coords="259,138,30" @click="clickImg('左肩膀')">
-        </map> -->
+          <area shape="circle" coords="133,133,30" @click="clickImg('肩关节')"/>
+          <area shape="circle" coords="259,138,30" @click="clickImg('肩关节')">
+           <area shape="circle" coords="110,181,30" @click="clickImg('上臂中间')"/>
+          <area shape="circle" coords="275,179,30" @click="clickImg('上臂中间')">
+           <area shape="circle" coords="100,215,30" @click="clickImg('肘关节')"/>
+          <area shape="circle" coords="285,213,30" @click="clickImg('肘关节')">
+          <area shape="circle" coords="80,260,30" @click="clickImg('前臂中间')"/>
+          <area shape="circle" coords="305,263,30" @click="clickImg('前臂中间')">
+          <area shape="circle" coords="60,305,30" @click="clickImg('腕关节')"/>
+          <area shape="circle" coords="325,303,30" @click="clickImg('腕关节')">
+        </map>  -->
         <!-- 文字 -->
-        <!-- <swipeout>
+         <!-- <div v-for="(name,change) in changeText" :key="change">
+        <swipeout>
           <swipeout-item :disabled="disabled" ref="swipeoutItem" :right-menu-width="210" :sensitivity="15">
             <div slot="right-menu">
-              <swipeout-button @click.native="clickImg('fav')" type="primary" :width="70">{{'Fav'}}</swipeout-button>
               <swipeout-button @click.native="clickImg('delete')" type="warn" :width="70">{{'Delete'}}</swipeout-button>
-              <swipeout-button @click.native="clickImg('ignore')" type="default" :width="70">{{'Ignore'}}</swipeout-button>
             </div>
             <div slot="left-menu">
-              <swipeout-button @click.native="clickImg('fav')" type="primary">{{'Fav'}}</swipeout-button>
               <swipeout-button @click.native="clickImg('delete')" type="warn">{{'Delete'}}</swipeout-button>
             </div>
             <div slot="content" class="demo-content vux-1px-b">
-              now 
+              {{name}}
             </div>
           </swipeout-item>
-        </swipeout> -->
+        </swipeout>
+        </div> -->
 
-
-      </div>
+      </div> 
       <!--单选和多选end-->
       <!--选择后的下拉-->
       <div v-if="question.Type>2 && question.Type<5" class="weui-cells weui-cells_checkbox">
@@ -192,6 +198,9 @@ export default {
   },
   data() {
     return {
+      changeText: [],
+      changeGrade: [],
+      changeVal: [],
       currentValue: [],
       currentSubValue: [],
       messages: "",
@@ -229,7 +238,62 @@ export default {
     getKey,
     getShow,
     clickImg(e) {
-      this.$utils.Alert(e);
+      let maxGrade;
+      let grade;
+      let val;
+      //获取最大值
+      for (let a = 0; a < this.question.Options.length; a++) {
+        let k = this.question.Options[a].key;
+        if (maxGrade === undefined) {
+          maxGrade = this.question.QueryOptions[k].Grade;
+        } else {
+          if (this.question.QueryOptions[k].Grade > maxGrade) {
+            maxGrade = this.question.QueryOptions[k].Grade;
+          }
+        }
+      }
+      //获取当前值
+      for (let i = 0; i < this.question.Options.length; i++) {
+        if (this.question.Options[i].value.indexOf(e) > -1) {
+          val = this.question.Options[i].key;
+          grade = this.question.QueryOptions[val].Grade;
+          break;
+        }
+      }
+      //判断区间
+      if (this.changeText.length === 0) {
+        this.changeText.push(e);
+        this.changeVal.push(val);
+        this.changeGrade.push(grade);
+      } else {
+        let flag = true;
+        //上肢区间 [maxGrade,maxGrade/2)
+        if (grade > maxGrade / 2) {
+          for (let u = 0; u < this.changeGrade.length; u++) {
+            if (this.changeGrade[u] > maxGrade / 2) {
+              if (this.changeGrade[u] >= grade) {
+                flag = false;
+              }
+            }
+          }
+        } else {
+          //下肢区间[maxGrade/2,0)
+          for (let u = 0; u < this.changeGrade.length; u++) {
+            if (this.changeGrade[u] <= maxGrade / 2) {
+              if (this.changeGrade[u] >= grade) {
+                flag = false;
+              }
+            }
+          }
+        }
+        if (flag) {
+          this.changeText.push(e);
+          this.changeVal.push(val);
+          this.changeGrade.push(grade);
+        }
+      }
+      this.currentValue = this.changeVal;
+      this.$utils.Alert(this.changeText);
     },
     imageChange(e) {
       let $target = e.target || e.dataTransfer || e.srcElement;
@@ -463,7 +527,6 @@ function pure(obj) {
 // .weui-cells_checkbox .weui-check:checked + .vux-checklist-icon-checked:before {
 //   color: @checklist-icon-active-color;
 // }
-
 .image img {
   width: 100%;
 }
@@ -476,6 +539,9 @@ function pure(obj) {
 
 .weui-cells_checkbox > div > label > * {
   pointer-events: none;
+}
+.weui-cells_checkpic {
+  padding-bottom: 20px;
 }
 .vux-checklist-disabled .vux-checklist-icon-checked:before {
   opacity: 0.5;

@@ -50,7 +50,7 @@
         </div>
       </div>
       <div v-if="!IsView">
-        <flexbox style="bottom: 1em;position: absolute;" :gutter="10">
+        <flexbox style="bottom: 3.5em;position: absolute;" :gutter="10">
           <flexbox-item>
             <x-button type="primary" ref="but" @click.native="Previous" :disabled="this.questionManager.currentQuestionsFlowIndex===0">上一题</x-button>
           </flexbox-item>
