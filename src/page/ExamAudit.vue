@@ -27,7 +27,7 @@
     <div v-if="showQuestion || IsView">
       <div v-for="(questions,examID) in exams" :key="examID">
         <div v-for="(question,QuestionNo) in questions" :key="QuestionNo">
-          <app-checklist v-show="question.show" required :examID="examID" :ref="'checklist'+examID+QuestionNo" :question="question" :questions="questions" :options="question.Options" label-position="left" :max="question.Type===1?1:question.Type===8?3:10" @on-change="optionChange" :disabled="IsView"></app-checklist>
+          <app-checklist v-show="question.show" required :state="State" :examID="examID" :ref="'checklist'+examID+QuestionNo" :question="question" :questions="questions" :options="question.Options" label-position="left" :max="question.Type===1?1:question.Type===8?3:10" @on-change="optionChange" :disabled="IsView"></app-checklist>
         </div>
       </div>
     </div>
@@ -668,7 +668,7 @@ export default {
           );
 
           //遍历选项获取选项文本
-          await this.condition(question, optionIDs, assistivesType,answers);
+          await this.condition(question, optionIDs, assistivesType, answers);
           question.show = true;
         } else {
           //从数据库查询
@@ -692,7 +692,7 @@ export default {
           );
 
           //遍历选项获取选项文本
-          await this.condition(question, optionIDs, assistivesType,answers);
+          await this.condition(question, optionIDs, assistivesType, answers);
           question.show = true;
         }
       }
@@ -856,7 +856,7 @@ export default {
       }
     },
     //遍历选项获取选项文本
-    async condition(question, optionIDs, assistivesType,answers) {
+    async condition(question, optionIDs, assistivesType, answers) {
       let fg = false;
       let aw = {};
       let que = {};
@@ -1096,9 +1096,9 @@ export default {
         });
       }
     },
-     getName (value) {
-      return value2name(value, ChinaAddressV4Data)
-    },
+    getName(value) {
+      return value2name(value, ChinaAddressV4Data);
+    }
   },
   computed: {
     //年龄计算
@@ -1225,5 +1225,4 @@ export default {
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
-
 </style>

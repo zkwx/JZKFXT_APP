@@ -15,9 +15,9 @@
         </label>
       </div>
       <!-- 残疾部位选择 -->
-       <div v-if="question.Type===6" class="weui-cells weui-cells_checkbox">
-
-        <label class="weui-cell weui-check_label" :class="{'vux-checklist-label-left': labelPosition === 'left'}" :for="`checkbox_${uuid}_${index}`" v-for="(one, index) in currentOptions" :key="index" v-show="getShow(one)">
+       <div v-if="question.Type===6">
+         <div v-show="State!='0'"  class="weui-cells weui-cells_checkbox">
+          <label class="weui-cell weui-check_label" :class="{'vux-checklist-label-left': labelPosition === 'left'}" :for="`checkbox_${uuid}_${index}`" v-for="(one, index) in currentOptions" :key="index" v-show="getShow(one)">
           <div class="weui-cell__hd">
             <input type="checkbox" class="weui-check" :name="`vux-checkbox-${uuid}`" :value="getKey(one)" v-model="currentValue" :id="disabled ? '' : `checkbox_${uuid}_${index}`" :disabled="isDisabled(getKey(one))">
             <i class="weui-icon-checked vux-checklist-icon-checked"></i>
@@ -26,39 +26,33 @@
             <p v-html="getValue(one)"></p>
           </div>
         </label>
-
-        <!-- 图片 -->
-        <!-- <img :src="test" border="0" usemap="#planetmap" style="width:100%"/>
+        </div>
+       <div v-show="State==='0'" style="text-align:center">
+        <img :src="test" border="0" usemap="#planetmap" width="200px"/>
         <map name="planetmap" id="planetmap">
-          <area shape="circle" coords="133,133,30" @click="clickImg('肩关节')"/>
-          <area shape="circle" coords="259,138,30" @click="clickImg('肩关节')">
-           <area shape="circle" coords="110,181,30" @click="clickImg('上臂中间')"/>
-          <area shape="circle" coords="275,179,30" @click="clickImg('上臂中间')">
-           <area shape="circle" coords="100,215,30" @click="clickImg('肘关节')"/>
-          <area shape="circle" coords="285,213,30" @click="clickImg('肘关节')">
-          <area shape="circle" coords="80,260,30" @click="clickImg('前臂中间')"/>
-          <area shape="circle" coords="305,263,30" @click="clickImg('前臂中间')">
-          <area shape="circle" coords="60,305,30" @click="clickImg('腕关节')"/>
-          <area shape="circle" coords="325,303,30" @click="clickImg('腕关节')">
-        </map>  -->
+          <div v-for="(tol,num) in body" :key="num">
+            <area :shape="tol.shape" :coords="tol.coords" @click="clickImg(tol.click)"/>
+          </div>
+        </map> 
         <!-- 文字 -->
-         <!-- <div v-for="(name,change) in changeText" :key="change">
+         <div v-for="(na,change) in changeText" :key="change">
         <swipeout>
           <swipeout-item :disabled="disabled" ref="swipeoutItem" :right-menu-width="210" :sensitivity="15">
             <div slot="right-menu">
-              <swipeout-button @click.native="clickImg('delete')" type="warn" :width="70">{{'Delete'}}</swipeout-button>
+              <swipeout-button @click.native="delImg(na.val)" type="warn" :width="70">{{'Delete'}}</swipeout-button>
             </div>
             <div slot="left-menu">
-              <swipeout-button @click.native="clickImg('delete')" type="warn">{{'Delete'}}</swipeout-button>
+              <swipeout-button @click.native="delImg(na.val)" type="warn">{{'Delete'}}</swipeout-button>
             </div>
-            <div slot="content" class="demo-content vux-1px-b">
-              {{name}}
+            <div slot="content" class="demo-content vux-1px-b" style="line-height:3">
+              {{na.name}}
             </div>
           </swipeout-item>
         </swipeout>
-        </div> -->
-
+        </div>
+       <!-- state:0 -->
       </div> 
+        </div>
       <!--单选和多选end-->
       <!--选择后的下拉-->
       <div v-if="question.Type>2 && question.Type<5" class="weui-cells weui-cells_checkbox">
@@ -143,7 +137,8 @@ import {
   XTextarea,
   Swipeout,
   SwipeoutItem,
-  SwipeoutButton
+  SwipeoutButton,
+  XButton
 } from "vux";
 
 export default {
@@ -155,7 +150,8 @@ export default {
     XTextarea,
     Swipeout,
     SwipeoutItem,
-    SwipeoutButton
+    SwipeoutButton,
+    XButton
   },
   filters: {
     getValue,
@@ -172,6 +168,7 @@ export default {
       default: false
     },
     examID: String,
+    state: String,
     question: Object,
     questions: Object,
     options: {
@@ -198,8 +195,8 @@ export default {
   },
   data() {
     return {
+      State: this.state,
       changeText: [],
-      changeGrade: [],
       changeVal: [],
       currentValue: [],
       currentSubValue: [],
@@ -209,8 +206,114 @@ export default {
       tempSubValue: "", // used only for radio mode
       images: [],
       fileExist: false,
-      test: require("@/assets/icon/change.png")
+      test: require("@/assets/icon/change.png"),
       // img: null
+      //图片残疾部位选择
+      body: [
+        {
+          //形状
+          shape: "circle",
+          //坐标(圆心点坐标，半径)
+          coords: "70,75,10",
+          //点击传值（身体部位）
+          click: "肩关节"
+        },
+        {
+          shape: "circle",
+          coords: "135,70,10",
+          click: "肩关节"
+        },
+        {
+          shape: "circle",
+          coords: "60,95,10",
+          click: "上臂中间"
+        },
+        {
+          shape: "circle",
+          coords: "145,95,10",
+          click: "上臂中间"
+        },
+        {
+          shape: "circle",
+          coords: "53,113,10",
+          click: "肘关节"
+        },
+        {
+          shape: "circle",
+          coords: "153,114,10",
+          click: "肘关节"
+        },
+        {
+          shape: "circle",
+          coords: "45,140,10",
+          click: "前臂中间"
+        },
+        {
+          shape: "circle",
+          coords: "165,145,10",
+          click: "前臂中间"
+        },
+        {
+          shape: "circle",
+          coords: "32,160,10",
+          click: "腕关节"
+        },
+        {
+          shape: "circle",
+          coords: "176,161,10",
+          click: "腕关节"
+        },
+        {
+          shape: "circle",
+          coords: "88,163,10",
+          click: "髋关节"
+        },
+        {
+          shape: "circle",
+          coords: "118,164,10",
+          click: "髋关节"
+        },
+        {
+          shape: "circle",
+          coords: "80,205,30",
+          click: "大腿中间"
+        },
+        {
+          shape: "circle",
+          coords: "125,210,30",
+          click: "大腿中间"
+        },
+        {
+          shape: "circle",
+          coords: "75,250,10",
+          click: "膝关节"
+        },
+        {
+          shape: "circle",
+          coords: "130,255,10",
+          click: "膝关节"
+        },
+        {
+          shape: "circle",
+          coords: "70,300,30",
+          click: "小腿中间"
+        },
+        {
+          shape: "circle",
+          coords: "135,300,30",
+          click: "小腿中间"
+        },
+        {
+          shape: "circle",
+          coords: "75,345,10",
+          click: "踝关节"
+        },
+        {
+          shape: "circle",
+          coords: "130,345,10",
+          click: "踝关节"
+        }
+      ]
     };
   },
   beforeUpdate() {
@@ -237,6 +340,18 @@ export default {
     getValue,
     getKey,
     getShow,
+    //删除选择(部位ID)
+    delImg(value) {
+      for (let v = 0; v < this.changeText.length; v++) {
+        if (this.changeText[v].val === value) {
+          this.changeText.splice(v, 1);
+        }
+      }
+      this.changeVal.splice(this.changeVal.indexOf(value), 1);
+      this.currentValue = this.changeVal;
+      this.$utils.Alert(this.changeText);
+    },
+    //图片选择(部位名称)
     clickImg(e) {
       let maxGrade;
       let grade;
@@ -262,34 +377,66 @@ export default {
       }
       //判断区间
       if (this.changeText.length === 0) {
-        this.changeText.push(e);
+        this.changeText.push({
+          name: e,
+          val: val,
+          grade: grade
+        });
         this.changeVal.push(val);
-        this.changeGrade.push(grade);
+        this.currentValue = this.changeVal;
       } else {
         let flag = true;
         //上肢区间 [maxGrade,maxGrade/2)
         if (grade > maxGrade / 2) {
-          for (let u = 0; u < this.changeGrade.length; u++) {
-            if (this.changeGrade[u] > maxGrade / 2) {
-              if (this.changeGrade[u] >= grade) {
+          for (let u = 0; u < this.changeText.length; u++) {
+            if (this.changeText[u].grade > maxGrade / 2) {
+              if (this.changeText[u].grade >= grade) {
                 flag = false;
               }
             }
           }
         } else {
           //下肢区间[maxGrade/2,0)
-          for (let u = 0; u < this.changeGrade.length; u++) {
-            if (this.changeGrade[u] <= maxGrade / 2) {
-              if (this.changeGrade[u] >= grade) {
+          for (let u = 0; u < this.changeText.length; u++) {
+            if (this.changeText[u].grade <= maxGrade / 2) {
+              if (this.changeText[u].grade >= grade) {
                 flag = false;
               }
             }
           }
         }
         if (flag) {
-          this.changeText.push(e);
+          let delList = [];
+          if (grade > maxGrade / 2) {
+            for (let t = 0; t < this.changeText.length; t++) {
+              if (this.changeText[t].grade > maxGrade / 2) {
+                delList.push(t);
+              }
+            }
+            for (let e = 0; e < delList.length; e++) {
+              this.delImg(this.changeText[delList[e]].val);
+            }
+            delList = [];
+          } else {
+            for (let t = 0; t < this.changeText.length; t++) {
+              if (this.changeText[t].grade <= maxGrade / 2) {
+                delList.push(t);
+              }
+            }
+            for (let f = 0; f < delList.length; f++) {
+              this.delImg(this.changeText[delList[f]].val);
+            }
+            delList = [];
+          }
+          this.changeText.push({
+            name: e,
+            val: val,
+            grade: grade
+          });
           this.changeVal.push(val);
-          this.changeGrade.push(grade);
+        } else {
+          this.$utils.Alert("选择错误", "存在上级或相同类型的肢体残疾");
+          return;
         }
       }
       this.currentValue = this.changeVal;
@@ -536,12 +683,8 @@ function pure(obj) {
 .weui-cells .vux-no-group-title {
   margin: auto;
 }
-
 .weui-cells_checkbox > div > label > * {
   pointer-events: none;
-}
-.weui-cells_checkpic {
-  padding-bottom: 20px;
 }
 .vux-checklist-disabled .vux-checklist-icon-checked:before {
   opacity: 0.5;

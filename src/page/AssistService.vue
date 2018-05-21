@@ -27,7 +27,7 @@
     <div v-show="showView" v-if="showQuestion || IsView">
       <div v-for="(questions,examID) in exams" :key="examID">
         <div v-for="(question,QuestionNo) in questions" :key="QuestionNo">
-          <app-checklist v-show="question.show" required :examID="examID" :ref="'checklist'+examID+QuestionNo" :question="question" :questions="questions" :options="question.Options" label-position="left" :max="question.Type===1?1:question.Type===8?3:10" @on-change="optionChange" :disabled="IsView"></app-checklist>
+          <app-checklist v-show="question.show" required :state="State" :examID="examID" :ref="'checklist'+examID+QuestionNo" :question="question" :questions="questions" :options="question.Options" label-position="left" :max="question.Type===1?1:question.Type===8?3:10" @on-change="optionChange" :disabled="IsView"></app-checklist>
         </div>
       </div>
     </div>
@@ -74,7 +74,9 @@
 
         </div>
         <div v-if="showFinish">
-           <x-button type="primary" @click.native="finish" :disabled="!showFinish">完成</x-button>
+          <x-button type="primary" @click.native="finish(0)" :disabled="!showFinish">重新评估</x-button>
+          <x-button type="primary" @click.native="finish(2)" :disabled="!showFinish">重新审核</x-button>
+           <x-button type="primary" @click.native="finish(4)" :disabled="!showFinish">完成</x-button>
         </div>
       </div>
     </div>
@@ -836,21 +838,44 @@ export default {
       return JSON.parse(JSON.stringify(obj));
     },
     //辅具服务点击完成
-    finish() {
-      let Key = localStorage.getItem("loginUserBaseInfo");
-      let obj = JSON.parse(Key);
-      let uID = obj.I;
-      let record = [];
-      record.push({
-        ExamID: this.examID,
-        DisabledID: this.disabled.ID,
-        Complete: uID
-      });
-      this.$http.put("ExamRecords/Modify", record).then(r => {
-        this.$utils.Alert("操作成功", "已完成该次服务");
-        this.State = "4";
-        this.$router.push("/ZongHeKangFuHome");
-      });
+    finish(num) {
+      if (num === 0) {
+        //重新评估
+        let assistive = {
+          ExamID: this.examID,
+          DisabledID: this.disabled.ID
+        };
+        this.$http.post("AssistiveAnswers/DeleteAnswers", assistive).then(r => {
+          this.$utils.Alert("操作成功", "已发回重新评估");
+          this.State="0";
+          this.$router.push("/ZongHeKangFuHome");
+        });
+      } else if (num === 2) {
+        //重新审核
+        let record = {
+          ExamID: this.examID,
+          DisabledID: this.disabled.ID
+        };
+        this.$http.post("ExamRecords/BackExam", record).then(r => {
+          this.$utils.Alert("操作成功", "已发回重新审核");
+          this.State="2";
+          this.$router.push("/ZongHeKangFuHome");
+        });
+      } else if (num === 4) {
+        let Key = localStorage.getItem("loginUserBaseInfo");
+        let obj = JSON.parse(Key);
+        let uID = obj.I;
+        let record = {
+          ExamID: this.examID,
+          DisabledID: this.disabled.ID,
+          Complete: uID
+        };
+        this.$http.put("ExamRecords/Modify", record).then(r => {
+          this.$utils.Alert("操作成功", "已完成该次服务");
+          this.State = "4";
+          this.$router.push("/ZongHeKangFuHome");
+        });
+      }
     },
     changeNumber(type) {
       let index = 0;
@@ -935,13 +960,6 @@ export default {
       return age;
     },
 
-    //审核按钮使用
-    canAdopt() {
-      if (this.State === "2") {
-        return false;
-      }
-      return true;
-    },
     showView() {
       if (this.State === "3") {
         return true;
@@ -949,7 +967,7 @@ export default {
       return false;
     },
     showFinish() {
-      if (this.State === "4") {
+      if (this.State === "3") {
         return true;
       }
       return false;
