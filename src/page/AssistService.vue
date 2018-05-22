@@ -841,13 +841,14 @@ export default {
     finish(num) {
       if (num === 0) {
         //重新评估
-        let assistive = {
+        let assistive=[];
+        assistive.push({
           ExamID: this.examID,
           DisabledID: this.disabled.ID
-        };
+        });
         this.$http.post("AssistiveAnswers/DeleteAnswers", assistive).then(r => {
           this.$utils.Alert("操作成功", "已发回重新评估");
-          this.State="0";
+          this.State = "0";
           this.$router.push("/ZongHeKangFuHome");
         });
       } else if (num === 2) {
@@ -858,19 +859,20 @@ export default {
         };
         this.$http.post("ExamRecords/BackExam", record).then(r => {
           this.$utils.Alert("操作成功", "已发回重新审核");
-          this.State="2";
+          this.State = "2";
           this.$router.push("/ZongHeKangFuHome");
         });
       } else if (num === 4) {
         let Key = localStorage.getItem("loginUserBaseInfo");
-        let obj = JSON.parse(Key);
-        let uID = obj.I;
-        let record = {
+        let userInfo = JSON.parse(Key);
+        let uID = userInfo.I;
+        let record1 = [];
+        record1.push({
           ExamID: this.examID,
           DisabledID: this.disabled.ID,
           Complete: uID
-        };
-        this.$http.put("ExamRecords/Modify", record).then(r => {
+        });
+        this.$http.put("ExamRecords/Modify", record1).then(r => {
           this.$utils.Alert("操作成功", "已完成该次服务");
           this.State = "4";
           this.$router.push("/ZongHeKangFuHome");

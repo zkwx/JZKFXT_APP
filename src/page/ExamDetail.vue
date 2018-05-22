@@ -682,13 +682,22 @@ export default {
         if (this.Addresses.length === 0) {
           this.$utils.Alert("评估出错", "请填写地址");
         } else {
-          this.$http
-            .put("disableds/" + this.disabled.ID, this.disabled)
-            .then(r => {
-              let result = r;
-              _this.initQuestions();
-              _this.showScrollBox = true;
-            });
+          // this.$http
+          //   .put("disableds/" + this.disabled.ID, this.disabled)
+          //   .then(r => {
+          //     let result = r;
+          //     _this.initQuestions();
+          //     _this.showScrollBox = true;
+          //   });
+          let userAdderss = {
+            disabledID: this.disabled.ID,
+            address: this.disabled.Address
+          };
+          this.$http.get("Disableds/SaveUserAddress", userAdderss).then(r => {
+            let result = r;
+            _this.initQuestions();
+            _this.showScrollBox = true;
+          });
         }
       }
     },
@@ -1197,7 +1206,7 @@ export default {
           if (this.assistiveAnswer[q].ID === this.currentNumber[w].id) {
             this.assistiveAnswer[q].Number = this.currentNumber[w].number;
             this.assistiveAnswer[q].Total =
-              this.currentNumber[w].number * assistiveAnswer[q].Price;
+              this.currentNumber[w].number * this.assistiveAnswer[q].Price;
           }
         }
       }
@@ -1221,7 +1230,7 @@ export default {
       };
       this.$http.post("ExamRecords/BackState", exRecord).then(x => {
         this.$utils.Alert("请重新进行评估");
-        this.State = "2";
+        this.State = "0";
         this.$router.push("/FuJuPingGuHome");
       });
     },
@@ -1233,7 +1242,7 @@ export default {
       };
       this.$http.post("ExamRecords/BackExam", record).then(x => {
         this.$utils.Alert("撤回成功");
-        this.State = "2";
+        this.State = "1";
         this.$router.push("/FuJuPingGuHome");
       });
     },

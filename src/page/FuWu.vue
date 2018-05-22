@@ -383,7 +383,7 @@ export default {
             "?ExamID=" +
               _this.Disabled.Categories[0] +
               "&DisabledID=" +
-              _this.Disabled.ID
+              _this.Disabled.ID+"&First=0"
           )
           .then(r => {
             if (r.State != 4) {

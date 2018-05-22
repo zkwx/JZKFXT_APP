@@ -474,11 +474,6 @@ export default {
           this.Disabled.Disabled_Details[i] = null;
         }
       }
-      let userKey = localStorage.getItem("loginUserBaseInfo");
-      var obj = JSON.parse(userKey);
-      //this.Disabled.UserID = obj.I;
-      //审核人
-      let auditor = obj.I;
       if (!this.Disabled.ID) {
         //选择身份证号后选择的残疾类别和等级
         if (this.Disabled.Categories === []) {
@@ -544,22 +539,23 @@ export default {
           }
         }
         let Key = localStorage.getItem("loginUserBaseInfo");
-        let obj = JSON.parse(Key);
-        let uID = obj.I;
-        let assistive = {
+        let userInfo = JSON.parse(Key);
+        let uID = userInfo.I;
+        let record = [];
+        record.push({
           ExamID: this.examID,
-          DisabledID: this.disabled.ID,
+          DisabledID: this.Disabled.ID,
           Auditor: uID
-        };
+        });
         await this.$http
           .post("AssistiveAnswers/SaveAnswers", this.assistiveAnswer)
           .then(x => {
-            this.$http.put("ExamRecords/Modify", assistive).then(r => {
-              this.$utils.Alert("操作成功", "已通过审核");
-              this.State = "3";
-              this.$router.push("/JiGouPingGuHome");
-            });
+            this.State = "3";
           });
+        await this.$http.put("ExamRecords/Modify", record).then(r => {
+          this.$utils.Alert("操作成功", "已通过审核");
+          this.$router.push("/JiGouPingGuHome");
+        });
       }
       if (
         this.State === "3" ||

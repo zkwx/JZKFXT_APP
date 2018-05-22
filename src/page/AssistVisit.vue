@@ -149,7 +149,6 @@ export default {
       this.DisabilityReasons = await this.$api.getDisabilityReasons(2);
       if (this.disabled.ID != null) {
         this.getDisabled(this.disabled.ID);
-        localStorage.removeItem(this.disabled.ID);
       }
       await this.initQuestions();
       if (this.IsView) {
@@ -173,8 +172,24 @@ export default {
     async initQuestions() {
       //时间差
       let recode = await this.$api.getExamRecord(
-        "?ExamID=" + this.examID + "&disabledID=" + this.disabled.ID
+        "?ExamID=" +
+          this.examID +
+          "&disabledID=" +
+          this.disabled.ID +
+          "&First=0"
       );
+      let exID = JSON.parse(localStorage.getItem(this.disabled.ID));
+      if (!exID) {
+        localStorage.setItem(this.disabled.ID, JSON.stringify(recode.ExamID));
+      } else if (
+        recode.ExamID != exID &&
+        recode.ExamID != 9 &&
+        recode.ExamID != 10 &&
+        recode.ExamID != 11
+      ) {
+        localStorage.setItem(this.disabled.ID, JSON.stringify(recode.ExamID));
+      }
+      //let redID = JSON.parse(localStorage.getItem(this.disabled.ID));
       let recode1;
       let examId;
       let err;
@@ -184,9 +199,13 @@ export default {
         recode.FinishTime != null &&
         recode.NextID === 2
       ) {
-        if (this.State === "4" && this.examID < 9) {
+        if ((this.State === "4" || this.State === "5") && this.examID < 9) {
           examId = 11;
-          let param = { ExamID: examId, DisabledID: this.disabled.ID };
+          let param = {
+            ExamID: examId,
+            DisabledID: this.disabled.ID,
+            First: recode.ExamID
+          };
           recode1 = await this.$http
             .get("ExamRecords/Select", param)
             .then(r => {
@@ -199,7 +218,7 @@ export default {
         if (recode.FinishTime != null) {
           bng = new Date(recode.FinishTime);
         }
-        if (this.State === "4" && this.examID < 9) {
+        if ((this.State === "4" || this.State === "5") && this.examID < 9) {
           if (bng.getFullYear() > end.getFullYear()) {
             this.$utils.Alert("操作失败", "时间格式出错");
           } else {
@@ -215,7 +234,8 @@ export default {
                   examId = 9;
                   let param = {
                     ExamID: examId,
-                    DisabledID: this.disabled.ID
+                    DisabledID: this.disabled.ID,
+                    First: recode.ExamID
                   };
                   recode1 = await this.$http
                     .get("ExamRecords/Select", param)
@@ -230,7 +250,8 @@ export default {
                 examId = 9;
                 let param = {
                   ExamID: examId,
-                  DisabledID: this.disabled.ID
+                  DisabledID: this.disabled.ID,
+                  First: recode.ExamID
                 };
                 recode1 = await this.$http
                   .get("ExamRecords/Select", param)
@@ -242,7 +263,8 @@ export default {
                   examId = 9;
                   let param = {
                     ExamID: examId,
-                    DisabledID: this.disabled.ID
+                    DisabledID: this.disabled.ID,
+                    First: recode.ExamID
                   };
                   recode1 = await this.$http
                     .get("ExamRecords/Select", param)
@@ -253,7 +275,8 @@ export default {
                   examId = 10;
                   let param = {
                     ExamID: examId,
-                    DisabledID: this.disabled.ID
+                    DisabledID: this.disabled.ID,
+                    First: recode.ExamID
                   };
                   recode1 = await this.$http
                     .get("ExamRecords/Select", param)
@@ -276,16 +299,13 @@ export default {
         }
       }
       this.questionManager.questionsFlow = [];
-      if (this.State === "4" && examId) {
+      if ((this.State === "4" || this.State === "5") && examId) {
         this.questionManager.questionsFlow.push({
           examID: examId.toString(),
           questionNo: "1",
           messages: ""
         });
-        let ex = JSON.parse(localStorage.getItem("loginUserBaseInfo"));
-        if (!ex) {
-          localStorage.setItem(this.disabled.ID, JSON.stringify(this.examID));
-        }
+
         this.$router.push({
           path: "/AssistVisit/" + this.disabled.ID + "/" + examId + "/" + vstate
         });
@@ -657,8 +677,14 @@ export default {
       // }
       //数据库查询答案
       if (!answers) {
+        let hfID = JSON.parse(localStorage.getItem(this.disabled.ID));
         answers = await this.$api.getAnswers(
-          "?ExamID=" + this.examID + "&disabledID=" + this.disabled.ID
+          "?ExamID=" +
+            this.examID +
+            "&disabledID=" +
+            this.disabled.ID +
+            "&FirstExam=" +
+            hfID
         );
       }
       this.assistiveDevices = [];
@@ -698,6 +724,9 @@ export default {
         } else {
           //从数据库查询
           exama = answers[key];
+          if (this.exams[exama.ExamID] === undefined) {
+            await this.bindExams(exama.ExamID);
+          }
           questions = this.exams[exama.ExamID];
           question = questions[exama.QuestionNo];
           //辅具查询(答案选项，答案记录数据，问题集合)
@@ -865,6 +894,7 @@ export default {
         lastQuestion.messages = checklist.messages;
       }
       let Answers = [];
+      let num = JSON.parse(localStorage.getItem(this.disabled.ID));
       for (let i = 0; i < this.questionManager.questionsFlow.length; i++) {
         let que = this.questionManager.questionsFlow[i];
         Answers.push({
@@ -872,18 +902,19 @@ export default {
           QuestionNo: que.questionNo,
           OptionIDs: que.options.join(","),
           disabledID: this.disabled.ID,
-          Other: que.messages
+          Other: que.messages,
+          FirstExam: num
         });
       }
       this.$http.post("Answers/SaveAnswers", Answers).then(r => {
-        let ex = JSON.parse(localStorage.getItem("loginUserBaseInfo"));
+        let ex = JSON.parse(localStorage.getItem(this.disabled.ID));
         let exam = {
-          ExamID: this.examID,
+          ExamID: ex,
           DisabledID: this.disabled.ID
         };
         this.$http.post("ExamRecords/ChangeState", exam).then(x => {
           this.$utils.Alert("提交成功");
-          this.State = "4";
+          this.State = "5";
           localStorage.removeItem(this.disabled.ID);
         });
         this.loadAssistiveDevices(Answers);
@@ -1045,27 +1076,13 @@ export default {
       }
       return false;
     },
-    status() {
-      if (this.State === "1") {
-        return "提交审批";
-      } else if (this.State === "2") {
-        return "待审核";
-      } else if (this.State === "3") {
-        return "已通过审核";
-      }
-    },
+
     //试卷是否做过
     IsView() {
       if (this.State != "0") {
         return true;
       }
       return false;
-    },
-    //辅具是否可选
-    IsCheck() {
-      if (this.State != "1") {
-        return true;
-      }
     }
   },
   watch: {
