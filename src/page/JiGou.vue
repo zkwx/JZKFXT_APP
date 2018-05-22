@@ -543,10 +543,22 @@ export default {
             }
           }
         }
+        let Key = localStorage.getItem("loginUserBaseInfo");
+        let obj = JSON.parse(Key);
+        let uID = obj.I;
+        let assistive = {
+          ExamID: this.examID,
+          DisabledID: this.disabled.ID,
+          Auditor: uID
+        };
         await this.$http
           .post("AssistiveAnswers/SaveAnswers", this.assistiveAnswer)
-          .then(r => {
-            this.State = "3";
+          .then(x => {
+            this.$http.put("ExamRecords/Modify", assistive).then(r => {
+              this.$utils.Alert("操作成功", "已通过审核");
+              this.State = "3";
+              this.$router.push("/JiGouPingGuHome");
+            });
           });
       }
       if (

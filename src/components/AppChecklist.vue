@@ -349,7 +349,6 @@ export default {
       }
       this.changeVal.splice(this.changeVal.indexOf(value), 1);
       this.currentValue = this.changeVal;
-      this.$utils.Alert(this.changeText);
     },
     //图片选择(部位名称)
     clickImg(e) {
@@ -440,7 +439,6 @@ export default {
         }
       }
       this.currentValue = this.changeVal;
-      this.$utils.Alert(this.changeText);
     },
     imageChange(e) {
       let $target = e.target || e.dataTransfer || e.srcElement;
