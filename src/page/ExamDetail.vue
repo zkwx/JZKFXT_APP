@@ -682,22 +682,14 @@ export default {
         if (this.Addresses.length === 0) {
           this.$utils.Alert("评估出错", "请填写地址");
         } else {
-          // this.$http
-          //   .put("disableds/" + this.disabled.ID, this.disabled)
-          //   .then(r => {
-          //     let result = r;
-          //     _this.initQuestions();
-          //     _this.showScrollBox = true;
-          //   });
-          let userAdderss = {
-            disabledID: this.disabled.ID,
-            address: this.disabled.Address
-          };
-          this.$http.get("Disableds/SaveUserAddress", userAdderss).then(r => {
-            let result = r;
-            _this.initQuestions();
-            _this.showScrollBox = true;
-          });
+          let param = "?id=" + this.disabled.ID;
+          this.$http
+            .put("Disableds/SaveUserInfo" + param, this.disabled)
+            .then(r => {
+              let result = r;
+              _this.initQuestions();
+              _this.showScrollBox = true;
+            });
         }
       }
     },
