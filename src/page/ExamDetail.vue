@@ -72,16 +72,28 @@
       <div>
         <div class="weui-cells__title" id="assistiveType"></div>
         <div>
-            <!-- <checklist label-position="left" :options="conditions" ref="demoObject" v-model="currentValue" :disabled="IsCheck"></checklist> -->
-            <group>
-              <div v-for="(name,assistive) in conditions" :key="assistive">
-                <cell :title='name' is-link :border-intent="false" :arrow-direction="showContent[name] ? 'up' : 'down'" @click.native="showContent[name] = !showContent[name]">
+          <group>
+            <div v-for="(name,assistive) in conditions" :key="assistive">
+            <!-- 一级目录 -->
+              <cell :title='name' is-link :border-intent="false" :arrow-direction="showContent[name] ? 'up' : 'down'" @click.native="showContent[name] = !showContent[name]">
                   <badge :text='changeNumber(name)'></badge>
+              </cell>
+              <template v-if="showContent[name]">
+               <!-- 二级目录 -->
+                <div v-for="(twoName,assistivet) in  changeTwoAssistive(name)" :key="assistivet" style="padding-left:10px;">
+                <cell :title='twoName.value' is-link :border-intent="false" :arrow-direction="showContent[twoName.value] ? 'up' : 'down'" @click.native="showContent[twoName.value] = !showContent[twoName.value]">
+                  <badge :text='changeTwoNumber(twoName.key)'></badge>
                 </cell>
-                <template v-if="showContent[name]">
-                  <div>
+                <template v-if="showContent[twoName.value]">
+                  <!-- 三级目录 -->
+                   <div v-for="(threeName,assistivet) in  changeThreeAssistive(twoName.key)" :key="assistivet" style="padding-left:10px;">
+                <cell :title='threeName.value' is-link :border-intent="false" :arrow-direction="showContent[threeName.value] ? 'up' : 'down'" @click.native="showContent[threeName.value] = !showContent[threeName.value]">
+                  <badge :text='changeThreeNumber(threeName.key)'></badge>
+                </cell>
+                <template v-if="showContent[threeName.value]">
+                    <div>
                     <div class="weui-cells weui-cells_checkbox">
-                    <div v-for="(item,assistive) in changeAssistive(name)" :key="assistive">
+                    <div v-for="(item,assistive) in changeFourAssistive(threeName.key)" :key="assistive">
                       <label class="weui-cell weui-check_label">
                           <div class="weui-cell__hd">
                             <input type="checkbox" class="weui-check" :value="item.key" v-model="currentValue" :disabled="IsCheck">
@@ -95,11 +107,18 @@
                           <p v-html="'单价：'+item.price+'元'"></p>
                         </div>
                       </label>
-                     <app-number :disabledID="disabledID" :examID="examID" :item="item" :jian="item.key" :title="item.value" :display="assistiveDisabled" @on-change="numberChange"></app-number>
+                     <app-number :disabledID="disabledID" :state="State" :examID="examID" :item="item" :jian="item.key" :title="item.value" :display="assistiveDisabled" @on-change="numberChange"></app-number>
                   </div>
                 </div>
-               </div>
+               </div> 
                 </template>
+                <!-- 三级目录 -->
+                   </div>
+                </template>
+                <!-- 二级目录 -->
+              </div>
+          </template>
+          <!-- 一级目录 -->
               </div>
             </group>
 
@@ -227,8 +246,10 @@ export default {
       NextQuestionNo: null,
       assistiveDevices: [],
       conditions: [], //选择筛选辅具的类型
-      assistiveName: [], //筛选之后的辅具名称(用来选择)
+      assistiveName: [], //筛选之后的辅具名称(用来选择)（四级）
       assistiveChange: [], //筛选之后的辅具集合
+      twoAssistive: [],
+      threeAssistive: [],
       currentValue: [], //辅具选择
       currentNumber: [], //选择辅具数量
       assistNumber: [],
@@ -409,7 +430,46 @@ export default {
       }
       return index;
     },
-
+    changeTwoNumber(value) {
+      let index = 0;
+      let list = [];
+      for (let i = 0; i < this.assistiveName.length; i++) {
+        let two = this.assistiveName[i];
+        if (two.twoID) {
+          list.push(two.key);
+        } else {
+          continue;
+        }
+      }
+      for (let j = 0; j < this.currentValue.length; j++) {
+        for (let k = 0; k < list.length; k++) {
+          if (list[k] === this.currentValue[k]) {
+            index += 1;
+          }
+        }
+      }
+      return index;
+    },
+    changeThreeNumber(value) {
+      let index = 0;
+      let list = [];
+      for (let i = 0; i < this.assistiveName.length; i++) {
+        let three = this.assistiveName[i];
+        if (three.threeID) {
+          list.push(three.key);
+        } else {
+          continue;
+        }
+      }
+      for (let j = 0; j < this.currentValue.length; j++) {
+        for (let k = 0; k < list.length; k++) {
+          if (list[k] === this.currentValue[k]) {
+            index += 1;
+          }
+        }
+      }
+      return index;
+    },
     //没有选择时
     noDisability(examID, questionNo) {
       const questions = this.exams[examID];
@@ -796,6 +856,8 @@ export default {
       }
 
       if (this.assistiveDevices.length > 0) {
+        let twoFlag = true;
+        let threeFlag = true;
         //筛选
         if (this.conditions.length === 0) {
           for (let a in this.assistiveDevices) {
@@ -803,11 +865,71 @@ export default {
             //辅具所有信息
             this.assistiveChange.push(aty);
             //辅具显示
-            const type = aty.Type;
+            const atype = aty.Type;
 
             let content = this.pure(this.showContent);
-            if (content[type] != false) {
-              content[type] = false;
+            if (content[atype] != false) {
+              content[atype] = false;
+              this.showContent = content;
+            }
+            let four = await this.$api.getAssistiveDevice(at.ID);
+            let three = await this.$api.getAssistiveDevice(
+              four.ParentAssistiveDeviceID
+            );
+            let two = await this.$api.getAssistiveDevice(
+              three.ParentAssistiveDeviceID
+            );
+
+            if (this.twoAssistive.length === 0) {
+              this.twoAssistive.push({
+                id: two.ID,
+                name: two.Name,
+                type: two.Type
+              });
+            } else {
+              for (let tz = 0; tz < this.twoAssistive.length; tz++) {
+                if (this.twoAssistive[tz].id === two.ID) {
+                  twoFlag = false;
+                } else {
+                  twoFlag = true;
+                }
+              }
+              if (twoFlag) {
+                this.twoAssistive.push({
+                  id: two.ID,
+                  name: two.Name,
+                  type: two.Type
+                });
+              }
+            }
+
+            if (this.threeAssistive.length === 0) {
+              this.threeAssistive.push({
+                id: three.ID,
+                parent: three.ParentAssistiveDeviceID,
+                name: three.Name,
+                type: three.Type
+              });
+            } else {
+              for (let tx = 0; tx < this.threeAssistive.length; tx++) {
+                if (this.threeAssistive[tx].id === three.ID) {
+                  threeFlag = false;
+                } else {
+                  threeFlag = true;
+                }
+              }
+              if (threeFlag) {
+                this.threeAssistive.push({
+                  id: three.ID,
+                  parent: three.ParentAssistiveDeviceID,
+                  name: three.Name,
+                  type: three.Type
+                });
+              }
+            }
+
+            if (content[two.Name] != false) {
+              content[two.Name] = false;
               this.showContent = content;
             }
             const path = await this.$http.get(
@@ -826,7 +948,9 @@ export default {
               value: aty.Name,
               type: aty.Type,
               img: this.image,
-              price: aty.Price
+              price: aty.Price,
+              twoID: two.ID,
+              threeID: three.ID
             });
           }
         } else {
@@ -842,23 +966,83 @@ export default {
             const bt = this.conditions[b];
             //table.innerHTML = bt;
             for (let a in this.assistiveDevices) {
-              const at = this.assistiveDevices[a];
-              if (at.Type === bt) {
+              const atx = this.assistiveDevices[a];
+              if (atx.Type === bt) {
                 //辅具所有信息
-                this.assistiveChange.push(at);
+                this.assistiveChange.push(atx);
                 //辅具显示
-                const type = at.Type;
+                const type = atx.Type;
 
                 let content = this.pure(this.showContent);
                 if (content[type] != false) {
                   content[type] = false;
                   this.showContent = content;
                 }
+                let fourx = await this.$api.getAssistiveDevice(atx.ID);
+                let threex = await this.$api.getAssistiveDevice(
+                  fourx.ParentAssistiveDeviceID
+                );
+                let twox = await this.$api.getAssistiveDevice(
+                  threex.ParentAssistiveDeviceID
+                );
+
+                if (this.twoAssistive.length === 0) {
+                  this.twoAssistive.push({
+                    id: twox.ID,
+                    name: twox.Name,
+                    type: twox.Type
+                  });
+                } else {
+                  for (let z = 0; z < this.twoAssistive.length; z++) {
+                    if (this.twoAssistive[z].id === twox.ID) {
+                      twoFlag = false;
+                    } else {
+                      twoFlag = true;
+                    }
+                  }
+                  if (twoFlag) {
+                    this.twoAssistive.push({
+                      id: twox.ID,
+                      name: twox.Name,
+                      type: twox.Type
+                    });
+                  }
+                }
+                //三级
+                if (this.threeAssistive.length === 0) {
+                  this.threeAssistive.push({
+                    id: threex.ID,
+                    parent: threex.ParentAssistiveDeviceID,
+                    name: threex.Name,
+                    type: threex.Type
+                  });
+                } else {
+                  for (let x = 0; x < this.threeAssistive.length; x++) {
+                    if (this.threeAssistive[x].id === threex.ID) {
+                      threeFlag = false;
+                    } else {
+                      threeFlag = true;
+                    }
+                  }
+                  if (threeFlag) {
+                    this.threeAssistive.push({
+                      id: threex.ID,
+                      parent: threex.ParentAssistiveDeviceID,
+                      name: threex.Name,
+                      type: threex.Type
+                    });
+                  }
+                }
+                if (content[twox.Name] != false) {
+                  content[twox.Name] = false;
+                  this.showContent = content;
+                }
+
                 //辅具图片
                 let assistMath = {
-                  id: at.ID,
-                  name: at.Name,
-                  type: at.Type
+                  id: atx.ID,
+                  name: atx.Name,
+                  type: atx.Type
                 };
                 const imgPath = await this.$http.get(
                   "AssistiveDevices/ShowImagePath",
@@ -872,11 +1056,13 @@ export default {
                 //辅具名称(用来选择)
                 //this.assistiveName.push(at.Name);
                 this.assistiveName.push({
-                  key: at.ID,
-                  value: at.Name,
-                  type: at.Type,
+                  key: atx.ID,
+                  value: atx.Name,
+                  type: atx.Type,
                   img: this.image,
-                  price: at.Price
+                  price: atx.Price,
+                  twoID: twox.ID,
+                  threeID: threex.ID
                 });
               }
             }
@@ -1263,6 +1449,53 @@ export default {
           }
         }
       }
+    },
+
+    //辅具二级目录
+    changeTwoAssistive(type) {
+      let list = [];
+      for (let i = 0; i < this.twoAssistive.length; i++) {
+        let two = this.twoAssistive[i];
+        if (type === two.type) {
+          list.push({
+            key: two.id,
+            value: two.name,
+            type: two.type
+          });
+        }
+      }
+      return list;
+    },
+    //辅具三级目录
+    changeThreeAssistive(value) {
+      let list = [];
+      for (let i = 0; i < this.threeAssistive.length; i++) {
+        let three = this.threeAssistive[i];
+        if (value === three.parent) {
+          list.push({
+            key: three.id,
+            value: three.name,
+            type: three.type
+          });
+        }
+      }
+      return list;
+    },
+    changeFourAssistive(value) {
+      let list = [];
+      for (let i = 0; i < this.assistiveName.length; i++) {
+        let t = this.assistiveName[i];
+        if (value === t.threeID) {
+          list.push({
+            key: t.key,
+            value: t.value,
+            type: t.type,
+            img: t.img,
+            price: t.price
+          });
+        }
+      }
+      return list;
     },
     changeAssistive(type) {
       let list = [];

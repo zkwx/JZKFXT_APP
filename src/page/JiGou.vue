@@ -54,13 +54,26 @@
         <div>
             <group>
               <div v-for="(name,assistive) in conditions" :key="assistive">
+                <!-- 一级目录 -->
                 <cell :title='name' is-link :border-intent="false" :arrow-direction="showContent[name] ? 'up' : 'down'" @click.native="showContent[name] = !showContent[name]">
                   <badge :text='changeNumber(name)'></badge>
                 </cell>
                 <template v-if="showContent[name]">
-                  <div>
+               <!-- 二级目录 -->
+                <div v-for="(twoName,assistivet) in  changeTwoAssistive(name)" :key="assistivet" style="padding-left:10px;">
+                <cell :title='twoName.value' is-link :border-intent="false" :arrow-direction="showContent[twoName.value] ? 'up' : 'down'" @click.native="showContent[twoName.value] = !showContent[twoName.value]">
+                  <badge :text='changeNumber(twoName.value)'></badge>
+                </cell>
+                <template v-if="showContent[twoName.value]">
+                  <!-- 三级目录 -->
+                   <div v-for="(threeName,assistives) in  changeThreeAssistive(twoName)" :key="assistives" style="padding-left:20px;">
+                    <cell :title='threeName.value' is-link :border-intent="false" :arrow-direction="showContent[threeName.value] ? 'up' : 'down'" @click.native="showContent[threeName.value] = !showContent[threeName.value]">
+                      <badge :text='changeNumber(threeName.value)'></badge>
+                    </cell>
+                  <template v-if="showContent[threeName.value]">
+                   <div>
                     <div class="weui-cells weui-cells_checkbox">
-                    <div v-for="(item,assistive) in changeAssistive(name)" :key="assistive">
+                    <div v-for="(item,assistive) in changeFourAssistive(threeName)" :key="assistive">
                       <label class="weui-cell weui-check_label">
                           <div class="weui-cell__hd">
                             <input type="checkbox" class="weui-check" :value="item.key" v-model="currentValue" :disabled="IsCheck">
@@ -77,7 +90,11 @@
                      <app-number :disabledID="disabledID" :state="State" :examID="examID" :item="item" :jian="item.key" :title="item.value" :display="assistiveDisabled" @on-change="numberChange"></app-number>
                   </div>
                 </div>
-               </div>
+               </div> 
+                </template>
+              </div>
+                </template>
+              </div>
                 </template>
               </div>
             </group>
@@ -89,10 +106,6 @@
               </div>
               
         </div>
-        <!-- <div>
-        <x-button type="primary"  @click.native="submitExamine">提交</x-button>
-        </div> -->
-
 
       </div>
     </div>
@@ -282,7 +295,6 @@ export default {
           }
         }
       });
-
       if (this.conditions.length > 0) {
         for (let j = 0; j < this.assistiveDevices.length; j++) {
           //辅具所有信息
@@ -291,30 +303,22 @@ export default {
           if (content[ast.Type] != false) {
             content[ast.Type] = false;
             this.showContent = content;
+          } else if (
+            (ast.ID.toString().length === 5 ||
+              ast.ID.toString().length === 7) &&
+            this.showContent[ast.Name] != false
+          ) {
+            this.showContent[ast.Name] = false;
           }
-          //辅具图片
-          let assistMath = {
-            id: ast.ID,
-            name: ast.Name,
-            type: ast.Type
-          };
-          const path = await this.$http.get(
-            "AssistiveDevices/ShowImagePath",
-            assistMath
-          );
-          if (typeof path === "string") {
-            this.image = path;
-          } else {
-            this.image = this.img;
-          }
+
           //辅具名称(用来选择)
-          this.assistiveName.push({
-            key: ast.ID,
-            value: ast.Name,
-            type: ast.Type,
-            img: this.image,
-            price: ast.Price
-          });
+          // this.assistiveName.push({
+          //   key: ast.ID,
+          //   value: ast.Name,
+          //   parent: ast.ParentAssistiveDeviceID,
+          //   type: ast.Type,
+          //   price: ast.Price
+          // });
         }
       }
     },
@@ -612,21 +616,76 @@ export default {
       }
       return index;
     },
-    changeAssistive(type) {
+    //辅具二级目录
+    changeTwoAssistive(type) {
       let list = [];
-      for (let i = 0; i < this.assistiveName.length; i++) {
-        let t = this.assistiveName[i];
-        if (type === t.type) {
+      for (let i = 0; i < this.assistiveDevices.length; i++) {
+        let t = this.assistiveDevices[i];
+        if (type === t.Type && t.ID.toString().length === 5) {
           list.push({
-            key: t.key,
-            value: t.value,
-            type: t.type,
-            img: t.img,
-            price: t.price
+            key: t.ID,
+            value: t.Name,
+            type: t.Type,
+            price: t.Price
           });
         }
       }
       return list;
+    },
+    //辅具三级目录
+    changeThreeAssistive(value) {
+      let tList = [];
+      for (let i = 0; i < this.assistiveDevices.length; i++) {
+        let t = this.assistiveDevices[i];
+        if (
+          value.type === t.Type &&
+          t.ParentAssistiveDeviceID === value.key &&
+          t.ID.toString().length === 7
+        ) {
+          tList.push({
+            key: t.ID,
+            value: t.Name,
+            type: t.Type,
+            price: t.Price
+          });
+        }
+      }
+      return tList;
+    },
+    //辅具列表
+    async changeFourAssistive(value) {
+      // //辅具图片
+      // let assistMath = {
+      //   id: t.ID,
+      //   name: t.Name,
+      //   type: t.Type
+      // };
+      // await this.$http
+      //   .get("AssistiveDevices/ShowImagePath", assistMath)
+      //   .then(r => {
+      //     if (typeof r === "string") {
+      //       this.image = r;
+      //     } else {
+      //       this.image = this.img;
+      //     }
+      //   });
+      let tList = [];
+      for (let i = 0; i < this.assistiveDevices.length; i++) {
+        let t = this.assistiveDevices[i];
+        if (
+          value.type === t.Type &&
+          t.ParentAssistiveDeviceID === value.key &&
+          t.ID.toString().length === 7
+        ) {
+          tList.push({
+            key: t.ID,
+            value: t.Name,
+            type: t.Type,
+            price: t.Price
+          });
+        }
+      }
+      return tList;
     },
     numberChange(title, jian, number) {
       this.assistNumber.push(number);
