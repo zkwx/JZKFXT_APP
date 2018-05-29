@@ -52,28 +52,28 @@
       <div>
          <div class="weui-cells__title">辅具列表</div>
         <div>
-            <group>
-              <div v-for="(name,assistive) in conditions" :key="assistive">
-                <!-- 一级目录 -->
-                <cell :title='name' is-link :border-intent="false" :arrow-direction="showContent[name] ? 'up' : 'down'" @click.native="showContent[name] = !showContent[name]">
+           <group>
+            <div v-for="(name,assistive) in conditions" :key="assistive">
+            <!-- 一级目录 -->
+              <cell :title='name' is-link :border-intent="false" :arrow-direction="showContent[name] ? 'up' : 'down'" @click.native="showContent[name] = !showContent[name]">
                   <badge :text='changeNumber(name)'></badge>
-                </cell>
-                <template v-if="showContent[name]">
+              </cell>
+              <template v-if="showContent[name]">
                <!-- 二级目录 -->
                 <div v-for="(twoName,assistivet) in  changeTwoAssistive(name)" :key="assistivet" style="padding-left:10px;">
                 <cell :title='twoName.value' is-link :border-intent="false" :arrow-direction="showContent[twoName.value] ? 'up' : 'down'" @click.native="showContent[twoName.value] = !showContent[twoName.value]">
-                  <badge :text='changeNumber(twoName.value)'></badge>
+                  <badge :text='changeTwoNumber(twoName.key)'></badge>
                 </cell>
                 <template v-if="showContent[twoName.value]">
                   <!-- 三级目录 -->
-                   <div v-for="(threeName,assistives) in  changeThreeAssistive(twoName)" :key="assistives" style="padding-left:20px;">
-                    <cell :title='threeName.value' is-link :border-intent="false" :arrow-direction="showContent[threeName.value] ? 'up' : 'down'" @click.native="showContent[threeName.value] = !showContent[threeName.value]">
-                      <badge :text='changeNumber(threeName.value)'></badge>
-                    </cell>
-                  <template v-if="showContent[threeName.value]">
-                   <div>
+                   <div v-for="(threeName,assistivet) in  changeThreeAssistive(twoName.key)" :key="assistivet" style="padding-left:10px;">
+                <cell :title='threeName.value' is-link :border-intent="false" :arrow-direction="showContent[threeName.value] ? 'up' : 'down'" @click.native="showContent[threeName.value] = !showContent[threeName.value]">
+                  <badge :text='changeThreeNumber(threeName.key)'></badge>
+                </cell>
+                <template v-if="showContent[threeName.value]">
+                    <div>
                     <div class="weui-cells weui-cells_checkbox">
-                    <div v-for="(item,assistive) in changeFourAssistive(threeName)" :key="assistive">
+                    <div v-for="(item,assistive) in changeFourAssistive(threeName.key)" :key="assistive">
                       <label class="weui-cell weui-check_label">
                           <div class="weui-cell__hd">
                             <input type="checkbox" class="weui-check" :value="item.key" v-model="currentValue" :disabled="IsCheck">
@@ -92,10 +92,13 @@
                 </div>
                </div> 
                 </template>
-              </div>
+                <!-- 三级目录 -->
+                   </div>
                 </template>
+                <!-- 二级目录 -->
               </div>
-                </template>
+          </template>
+          <!-- 一级目录 -->
               </div>
             </group>
 
@@ -104,7 +107,6 @@
                      <x-input title="总价" v-model="total"  text-align="center" :disabled="true"></x-input>
                   </group>
               </div>
-              
         </div>
 
       </div>
@@ -167,8 +169,11 @@ export default {
       showContent: {},
       currentValue: [], //辅具选择
       currentNumber: [],
+      twoAssistive: [],
+      threeAssistive: [],
       assistNumber: [],
       assistiveAnswer: [],
+      imageUrl: [],
       img: require("@/assets/icon/暂无图片.jpg"),
       image: "",
       Sexlist: [{ key: 1, value: "男" }, { key: 2, value: "女" }],
@@ -287,6 +292,10 @@ export default {
       this.$api.getNexts().then(r => {
         this.Nexts = r;
       });
+      //文件当前路径
+      await this.$http.get("AssistiveDevices/ShowImageUrl").then(r => {
+        this.imageUrl = r;
+      });
       await this.$api.getAllAssistives().then(r => {
         this.assistiveDevices = r;
         for (let i = 0; i < r.length; i++) {
@@ -295,32 +304,7 @@ export default {
           }
         }
       });
-      if (this.conditions.length > 0) {
-        for (let j = 0; j < this.assistiveDevices.length; j++) {
-          //辅具所有信息
-          let content = this.pure(this.showContent);
-          let ast = this.assistiveDevices[j];
-          if (content[ast.Type] != false) {
-            content[ast.Type] = false;
-            this.showContent = content;
-          } else if (
-            (ast.ID.toString().length === 5 ||
-              ast.ID.toString().length === 7) &&
-            this.showContent[ast.Name] != false
-          ) {
-            this.showContent[ast.Name] = false;
-          }
-
-          //辅具名称(用来选择)
-          // this.assistiveName.push({
-          //   key: ast.ID,
-          //   value: ast.Name,
-          //   parent: ast.ParentAssistiveDeviceID,
-          //   type: ast.Type,
-          //   price: ast.Price
-          // });
-        }
-      }
+      this.changeAllAssistive(this.assistiveDevices);
     },
     getDisabled(id) {
       var _this = this;
@@ -616,17 +600,109 @@ export default {
       }
       return index;
     },
+    changeAllAssistive(r) {
+      if (this.conditions.length > 0) {
+        let twoFlag = true;
+        let threeFlag = true;
+        let content = this.pure(this.showContent);
+        for (let j = 0; j < r.length; j++) {
+          //辅具所有信息
+          let ast = r[j];
+          if (content[ast.Type] != false) {
+            content[ast.Type] = false;
+          }
+          if (
+            (ast.ID.toString().length === 5 ||
+              ast.ID.toString().length === 7) &&
+            content[ast.Name] != false
+          ) {
+            content[ast.Name] = false;
+          }
+
+          if (ast.ID.toString().length === 5) {
+            if (this.twoAssistive.length === 0) {
+              this.twoAssistive.push({
+                id: ast.ID,
+                name: ast.Name,
+                type: ast.Type
+              });
+            } else {
+              for (let twoID = 0; twoID < this.twoAssistive.length; twoID++) {
+                if (this.twoAssistive[twoID].id === ast.ID) {
+                  twoFlag = false;
+                }
+              }
+              if (twoFlag) {
+                this.twoAssistive.push({
+                  id: ast.ID,
+                  name: ast.Name,
+                  type: ast.Type
+                });
+              }
+            }
+          } else if (ast.ID.toString().length === 7) {
+            if (this.threeAssistive.length === 0) {
+              this.threeAssistive.push({
+                id: ast.ID,
+                name: ast.Name,
+                parent: ast.ParentAssistiveDeviceID,
+                type: ast.Type
+              });
+            } else {
+              for (
+                let threeID = 0;
+                threeID < this.threeAssistive.length;
+                threeID++
+              ) {
+                if (this.threeAssistive[threeID].id === ast.ID) {
+                  threeFlag = false;
+                }
+              }
+              if (threeFlag) {
+                this.threeAssistive.push({
+                  id: ast.ID,
+                  name: ast.Name,
+                  parent: ast.ParentAssistiveDeviceID,
+                  type: ast.Type
+                });
+              }
+            }
+          } else if (ast.ID.toString().length === 9) {
+            // if (ast.picName.indexOf("暂无图片") > -1) {
+            //   this.image = this.img;
+            // } else {
+            //   this.image = this.imageUrl + ast.picName;
+            // }
+
+            if (ast.picNumber != 0) {
+              this.image = this.img;
+            } else {
+              this.image = this.imageUrl + ast.picName;
+            }
+
+            this.assistiveName.push({
+              key: ast.ID,
+              value: ast.Name,
+              parent: ast.ParentAssistiveDeviceID,
+              type: ast.Type,
+              img: this.image,
+              price: ast.Price
+            });
+          }
+        }
+        this.showContent = content;
+      }
+    },
     //辅具二级目录
     changeTwoAssistive(type) {
       let list = [];
-      for (let i = 0; i < this.assistiveDevices.length; i++) {
-        let t = this.assistiveDevices[i];
-        if (type === t.Type && t.ID.toString().length === 5) {
+      for (let i = 0; i < this.twoAssistive.length; i++) {
+        let two = this.twoAssistive[i];
+        if (type === two.type) {
           list.push({
-            key: t.ID,
-            value: t.Name,
-            type: t.Type,
-            price: t.Price
+            key: two.id,
+            value: two.name,
+            type: two.type
           });
         }
       }
@@ -634,58 +710,57 @@ export default {
     },
     //辅具三级目录
     changeThreeAssistive(value) {
-      let tList = [];
-      for (let i = 0; i < this.assistiveDevices.length; i++) {
-        let t = this.assistiveDevices[i];
-        if (
-          value.type === t.Type &&
-          t.ParentAssistiveDeviceID === value.key &&
-          t.ID.toString().length === 7
-        ) {
-          tList.push({
-            key: t.ID,
-            value: t.Name,
-            type: t.Type,
-            price: t.Price
+      let tlist = [];
+      for (let i = 0; i < this.threeAssistive.length; i++) {
+        let three = this.threeAssistive[i];
+        if (value === three.parent) {
+          tlist.push({
+            key: three.id,
+            value: three.name,
+            type: three.type
           });
         }
       }
-      return tList;
+      return tlist;
     },
     //辅具列表
-    async changeFourAssistive(value) {
-      // //辅具图片
-      // let assistMath = {
-      //   id: t.ID,
-      //   name: t.Name,
-      //   type: t.Type
-      // };
-      // await this.$http
-      //   .get("AssistiveDevices/ShowImagePath", assistMath)
-      //   .then(r => {
-      //     if (typeof r === "string") {
-      //       this.image = r;
-      //     } else {
-      //       this.image = this.img;
-      //     }
-      //   });
-      let tList = [];
-      for (let i = 0; i < this.assistiveDevices.length; i++) {
-        let t = this.assistiveDevices[i];
-        if (
-          value.type === t.Type &&
-          t.ParentAssistiveDeviceID === value.key &&
-          t.ID.toString().length === 7
-        ) {
-          tList.push({
-            key: t.ID,
-            value: t.Name,
-            type: t.Type,
-            price: t.Price
+    changeFourAssistive(value) {
+      let fList = [];
+      for (let i = 0; i < this.assistiveName.length; i++) {
+        let t = this.assistiveName[i];
+        if (value === t.parent) {
+          fList.push({
+            key: t.key,
+            value: t.value,
+            type: t.type,
+            img: t.img,
+            price: t.price
           });
         }
       }
-      return tList;
+      return fList;
+    },
+    changeTwoNumber(value) {
+      let index = 0;
+      for (let i = 0; i < this.currentValue.length; i++) {
+        if (this.currentValue[i].toString().length === 9) {
+          if (this.currentValue[i].toString().indexOf(value) > -1) {
+            index += 1;
+          }
+        }
+      }
+      return index;
+    },
+    changeThreeNumber(value) {
+      let index = 0;
+      for (let i = 0; i < this.currentValue.length; i++) {
+        if (this.currentValue[i].toString().length === 9) {
+          if (this.currentValue[i].toString().indexOf(value) > -1) {
+            index += 1;
+          }
+        }
+      }
+      return index;
     },
     numberChange(title, jian, number) {
       this.assistNumber.push(number);
