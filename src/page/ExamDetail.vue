@@ -309,6 +309,11 @@ export default {
       var d = date.getDate();
       d = d < 10 ? "0" + d : d;
       this.endDate = y + "-" + m + "-" + d;
+
+      //文件当前路径
+      await this.$http.get("AssistiveDevices/ShowImageUrl").then(r => {
+        this.imageUrl = r;
+      });
     },
     //地址
     async getDisabled(ID) {
@@ -902,24 +907,10 @@ export default {
                 this.showContent = content;
               }
 
-              // const path = await this.$http.get(
-              //   "AssistiveDevices/ShowImagePath",
-              //   assistMath
-              // );
-              // if (typeof path === "string") {
-              //   this.image = path;
-              // } else {
-              //   this.image = this.img;
-              // }
-
-              //文件当前路径
-              await this.$http.get("AssistiveDevices/ShowImageUrl").then(r => {
-                this.imageUrl = r;
-              });
-              if (aty.PicNumber != 0) {
+              if (aty.PicName.indexOf("暂无图片") > -1) {
                 this.image = this.img;
               } else {
-                this.image = this.imageUrl + aty.picName;
+                this.image = this.imageUrl + aty.PicName;
               }
               //辅具名称(用来选择)
               this.assistiveName.push({
@@ -1023,16 +1014,10 @@ export default {
                     content[threex.Name] = false;
                     this.showContent = content;
                   }
-                  //文件当前路径
-                  await this.$http
-                    .get("AssistiveDevices/ShowImageUrl")
-                    .then(r => {
-                      this.imageUrl = r;
-                    });
-                  if (atx.PicNumber === 0) {
+                  if (atx.PicName.indexOf("暂无图片") > -1) {
                     this.image = this.img;
                   } else {
-                    this.image = this.imageUrl + atx.picName;
+                    this.image = this.imageUrl + atx.PicName;
                   }
                   //辅具名称(用来选择)
                   //this.assistiveName.push(at.Name);

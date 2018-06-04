@@ -269,6 +269,10 @@ export default {
       if (this.State != "1") {
         this.IsCheck = true;
       }
+      //文件当前路径
+      await this.$http.get("AssistiveDevices/ShowImageUrl").then(r => {
+        this.imageUrl = r;
+      });
     },
     //地址
     async getDisabled(ID) {
@@ -803,14 +807,10 @@ export default {
               }
               this.showContent = content;
 
-              //文件当前路径
-              await this.$http.get("AssistiveDevices/ShowImageUrl").then(r => {
-                this.imageUrl = r;
-              });
-              if (aty.PicNumber != 0) {
+              if (ast.PicName.indexOf("暂无图片") > -1) {
                 this.image = this.img;
               } else {
-                this.image = this.imageUrl + aty.picName;
+                this.image = this.imageUrl + ast.PicName;
               }
               //辅具名称(用来选择)
               this.assistiveName.push({
@@ -911,13 +911,7 @@ export default {
                     content[threex.Name] = false;
                   }
                   this.showContent = content;
-                  //文件当前路径
-                  await this.$http
-                    .get("AssistiveDevices/ShowImageUrl")
-                    .then(r => {
-                      this.imageUrl = r;
-                    });
-                  if (at.PicNumber === 0) {
+                  if (at.PicName.indexOf("暂无图片") > -1) {
                     this.image = this.img;
                   } else {
                     this.image = this.imageUrl + at.PicName;

@@ -259,6 +259,10 @@ export default {
           this.changeNumber(this.conditions[i]);
         }
       }
+      //文件当前路径
+      await this.$http.get("AssistiveDevices/ShowImageUrl").then(r => {
+        this.imageUrl = r;
+      });
     },
     //地址
     async getDisabled(ID) {
@@ -686,14 +690,10 @@ export default {
               }
               this.showContent = content;
 
-              //文件当前路径
-              await this.$http.get("AssistiveDevices/ShowImageUrl").then(r => {
-                this.imageUrl = r;
-              });
-              if (aty.PicNumber != 0) {
+              if (aty.PicName.indexOf("暂无图片") > -1) {
                 this.image = this.img;
               } else {
-                this.image = this.imageUrl + aty.picName;
+                this.image = this.imageUrl + aty.PicName;
               }
               //辅具名称(用来选择)
               this.assistiveName.push({
@@ -794,19 +794,12 @@ export default {
                     content[threex.Name] = false;
                   }
                   this.showContent = content;
-                  //文件当前路径
-                  await this.$http
-                    .get("AssistiveDevices/ShowImageUrl")
-                    .then(r => {
-                      this.imageUrl = r;
-                    });
-                  if (at.PicNumber === 0) {
+                  if (at.PicName.indexOf("暂无图片") > -1) {
                     this.image = this.img;
                   } else {
                     this.image = this.imageUrl + at.PicName;
                   }
                   //辅具名称(用来选择)
-                  //this.assistiveName.push(at.Name);
                   this.assistiveName.push({
                     key: at.ID,
                     value: at.Name,

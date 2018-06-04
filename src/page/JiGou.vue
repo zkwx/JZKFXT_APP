@@ -668,16 +668,11 @@ export default {
               }
             }
           } else if (ast.ID.toString().length === 9) {
-            // if (ast.picName.indexOf("暂无图片") > -1) {
-            //   this.image = this.img;
-            // } else {
-            //   this.image = this.imageUrl + ast.picName;
-            // }
-
-            if (ast.picNumber != 0) {
+            
+            if (ast.PicName.indexOf("暂无图片") > -1) {
               this.image = this.img;
             } else {
-              this.image = this.imageUrl + ast.picName;
+              this.image = this.imageUrl + ast.PicName;
             }
 
             this.assistiveName.push({

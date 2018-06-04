@@ -329,6 +329,10 @@ export default {
       if (this.currentValue.length > 0) {
         this.fin = false;
       }
+      //文件当前路径
+      await this.$http.get("AssistiveDevices/ShowImageUrl").then(r => {
+        this.imageUrl = r;
+      });
     },
 
     async getAsssistive() {
@@ -417,27 +421,12 @@ export default {
               this.conditions[c] === ast.Type &&
               this.currentValue.indexOf(ast.ID) > -1
             ) {
-              //辅具图片
-              let assistMath = {
-                id: ast.ID,
-                name: ast.Name,
-                type: ast.Type
-              };
-              const path = await this.$http.get(
-                "AssistiveDevices/ShowImagePath",
-                assistMath
-              );
-              if (typeof path === "string") {
-                this.image = path;
-              } else {
-                this.image = this.img;
-              }
 
-              // if (ast.PicName.indexOf("暂无图片") > -1) {
-              //   this.image = this.img;
-              // } else {
-              //   this.image = this.imageUrl + ast.PicName;
-              // }
+              if (ast.PicName.indexOf("暂无图片") > -1) {
+                this.image = this.img;
+              } else {
+                this.image = this.imageUrl + ast.PicName;
+              }
 
               //辅具名称(用来选择)
               this.assistiveName.push({
