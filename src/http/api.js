@@ -80,4 +80,8 @@ export default {
     async getAssistNumber(param) {
         return await http.get("AssistiveAnswers" + param);
     },
+    //查询辅具图片路径
+    async getAssistUrl() {
+        return await http.get("AssistiveDevices/ShowImageUrl");
+    },
 }

@@ -293,9 +293,7 @@ export default {
         this.Nexts = r;
       });
       //文件当前路径
-      await this.$http.get("AssistiveDevices/ShowImageUrl").then(r => {
-        this.imageUrl = r;
-      });
+      this.imageUrl = await this.$api.getAssistUrl();
       await this.$api.getAllAssistives().then(r => {
         this.assistiveDevices = r;
         for (let i = 0; i < r.length; i++) {
@@ -668,12 +666,7 @@ export default {
               }
             }
           } else if (ast.ID.toString().length === 9) {
-            
-            if (ast.PicName.indexOf("暂无图片") > -1) {
-              this.image = this.img;
-            } else {
-              this.image = this.imageUrl + ast.PicName;
-            }
+            this.image = this.imageUrl + ast.PicName;
 
             this.assistiveName.push({
               key: ast.ID,

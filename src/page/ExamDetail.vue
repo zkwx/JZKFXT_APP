@@ -250,12 +250,12 @@ export default {
       assistiveChange: [], //筛选之后的辅具集合
       twoAssistive: [],
       threeAssistive: [],
-      imageUrl: "",
       currentValue: [], //辅具选择
       currentNumber: [], //选择辅具数量
       assistNumber: [],
       assistiveAnswer: [],
       endDate: "", //致残时间 最大选择时间
+      imageUrl: "",
       img: require("@/assets/icon/暂无图片.jpg"),
       image: "",
       disabled: {
@@ -309,11 +309,9 @@ export default {
       var d = date.getDate();
       d = d < 10 ? "0" + d : d;
       this.endDate = y + "-" + m + "-" + d;
-
+      
       //文件当前路径
-      await this.$http.get("AssistiveDevices/ShowImageUrl").then(r => {
-        this.imageUrl = r;
-      });
+      this.imageUrl = await this.$api.getAssistUrl();
     },
     //地址
     async getDisabled(ID) {
@@ -907,11 +905,7 @@ export default {
                 this.showContent = content;
               }
 
-              if (aty.PicName.indexOf("暂无图片") > -1) {
-                this.image = this.img;
-              } else {
-                this.image = this.imageUrl + aty.PicName;
-              }
+              this.image = this.imageUrl + aty.PicName;
               //辅具名称(用来选择)
               this.assistiveName.push({
                 key: aty.ID,
@@ -1014,11 +1008,7 @@ export default {
                     content[threex.Name] = false;
                     this.showContent = content;
                   }
-                  if (atx.PicName.indexOf("暂无图片") > -1) {
-                    this.image = this.img;
-                  } else {
-                    this.image = this.imageUrl + atx.PicName;
-                  }
+                  this.image = this.imageUrl + atx.PicName;
                   //辅具名称(用来选择)
                   //this.assistiveName.push(at.Name);
                   this.assistiveName.push({

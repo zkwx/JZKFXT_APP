@@ -260,9 +260,7 @@ export default {
         }
       }
       //文件当前路径
-      await this.$http.get("AssistiveDevices/ShowImageUrl").then(r => {
-        this.imageUrl = r;
-      });
+      this.imageUrl = await this.$api.getAssistUrl();
     },
     //地址
     async getDisabled(ID) {
@@ -689,12 +687,7 @@ export default {
                 content[three.Name] = false;
               }
               this.showContent = content;
-
-              if (aty.PicName.indexOf("暂无图片") > -1) {
-                this.image = this.img;
-              } else {
-                this.image = this.imageUrl + aty.PicName;
-              }
+              this.image = this.imageUrl + aty.PicName;
               //辅具名称(用来选择)
               this.assistiveName.push({
                 key: aty.ID,
@@ -794,11 +787,7 @@ export default {
                     content[threex.Name] = false;
                   }
                   this.showContent = content;
-                  if (at.PicName.indexOf("暂无图片") > -1) {
-                    this.image = this.img;
-                  } else {
-                    this.image = this.imageUrl + at.PicName;
-                  }
+                  this.image = this.imageUrl + at.PicName;
                   //辅具名称(用来选择)
                   this.assistiveName.push({
                     key: at.ID,
