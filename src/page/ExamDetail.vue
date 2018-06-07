@@ -75,57 +75,65 @@
           <group>
             <div v-for="(name,assistive) in conditions" :key="assistive">
             <!-- 一级目录 -->
-              <cell :title='name' is-link :border-intent="false" :arrow-direction="showContent[name] ? 'up' : 'down'" @click.native="showContent[name] = !showContent[name]">
+               <cell :title='name' is-link :border-intent="false" :arrow-direction="showContent[name] ? 'up' : 'down'" @click.native="showContent[name] = !showContent[name]">
                   <badge :text='changeNumber(name)'></badge>
               </cell>
-              <template v-if="showContent[name]">
+              <template v-if="showContent[name]"> 
                <!-- 二级目录 -->
-                <div v-for="(twoName,assistivet) in  changeTwoAssistive(name)" :key="assistivet" style="padding-left:10px;">
-                <cell :title='twoName.value' is-link :border-intent="false" :arrow-direction="showContent[twoName.value] ? 'up' : 'down'" @click.native="showContent[twoName.value] = !showContent[twoName.value]">
+                <div v-for="(twoName,assistivet) in changeAssistives(name)" :key="assistivet" style="padding-left:10px;"> 
+              <cell :title="twoName.value" is-link :border-intent="false" :arrow-direction="showContent[twoName.value] ? 'up' : 'down'" @click.native="showContent[twoName.value] = !showContent[twoName.value]">
                   <badge :text='changeTwoNumber(twoName.key)'></badge>
                 </cell>
-                <template v-if="showContent[twoName.value]">
+                <template v-if="showContent[twoName.value]"> 
                   <!-- 三级目录 -->
-                   <div v-for="(threeName,assistivet) in  changeThreeAssistive(twoName.key)" :key="assistivet" style="padding-left:10px;">
-                <cell :title='threeName.value' is-link :border-intent="false" :arrow-direction="showContent[threeName.value] ? 'up' : 'down'" @click.native="showContent[threeName.value] = !showContent[threeName.value]">
+                   <div v-for="(threeName,assistivett) in changeAssistives(twoName.key)" :key="assistivett" style="padding-left:10px;">
+                <cell :title="threeName.value" is-link :border-intent="false" :arrow-direction="showContent[threeName.value] ? 'up' : 'down'" @click.native="showContent[threeName.value] = !showContent[threeName.value]">
                   <badge :text='changeThreeNumber(threeName.key)'></badge>
                 </cell>
                 <template v-if="showContent[threeName.value]">
                     <div>
                     <div class="weui-cells weui-cells_checkbox">
-                    <div v-for="(item,assistive) in changeFourAssistive(threeName.key)" :key="assistive">
+                    <div v-for="(item,assistivef) in changeAssistives(threeName.key)" :key="assistivef">
+                     
                       <label class="weui-cell weui-check_label">
                           <div class="weui-cell__hd">
                             <input type="checkbox" class="weui-check" :value="item.key" v-model="currentValue" :disabled="IsCheck">
                             <i class="weui-icon-checked vux-checklist-icon-checked"></i>
                           </div>
+                     
+
                           <div style="width:50%"> 
                             <img :src="item.img" style="width:100%"/>
                           </div>
                           <div class="weui-cell__bd" style="text-align: center;">
                           <p v-html="item.value"></p>
+                          <br>
                           <p v-html="'单价：'+item.price+'元'"></p>
                         </div>
                       </label>
+                      <group title="描述">
+                        <x-textarea readonly :value="item.comment" :autosize="true"></x-textarea>
+                      </group>
                      <app-number :disabledID="disabledID" :state="State" :examID="examID" :item="item" :jian="item.key" :title="item.value" :display="assistiveDisabled" @on-change="numberChange"></app-number>
                   </div>
                 </div>
                </div> 
                 </template>
-                <!-- 三级目录 -->
                    </div>
-                </template>
+                <!-- 三级目录 -->
+               </template>
+              </div> 
                 <!-- 二级目录 -->
-              </div>
           </template>
-          <!-- 一级目录 -->
               </div>
+          <!-- 一级目录 -->
             </group>
 
               <div>
-                  <group>
-                     <x-input title="总价" v-model="total"  text-align="center" :disabled="true"></x-input>
-                  </group>
+                   <group>
+                      <cell title="总价" :value="total"></cell>
+                      <cell-form-preview :list="valueList"></cell-form-preview>
+                    </group>
               </div>
               
         </div>
@@ -167,8 +175,11 @@ import {
   CellBox,
   Badge,
   InlineXNumber,
+  CellFormPreview,
+  XTextarea,
   Value2nameFilter as value2name
 } from "vux";
+import { connect } from "tls";
 export default {
   name: "FuJuPingGuDetail",
   directives: {
@@ -198,7 +209,9 @@ export default {
     Badge,
     InlineXNumber,
     AppNumber,
-    AppSign
+    AppSign,
+    CellFormPreview,
+    XTextarea
   },
   props: {
     disabledID: String,
@@ -207,7 +220,9 @@ export default {
   },
   data() {
     return {
+      fourVal: [],
       Answers: [],
+      valueList: [],
       sign: false,
       total: 0,
       assistiveNumber: 1,
@@ -254,6 +269,7 @@ export default {
       currentNumber: [], //选择辅具数量
       assistNumber: [],
       assistiveAnswer: [],
+      assistTol: [],
       endDate: "", //致残时间 最大选择时间
       imageUrl: "",
       img: require("@/assets/icon/暂无图片.jpg"),
@@ -285,6 +301,9 @@ export default {
     this.initData();
   },
   methods: {
+    alert(item) {
+      this.$utils.Alert(item);
+    },
     async initData() {
       this.disabled.ID = this.disabledID;
       //填充选项列表
@@ -309,7 +328,7 @@ export default {
       var d = date.getDate();
       d = d < 10 ? "0" + d : d;
       this.endDate = y + "-" + m + "-" + d;
-      
+
       //文件当前路径
       this.imageUrl = await this.$api.getAssistUrl();
     },
@@ -822,9 +841,8 @@ export default {
       }
 
       if (this.assistiveDevices.length > 0) {
-        let twoFlag = true;
-        let threeFlag = true;
         //筛选
+        let content = this.pure(this.showContent);
         if (this.conditions.length === 0) {
           for (let a in this.assistiveDevices) {
             const aty = this.assistiveDevices[a];
@@ -833,89 +851,51 @@ export default {
             //辅具显示
             const atype = aty.Type;
 
-            let content = this.pure(this.showContent);
             if (content[atype] != false) {
               content[atype] = false;
-              this.showContent = content;
             }
-            if (at.ID.toString().length === 9) {
-              let four = await this.$api.getAssistiveDevice(at.ID);
-              let three = await this.$api.getAssistiveDevice(
-                four.ParentAssistiveDeviceID
-              );
-              let two = await this.$api.getAssistiveDevice(
-                three.ParentAssistiveDeviceID
-              );
-
-              if (this.twoAssistive.length === 0) {
-                this.twoAssistive.push({
-                  id: two.ID,
-                  name: two.Name,
-                  type: two.Type
-                });
-              } else {
-                for (let tz = 0; tz < this.twoAssistive.length; tz++) {
-                  if (this.twoAssistive[tz].id === two.ID) {
-                    twoFlag = false;
-                  } else {
-                    twoFlag = true;
-                  }
-                }
-                if (twoFlag) {
-                  this.twoAssistive.push({
-                    id: two.ID,
-                    name: two.Name,
-                    type: two.Type
-                  });
-                }
-              }
-
-              if (this.threeAssistive.length === 0) {
-                this.threeAssistive.push({
-                  id: three.ID,
-                  parent: three.ParentAssistiveDeviceID,
-                  name: three.Name,
-                  type: three.Type
-                });
-              } else {
-                for (let tx = 0; tx < this.threeAssistive.length; tx++) {
-                  if (this.threeAssistive[tx].id === three.ID) {
-                    threeFlag = false;
-                  } else {
-                    threeFlag = true;
-                  }
-                }
-                if (threeFlag) {
-                  this.threeAssistive.push({
-                    id: three.ID,
-                    parent: three.ParentAssistiveDeviceID,
-                    name: three.Name,
-                    type: three.Type
-                  });
-                }
-              }
-
-              if (content[two.Name] != false) {
-                content[two.Name] = false;
-                this.showContent = content;
-              }
-
-              if (content[three.Name] != false) {
-                content[three.Name] = false;
-                this.showContent = content;
-              }
-
-              this.image = this.imageUrl + aty.PicName;
-              //辅具名称(用来选择)
-              this.assistiveName.push({
-                key: aty.ID,
-                value: aty.Name,
-                type: aty.Type,
-                img: this.image,
-                price: aty.Price,
-                twoID: two.ID,
-                threeID: three.ID
+            if (aty.ID.toString().length === 5) {
+              let twofy = await this.$api.getAssistiveDevice(aty.ID);
+              content = await this.twoLists(content, twofy);
+              var threefy = await this.$api.getAssistListByFid({
+                id: twofy.ID
               });
+              for (let m = 0; m < threefy.length; m++) {
+                content = await this.threeLists(content, threefy[m]);
+              }
+              for (let n = 0; n < threefy.length; n++) {
+                var fourfy = await this.$api.getAssistListByFid({
+                  id: threefy[m].ID
+                });
+                for (let k = 0; k < fourfy.length; k++) {
+                  await this.fourlists(fourfy[k], threef[n]);
+                }
+              }
+            } else if (aty.ID.toString().length === 7) {
+              let threesy = await this.$api.getAssistiveDevice(aty.ID);
+              let twosy = await this.$api.getAssistiveDevice(
+                threesy.ParentAssistiveDeviceID
+              );
+              content = await this.twoLists(content, twosy);
+              content = await this.threeLists(content, threesy);
+              var foursy = await this.$api.getAssistListByFid({
+                id: threesy.ID
+              });
+              for (let v = 0; v < foursy.length; v++) {
+                await this.fourlists(foursy[v], threesy);
+              }
+            } else if (aty.ID.toString().length === 9) {
+              let fourxy = await this.$api.getAssistiveDevice(aty.ID);
+              let threexy = await this.$api.getAssistiveDevice(
+                fourxy.ParentAssistiveDeviceID
+              );
+              let twoxy = await this.$api.getAssistiveDevice(
+                threexy.ParentAssistiveDeviceID
+              );
+
+              content = await this.twoLists(content, twoxy);
+              content = await this.threeLists(content, threexy);
+              await this.fourlists(fourxy, threexy);
             }
           }
         } else {
@@ -929,7 +909,6 @@ export default {
           let table = document.getElementById("assistiveType");
           for (const b in this.conditions) {
             const bt = this.conditions[b];
-            //table.innerHTML = bt;
             for (let a in this.assistiveDevices) {
               const atx = this.assistiveDevices[a];
               if (atx.Type === bt) {
@@ -938,13 +917,41 @@ export default {
                 //辅具显示
                 const type = atx.Type;
 
-                let content = this.pure(this.showContent);
                 if (content[type] != false) {
                   content[type] = false;
-                  this.showContent = content;
                 }
 
-                if (atx.ID.toString().length === 9) {
+                if (atx.ID.toString().length === 5) {
+                  let twof = await this.$api.getAssistiveDevice(atx.ID);
+                  content = await this.twoLists(content, twof);
+                  var threef = await this.$api.getAssistListByFid({
+                    id: twof.ID
+                  });
+                  for (let m = 0; m < threef.length; m++) {
+                    content = await this.threeLists(content, threef[m]);
+                  }
+                  for (let n = 0; n < threef.length; n++) {
+                    var fourf = await this.$api.getAssistListByFid({
+                      id: threef[m].ID
+                    });
+                    for (let k = 0; k < fourf.length; k++) {
+                      await this.fourlists(fourf[k], threef[n]);
+                    }
+                  }
+                } else if (atx.ID.toString().length === 7) {
+                  let threes = await this.$api.getAssistiveDevice(atx.ID);
+                  let twos = await this.$api.getAssistiveDevice(
+                    threes.ParentAssistiveDeviceID
+                  );
+                  content = await this.twoLists(content, twos);
+                  content = await this.threeLists(content, threes);
+                  var fours = await this.$api.getAssistListByFid({
+                    id: threes.ID
+                  });
+                  for (let v = 0; v < fours.length; v++) {
+                    await this.fourlists(fours[v], threes);
+                  }
+                } else if (atx.ID.toString().length === 9) {
                   let fourx = await this.$api.getAssistiveDevice(atx.ID);
                   let threex = await this.$api.getAssistiveDevice(
                     fourx.ParentAssistiveDeviceID
@@ -953,80 +960,84 @@ export default {
                     threex.ParentAssistiveDeviceID
                   );
 
-                  if (this.twoAssistive.length === 0) {
-                    this.twoAssistive.push({
-                      id: twox.ID,
-                      name: twox.Name,
-                      type: twox.Type
-                    });
-                  } else {
-                    for (let z = 0; z < this.twoAssistive.length; z++) {
-                      if (this.twoAssistive[z].id === twox.ID) {
-                        twoFlag = false;
-                      } else {
-                        twoFlag = true;
-                      }
-                    }
-                    if (twoFlag) {
-                      this.twoAssistive.push({
-                        id: twox.ID,
-                        name: twox.Name,
-                        type: twox.Type
-                      });
-                    }
-                  }
-                  //三级
-                  if (this.threeAssistive.length === 0) {
-                    this.threeAssistive.push({
-                      id: threex.ID,
-                      parent: threex.ParentAssistiveDeviceID,
-                      name: threex.Name,
-                      type: threex.Type
-                    });
-                  } else {
-                    for (let x = 0; x < this.threeAssistive.length; x++) {
-                      if (this.threeAssistive[x].id === threex.ID) {
-                        threeFlag = false;
-                      } else {
-                        threeFlag = true;
-                      }
-                    }
-                    if (threeFlag) {
-                      this.threeAssistive.push({
-                        id: threex.ID,
-                        parent: threex.ParentAssistiveDeviceID,
-                        name: threex.Name,
-                        type: threex.Type
-                      });
-                    }
-                  }
-                  if (content[twox.Name] != false) {
-                    content[twox.Name] = false;
-                    this.showContent = content;
-                  }
-                  if (content[threex.Name] != false) {
-                    content[threex.Name] = false;
-                    this.showContent = content;
-                  }
-                  this.image = this.imageUrl + atx.PicName;
-                  //辅具名称(用来选择)
-                  //this.assistiveName.push(at.Name);
-                  this.assistiveName.push({
-                    key: atx.ID,
-                    value: atx.Name,
-                    type: atx.Type,
-                    img: this.image,
-                    price: atx.Price,
-                    twoID: twox.ID,
-                    threeID: threex.ID
-                  });
+                  content = await this.twoLists(content, twox);
+                  content = await this.threeLists(content, threex);
+                  await this.fourlists(fourx, threex);
                 }
               }
             }
           }
         }
+        this.showContent = content;
 
         this.showAssistiveDevicesTable = true;
+      }
+    },
+    //插入二级
+    twoLists(content, twox) {
+      let twoFlag = true;
+      for (let z = 0; z < this.twoAssistive.length; z++) {
+        if (this.twoAssistive[z].id === twox.ID) {
+          twoFlag = false;
+        } else {
+          twoFlag = true;
+        }
+      }
+      if (twoFlag) {
+        this.twoAssistive.push({
+          id: twox.ID,
+          name: twox.Name,
+          type: twox.Type
+        });
+      }
+      if (content[twox.Name] != false) {
+        content[twox.Name] = false;
+      }
+      return content;
+    },
+    //插入三级
+    threeLists(content, threex) {
+      let threeFlag = true;
+      for (let x = 0; x < this.threeAssistive.length; x++) {
+        if (this.threeAssistive[x].id === threex.ID) {
+          threeFlag = false;
+        } else {
+          threeFlag = true;
+        }
+      }
+      if (threeFlag) {
+        this.threeAssistive.push({
+          id: threex.ID,
+          parent: threex.ParentAssistiveDeviceID,
+          name: threex.Name,
+          type: threex.Type
+        });
+      }
+
+      if (content[threex.Name] != false) {
+        content[threex.Name] = false;
+      }
+      return content;
+    },
+    //插入四级
+    fourlists(atx, three) {
+      let fourFlag = true;
+      for (let y = 0; y < this.assistiveName.length; y++) {
+        if (this.assistiveName[y].key === atx.ID) {
+          fourFlag = false;
+        }
+      }
+      if (fourFlag) {
+        this.assistiveName.push({
+          key: atx.ID,
+          value: atx.Name,
+          type: atx.Type,
+          img: this.imageUrl + atx.PicName,
+          price: atx.Price,
+          comments: atx.Comments,
+          twoID: three.ParentAssistiveDeviceID,
+          threeID: atx.ParentAssistiveDeviceID
+        });
       }
     },
     //查看答案时数组转换
@@ -1086,19 +1097,32 @@ export default {
         if (option.AssistiveDevices != "") {
           let assistives = option.AssistiveDevices.split(",");
           for (const assistive of assistives) {
-            const li = [];
-            const assistiveDevice = await this.$api.getAssistiveDevice(
-              parseInt(assistive)
-            );
-            // if (this.assistiveDevices.indexOf(assistiveDevice) === -1) {
-            //   this.assistiveDevices.push(assistiveDevice);
-            // }
-            for (let a = 0; a < this.assistiveDevices.length; a++) {
-              li.push(this.assistiveDevices[a].ID);
-            }
-
-            if (li.indexOf(assistiveDevice.ID) === -1) {
-              this.assistiveDevices.push(assistiveDevice);
+            let li = [];
+            if (assistive.length === 9) {
+              const assistiveDevice = await this.$api.getAssistiveDevice(
+                parseInt(assistive)
+              );
+              for (let a = 0; a < this.assistiveDevices.length; a++) {
+                li.push(this.assistiveDevices[a].ID);
+              }
+              if (li.indexOf(assistiveDevice.ID) === -1) {
+                this.assistiveDevices.push(assistiveDevice);
+              }
+            } else if (assistive.length === 7) {
+              let threeAssist = await this.$api.getAssistiveDevice(
+                parseInt(assistive)
+              );
+              var fourAssist = await this.$api.getAssistListByFid({
+                id: threeAssist.ID
+              });
+              for (let a = 0; a < this.assistiveDevices.length; a++) {
+                li.push(this.assistiveDevices[a].ID);
+              }
+              for (let fa = 0; fa < fourAssist.length; fa++) {
+                if (li.indexOf(fourAssist[fa].ID) === -1) {
+                  this.assistiveDevices.push(fourAssist[fa]);
+                }
+              }
             }
           }
         }
@@ -1407,65 +1431,45 @@ export default {
         }
       }
     },
-
-    //辅具二级目录
-    changeTwoAssistive(type) {
+    changeAssistives(value) {
       let list = [];
-      for (let i = 0; i < this.twoAssistive.length; i++) {
-        let two = this.twoAssistive[i];
-        if (type === two.type) {
-          list.push({
-            key: two.id,
-            value: two.name,
-            type: two.type
-          });
+      if (typeof value === "string") {
+        for (let i = 0; i < this.twoAssistive.length; i++) {
+          let two = this.twoAssistive[i];
+          if (value === two.type) {
+            list.push({
+              key: two.id,
+              value: two.name,
+              type: two.type
+            });
+          }
         }
-      }
-      return list;
-    },
-    //辅具三级目录
-    changeThreeAssistive(value) {
-      let list = [];
-      for (let i = 0; i < this.threeAssistive.length; i++) {
-        let three = this.threeAssistive[i];
-        if (value === three.parent) {
-          list.push({
-            key: three.id,
-            value: three.name,
-            type: three.type
-          });
-        }
-      }
-      return list;
-    },
-    changeFourAssistive(value) {
-      let list = [];
-      for (let i = 0; i < this.assistiveName.length; i++) {
-        let t = this.assistiveName[i];
-        if (value === t.threeID) {
-          list.push({
-            key: t.key,
-            value: t.value,
-            type: t.type,
-            img: t.img,
-            price: t.price
-          });
-        }
-      }
-      return list;
-    },
-    changeAssistive(type) {
-      let list = [];
-      for (let i = 0; i < this.assistiveName.length; i++) {
-        let t = this.assistiveName[i];
-        if (type === t.type) {
-          list.push({
-            key: t.key,
-            value: t.value,
-            type: t.type,
-            img: t.img,
-            price: t.price
-          });
+      } else {
+        if (value.toString().length === 5) {
+          for (let i = 0; i < this.threeAssistive.length; i++) {
+            let three = this.threeAssistive[i];
+            if (value === three.parent) {
+              list.push({
+                key: three.id,
+                value: three.name,
+                type: three.type
+              });
+            }
+          }
+        } else if (value.toString().length === 7) {
+          for (let i = 0; i < this.assistiveName.length; i++) {
+            let t = this.assistiveName[i];
+            if (value === t.threeID) {
+              list.push({
+                key: t.key,
+                value: t.value,
+                type: t.type,
+                img: t.img,
+                price: t.price,
+                comment: t.comments
+              });
+            }
+          }
         }
       }
       return list;
@@ -1694,12 +1698,12 @@ export default {
     },
     currentValue() {
       let to = 0;
+      this.assistTol = [];
       if (this.currentValue.length > 0) {
-        let assistiveAnswer = [];
         for (const id of this.currentValue) {
           for (const all of this.assistiveChange) {
             if (parseInt(id) === all.ID) {
-              assistiveAnswer.push({
+              this.assistTol.push({
                 ID: all.ID,
                 Name: all.Name,
                 Type: all.Type,
@@ -1713,28 +1717,42 @@ export default {
           }
         }
 
-        for (let q = 0; q < assistiveAnswer.length; q++) {
+        for (let q = 0; q < this.assistTol.length; q++) {
           for (let w = 0; w < this.currentNumber.length; w++) {
-            if (assistiveAnswer[q].ID === this.currentNumber[w].id) {
-              assistiveAnswer[q].Number = this.currentNumber[w].number;
+            if (this.assistTol[q].ID === this.currentNumber[w].id) {
+              this.assistTol[q].Number = this.currentNumber[w].number;
             }
           }
         }
 
-        for (let i = 0; i < assistiveAnswer.length; i++) {
-          let price = assistiveAnswer[i].Number * assistiveAnswer[i].price;
+        for (let i = 0; i < this.assistTol.length; i++) {
+          let price = this.assistTol[i].Number * this.assistTol[i].price;
           this.total = to + price;
         }
+      }
+      this.valueList = [];
+      for (let val = 0; val < this.assistTol.length; val++) {
+        this.valueList.push({
+          label: this.assistTol[val].Name,
+          value:
+            "数量：" +
+            this.assistTol[val].Number +
+            ",单价：" +
+            this.assistTol[val].price +
+            ",总价：" +
+            this.assistTol[val].Number * this.assistTol[val].price
+        });
       }
     },
     assistNumber() {
       let to = 0;
-      let assistiveAnswer = [];
+      let assistives = [];
+      let assistVal = [];
       if (this.currentValue.length > 0) {
         for (const id of this.currentValue) {
           for (const all of this.assistiveChange) {
             if (parseInt(id) === all.ID) {
-              assistiveAnswer.push({
+              assistives.push({
                 ID: all.ID,
                 Name: all.Name,
                 Type: all.Type,
@@ -1747,18 +1765,32 @@ export default {
             }
           }
         }
-        for (let q = 0; q < assistiveAnswer.length; q++) {
+        for (let q = 0; q < assistives.length; q++) {
           for (let w = 0; w < this.currentNumber.length; w++) {
-            if (assistiveAnswer[q].ID === this.currentNumber[w].id) {
-              assistiveAnswer[q].Number = this.currentNumber[w].number;
+            if (assistives[q].ID === this.currentNumber[w].id) {
+              assistives[q].Number = this.currentNumber[w].number;
             }
           }
         }
 
-        for (let i = 0; i < assistiveAnswer.length; i++) {
-          let price = assistiveAnswer[i].Number * assistiveAnswer[i].price;
+        for (let i = 0; i < assistives.length; i++) {
+          let price = assistives[i].Number * assistives[i].price;
           this.total = to + price;
         }
+
+        for (let val = 0; val < assistives.length; val++) {
+          assistVal.push({
+            label: assistives[val].Name,
+            value:
+              "数量：" +
+              assistives[val].Number +
+              ",单价：" +
+              assistives[val].price +
+              ",总价：" +
+              assistives[val].Number * assistives[val].price
+          });
+        }
+        this.valueList = assistVal;
       }
     }
   }

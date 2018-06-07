@@ -84,4 +84,8 @@ export default {
     async getAssistUrl() {
         return await http.get("AssistiveDevices/ShowImageUrl");
     },
+    //根据fid查询辅具
+    async getAssistListByFid(param) {
+        return await http.get("AssistiveDevices/fid",param);
+    },
 }
