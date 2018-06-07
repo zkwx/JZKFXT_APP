@@ -100,7 +100,6 @@
                             <input type="checkbox" class="weui-check" :value="item.key" v-model="currentValue" :disabled="IsCheck">
                             <i class="weui-icon-checked vux-checklist-icon-checked"></i>
                           </div>
-                     
 
                           <div style="width:50%"> 
                             <img :src="item.img" style="width:100%"/>
@@ -220,6 +219,7 @@ export default {
   },
   data() {
     return {
+      changeCN: [],
       fourVal: [],
       Answers: [],
       valueList: [],
@@ -1013,7 +1013,6 @@ export default {
           type: threex.Type
         });
       }
-
       if (content[threex.Name] != false) {
         content[threex.Name] = false;
       }
@@ -1121,6 +1120,27 @@ export default {
               for (let fa = 0; fa < fourAssist.length; fa++) {
                 if (li.indexOf(fourAssist[fa].ID) === -1) {
                   this.assistiveDevices.push(fourAssist[fa]);
+                }
+              }
+            } else if (assistive.length === 5) {
+              let twoAssist = await this.$api.getAssistiveDevice(
+                parseInt(assistive)
+              );
+              var threeByTwo = await this.$api.getAssistListByFid({
+                id: twoAssist.ID
+              });
+              for (let ff = 0; ff < threeByTwo.length; ff++) {
+                var fourByThree = await this.$api.getAssistListByFid({
+                  id: threeByTwo[ff].ID
+                });
+                li = [];
+                for (let fa = 0; fa < this.assistiveDevices.length; fa++) {
+                  li.push(this.assistiveDevices[fa].ID);
+                }
+                for (let ft = 0; ft < fourByThree.length; ft++) {
+                  if (li.indexOf(fourByThree[ft].ID) === -1) {
+                    this.assistiveDevices.push(fourByThree[ft]);
+                  }
                 }
               }
             }
@@ -1415,10 +1435,27 @@ export default {
           this.currentValue = [];
         } else {
           for (const sql in sqlAssistiveAnswer) {
-            // let options = sqlAssistiveAnswer[sql].OptionIDs.split(",");
-            // this.currentValue = options;
             this.currentValue.push(sqlAssistiveAnswer[sql].ID);
             this.total = this.total + sqlAssistiveAnswer[sql].Total;
+            this.changeCN.push({
+              ID: sqlAssistiveAnswer[sql].ID,
+              Name: sqlAssistiveAnswer[sql].Name,
+              Number: sqlAssistiveAnswer[sql].Number,
+              Total: sqlAssistiveAnswer[sql].Total
+            });
+            this.currentNumber.push({
+              id: sqlAssistiveAnswer[sql].ID,
+              name: sqlAssistiveAnswer[sql].Name,
+              number: sqlAssistiveAnswer[sql].Number
+            });
+            this.valueList.push({
+              label: sqlAssistiveAnswer[sql].Name,
+              value:
+                "数量：" +
+                sqlAssistiveAnswer[sql].Number +
+                ",总价：" +
+                sqlAssistiveAnswer[sql].Total
+            });
           }
         }
       } else {
@@ -1480,23 +1517,13 @@ export default {
     numberChange(title, jian, number) {
       this.assistNumber.push(number);
       let flag = false;
-      if (this.currentNumber.length > 0) {
-        for (let i = 0; i < this.currentNumber.length; i++) {
-          if (this.currentNumber[i].id == jian) {
-            this.currentNumber[i].number = number;
-            flag = true;
-            break;
-          }
+      for (let i = 0; i < this.currentNumber.length; i++) {
+        if (this.currentNumber[i].id == jian) {
+          this.currentNumber[i].number = number;
+          flag = true;
+          break;
         }
-      } else {
-        this.currentNumber.push({
-          id: jian,
-          name: title,
-          number: number
-        });
-        flag = true;
       }
-
       if (!flag) {
         this.currentNumber.push({
           id: jian,
@@ -1697,100 +1724,143 @@ export default {
       }
     },
     currentValue() {
-      let to = 0;
-      this.assistTol = [];
-      if (this.currentValue.length > 0) {
-        for (const id of this.currentValue) {
-          for (const all of this.assistiveChange) {
-            if (parseInt(id) === all.ID) {
-              this.assistTol.push({
-                ID: all.ID,
-                Name: all.Name,
-                Type: all.Type,
-                DisabledID: this.disabledID,
-                ExamID: this.examID,
-                optionIDs: this.currentValue.join(","),
-                Number: 1,
-                price: all.Price
+      if (this.state === "1") {
+        this.total = 0;
+        let assistiveAnswer = [];
+        if (this.currentValue.length > 0) {
+          //遍历所有，所选集合
+          for (const id of this.currentValue) {
+            for (const all of this.assistiveChange) {
+              if (parseInt(id) === all.ID) {
+                assistiveAnswer.push({
+                  ID: all.ID,
+                  Name: all.Name,
+                  Type: all.Type,
+                  DisabledID: this.disabledID,
+                  ExamID: this.examID,
+                  optionIDs: this.currentValue.join(","),
+                  Number: 1,
+                  price: all.Price
+                });
+              }
+            }
+          }
+          //查询数量集合，匹配所选辅具数量和总价
+          if (this.currentNumber.length > 0) {
+            for (let q = 0; q < assistiveAnswer.length; q++) {
+              for (let w = 0; w < this.currentNumber.length; w++) {
+                if (assistiveAnswer[q].ID === this.currentNumber[w].id) {
+                  assistiveAnswer[q].Number = this.currentNumber[w].number;
+                }
+              }
+            }
+
+            for (let i = 0; i < assistiveAnswer.length; i++) {
+              let price = assistiveAnswer[i].Number * assistiveAnswer[i].price;
+              this.total += price;
+            }
+          }
+        }
+        //所有辅具选择列表
+        this.changeCN = [];
+        for (let q = 0; q < this.currentValue.length; q++) {
+          for (let w = 0; w < assistiveAnswer.length; w++) {
+            if (this.currentValue[q] === assistiveAnswer[w].ID) {
+              this.changeCN.push({
+                ID: assistiveAnswer[w].ID,
+                Name: assistiveAnswer[w].Name,
+                Number: assistiveAnswer[w].Number,
+                Total: assistiveAnswer[w].Number * assistiveAnswer[w].price
               });
             }
           }
         }
-
-        for (let q = 0; q < this.assistTol.length; q++) {
-          for (let w = 0; w < this.currentNumber.length; w++) {
-            if (this.assistTol[q].ID === this.currentNumber[w].id) {
-              this.assistTol[q].Number = this.currentNumber[w].number;
-            }
+        if (this.assistiveChange.length != 0) {
+          this.valueList = [];
+          for (let e = 0; e < this.changeCN.length; e++) {
+            this.valueList.push({
+              label: this.changeCN[e].Name,
+              value:
+                "数量：" +
+                this.changeCN[e].Number +
+                ",总价：" +
+                this.changeCN[e].Total
+            });
           }
         }
-
-        for (let i = 0; i < this.assistTol.length; i++) {
-          let price = this.assistTol[i].Number * this.assistTol[i].price;
-          this.total = to + price;
-        }
-      }
-      this.valueList = [];
-      for (let val = 0; val < this.assistTol.length; val++) {
-        this.valueList.push({
-          label: this.assistTol[val].Name,
-          value:
-            "数量：" +
-            this.assistTol[val].Number +
-            ",单价：" +
-            this.assistTol[val].price +
-            ",总价：" +
-            this.assistTol[val].Number * this.assistTol[val].price
-        });
       }
     },
     assistNumber() {
-      let to = 0;
-      let assistives = [];
-      let assistVal = [];
-      if (this.currentValue.length > 0) {
-        for (const id of this.currentValue) {
-          for (const all of this.assistiveChange) {
-            if (parseInt(id) === all.ID) {
-              assistives.push({
-                ID: all.ID,
-                Name: all.Name,
-                Type: all.Type,
-                DisabledID: this.disabledID,
-                ExamID: this.examID,
-                optionIDs: this.currentValue.join(","),
-                Number: 1,
-                price: all.Price
+      if (this.state === "1") {
+        this.total = 0;
+        let assistiveAnswer = [];
+        if (this.currentValue.length > 0) {
+          for (const id of this.currentValue) {
+            for (const all of this.assistiveChange) {
+              if (parseInt(id) === all.ID) {
+                assistiveAnswer.push({
+                  ID: all.ID,
+                  Name: all.Name,
+                  Type: all.Type,
+                  DisabledID: this.disabledID,
+                  ExamID: this.examID,
+                  optionIDs: this.currentValue.join(","),
+                  Number: 1,
+                  price: all.Price
+                });
+              }
+            }
+          }
+
+          for (let a = 0; a < assistiveAnswer.length; a++) {
+            for (let b = 0; b < this.changeCN.length; b++) {
+              if (assistiveAnswer[a].ID === this.changeCN[b].ID) {
+                assistiveAnswer[a].Number = this.changeCN[b].Number;
+              }
+            }
+          }
+
+          for (let r = 0; r < assistiveAnswer.length; r++) {
+            for (let t = 0; t < this.currentNumber.length; t++) {
+              if (assistiveAnswer[r].ID === this.currentNumber[t].id) {
+                assistiveAnswer[r].Number = this.currentNumber[t].number;
+              }
+            }
+          }
+
+          for (let i = 0; i < assistiveAnswer.length; i++) {
+            let price = assistiveAnswer[i].Number * assistiveAnswer[i].price;
+            this.total += price;
+          }
+
+          //所有辅具选择列表
+          let changeVal = [];
+          for (let q = 0; q < this.currentValue.length; q++) {
+            for (let w = 0; w < assistiveAnswer.length; w++) {
+              if (this.currentValue[q] === assistiveAnswer[w].ID) {
+                changeVal.push({
+                  ID: assistiveAnswer[w].ID,
+                  Name: assistiveAnswer[w].Name,
+                  Number: assistiveAnswer[w].Number,
+                  Price: assistiveAnswer[w].price
+                });
+              }
+            }
+          }
+          if (this.assistiveChange.length != 0) {
+            this.valueList = [];
+            for (let e = 0; e < changeVal.length; e++) {
+              this.valueList.push({
+                label: changeVal[e].Name,
+                value:
+                  "数量：" +
+                  changeVal[e].Number +
+                  ",总价：" +
+                  changeVal[e].Number * changeVal[e].Price
               });
             }
           }
         }
-        for (let q = 0; q < assistives.length; q++) {
-          for (let w = 0; w < this.currentNumber.length; w++) {
-            if (assistives[q].ID === this.currentNumber[w].id) {
-              assistives[q].Number = this.currentNumber[w].number;
-            }
-          }
-        }
-
-        for (let i = 0; i < assistives.length; i++) {
-          let price = assistives[i].Number * assistives[i].price;
-          this.total = to + price;
-        }
-
-        for (let val = 0; val < assistives.length; val++) {
-          assistVal.push({
-            label: assistives[val].Name,
-            value:
-              "数量：" +
-              assistives[val].Number +
-              ",单价：" +
-              assistives[val].price +
-              ",总价：" +
-              assistives[val].Number * assistives[val].price
-          });
-        }
-        this.valueList = assistVal;
       }
     }
   }

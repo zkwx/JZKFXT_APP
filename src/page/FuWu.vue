@@ -88,6 +88,9 @@
                           <p v-html="'单价：'+item.price+'元'"></p>
                         </div>
                       </label>
+                       <group title="描述">
+                        <x-textarea readonly :value="item.comment" :autosize="true"></x-textarea>
+                      </group>
                      <app-number :disabledID="disabledID" :state="State" :examID="examID" :item="item" :jian="item.key" :title="item.value" :display="assistiveDisabled" @on-change="numberChange"></app-number>
                   </div>
                 </div>
@@ -103,8 +106,9 @@
               </div>
             </group>
               <div>
-                  <group>
-                     <x-input title="总价" v-model="total"  text-align="center" :disabled="true"></x-input>
+                 <group>
+                      <cell title="总价" :value="total"></cell>
+                      <cell-form-preview :list="valueList"></cell-form-preview>
                   </group>
               </div>
               
@@ -134,7 +138,9 @@ import {
   CellBox,
   Badge,
   PopupPicker,
-  InlineXNumber
+  InlineXNumber,
+  CellFormPreview,
+  XTextarea
 } from "vux";
 import AppSign from "@/components/AppSign";
 import AppNumber from "@/components/AppNumber";
@@ -154,7 +160,9 @@ export default {
     Cell,
     CellBox,
     Badge,
-    InlineXNumber
+    InlineXNumber,
+    CellFormPreview,
+    XTextarea
   },
   props: {
     disabledID: String,
@@ -163,6 +171,8 @@ export default {
   },
   data() {
     return {
+      changeCN: [],
+      valueList: [],
       sign: false,
       isEdit: true,
       isView: true,
@@ -305,6 +315,8 @@ export default {
       await this.$api.getAllAssistives().then(r => {
         this.assistiveDevices = r;
       });
+      //文件当前路径
+      this.imageUrl = await this.$api.getAssistUrl();
       await this.$api
         .getAssistiveAnswers(
           "?ExamID=" + this.examID + "&disabledID=" + this.Disabled.ID
@@ -328,9 +340,21 @@ export default {
       await this.getAsssistive();
       if (this.currentValue.length > 0) {
         this.fin = false;
+        for (let a = 0; a < this.assistiveName.length; a++) {
+          for (let b = 0; b < this.currentNumber.length; b++) {
+            if (this.assistiveName[a].key === this.currentNumber[b].id) {
+              this.valueList.push({
+                label: this.assistiveName[a].value,
+                value:
+                  "数量：" +
+                  this.currentNumber[b].number +
+                  ",总价：" +
+                  this.currentNumber[b].number * this.assistiveName[a].price
+              });
+            }
+          }
+        }
       }
-      //文件当前路径
-      this.imageUrl = await this.$api.getAssistUrl();
     },
 
     async getAsssistive() {
@@ -421,14 +445,15 @@ export default {
             ) {
               this.image = this.imageUrl + ast.PicName;
 
-              //辅具名称(用来选择)
+              //辅具名称
               this.assistiveName.push({
                 key: ast.ID,
                 value: ast.Name,
                 type: ast.Type,
                 img: this.image,
                 parent: ast.ParentAssistiveDeviceID,
-                price: ast.Price
+                price: ast.Price,
+                comment: ast.Comments
               });
             }
           }
@@ -751,6 +776,7 @@ export default {
             value: t.value,
             type: t.type,
             img: t.img,
+            comment:t.comment,
             price: t.price
           });
         }

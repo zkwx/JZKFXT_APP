@@ -51,6 +51,12 @@
 
       <div>
          <div class="weui-cells__title">辅具列表</div>
+         <div>
+            <group>
+              <cell title="总价" :value="total"></cell>
+              <cell-form-preview :list="valueList"></cell-form-preview>
+            </group>
+          </div>
         <div>
            <group>
             <div v-for="(name,assistive) in conditions" :key="assistive">
@@ -60,20 +66,20 @@
               </cell>
               <template v-if="showContent[name]">
                <!-- 二级目录 -->
-                <div v-for="(twoName,assistivet) in  changeTwoAssistive(name)" :key="assistivet" style="padding-left:10px;">
+                <div v-for="(twoName,assistivet) in  changeAssistives(name)" :key="assistivet" style="padding-left:10px;">
                 <cell :title='twoName.value' is-link :border-intent="false" :arrow-direction="showContent[twoName.value] ? 'up' : 'down'" @click.native="showContent[twoName.value] = !showContent[twoName.value]">
                   <badge :text='changeTwoNumber(twoName.key)'></badge>
                 </cell>
                 <template v-if="showContent[twoName.value]">
                   <!-- 三级目录 -->
-                   <div v-for="(threeName,assistivet) in  changeThreeAssistive(twoName.key)" :key="assistivet" style="padding-left:10px;">
+                   <div v-for="(threeName,assistivet) in  changeAssistives(twoName.key)" :key="assistivet" style="padding-left:10px;">
                 <cell :title='threeName.value' is-link :border-intent="false" :arrow-direction="showContent[threeName.value] ? 'up' : 'down'" @click.native="showContent[threeName.value] = !showContent[threeName.value]">
                   <badge :text='changeThreeNumber(threeName.key)'></badge>
                 </cell>
                 <template v-if="showContent[threeName.value]">
                     <div>
                     <div class="weui-cells weui-cells_checkbox">
-                    <div v-for="(item,assistive) in changeFourAssistive(threeName.key)" :key="assistive">
+                    <div v-for="(item,assistive) in changeAssistives(threeName.key)" :key="assistive">
                       <label class="weui-cell weui-check_label">
                           <div class="weui-cell__hd">
                             <input type="checkbox" class="weui-check" :value="item.key" v-model="currentValue" :disabled="IsCheck">
@@ -87,6 +93,9 @@
                           <p v-html="'单价：'+item.price+'元'"></p>
                         </div>
                       </label>
+                      <group title="描述">
+                        <x-textarea readonly :value="item.comment" :autosize="true"></x-textarea>
+                      </group>
                      <app-number :disabledID="disabledID" :state="State" :examID="examID" :item="item" :jian="item.key" :title="item.value" :display="assistiveDisabled" @on-change="numberChange"></app-number>
                   </div>
                 </div>
@@ -103,9 +112,10 @@
             </group>
 
               <div>
-                  <group>
-                     <x-input title="总价" v-model="total"  text-align="center" :disabled="true"></x-input>
-                  </group>
+                   <group>
+                      <cell title="总价" :value="total"></cell>
+                      <cell-form-preview :list="valueList"></cell-form-preview>
+                    </group>
               </div>
         </div>
 
@@ -128,6 +138,8 @@ import {
   Cell,
   CellBox,
   Badge,
+  CellFormPreview,
+  XTextarea,
   InlineXNumber
 } from "vux";
 import AppSign from "@/components/AppSign";
@@ -149,6 +161,8 @@ export default {
     Cell,
     CellBox,
     Badge,
+    CellFormPreview,
+    XTextarea,
     InlineXNumber
   },
   props: {
@@ -158,6 +172,9 @@ export default {
   },
   data() {
     return {
+      changeCN: [],
+      fourVal: [],
+      valueList: [],
       sign: false,
       isView: true,
       total: 0,
@@ -515,12 +532,12 @@ export default {
             }
           }
         }
+
         for (let q = 0; q < this.assistiveAnswer.length; q++) {
-          for (let w = 0; w < this.currentNumber.length; w++) {
-            if (this.assistiveAnswer[q].ID === this.currentNumber[w].id) {
-              this.assistiveAnswer[q].Number = this.currentNumber[w].number;
-              this.assistiveAnswer[q].Total =
-                this.currentNumber[w].number * this.assistiveAnswer[q].Price;
+          for (let w = 0; w < this.changeCN.length; w++) {
+            if (this.assistiveAnswer[q].ID === this.changeCN[w].ID) {
+              this.assistiveAnswer[q].Number = this.changeCN[w].Number;
+              this.assistiveAnswer[q].Total = this.changeCN[w].Total;
             }
           }
         }
@@ -609,124 +626,99 @@ export default {
           if (content[ast.Type] != false) {
             content[ast.Type] = false;
           }
-          if (
-            (ast.ID.toString().length === 5 ||
-              ast.ID.toString().length === 7) &&
-            content[ast.Name] != false
-          ) {
-            content[ast.Name] = false;
-          }
 
           if (ast.ID.toString().length === 5) {
-            if (this.twoAssistive.length === 0) {
+            for (let twoID = 0; twoID < this.twoAssistive.length; twoID++) {
+              if (this.twoAssistive[twoID].id === ast.ID) {
+                twoFlag = false;
+              }
+            }
+            if (twoFlag) {
               this.twoAssistive.push({
                 id: ast.ID,
                 name: ast.Name,
                 type: ast.Type
               });
-            } else {
-              for (let twoID = 0; twoID < this.twoAssistive.length; twoID++) {
-                if (this.twoAssistive[twoID].id === ast.ID) {
-                  twoFlag = false;
-                }
-              }
-              if (twoFlag) {
-                this.twoAssistive.push({
-                  id: ast.ID,
-                  name: ast.Name,
-                  type: ast.Type
-                });
-              }
+            }
+            if (content[ast.Name] != false) {
+              content[ast.Name] = false;
             }
           } else if (ast.ID.toString().length === 7) {
-            if (this.threeAssistive.length === 0) {
+            for (
+              let threeID = 0;
+              threeID < this.threeAssistive.length;
+              threeID++
+            ) {
+              if (this.threeAssistive[threeID].id === ast.ID) {
+                threeFlag = false;
+              }
+            }
+            if (threeFlag) {
               this.threeAssistive.push({
                 id: ast.ID,
                 name: ast.Name,
                 parent: ast.ParentAssistiveDeviceID,
                 type: ast.Type
               });
-            } else {
-              for (
-                let threeID = 0;
-                threeID < this.threeAssistive.length;
-                threeID++
-              ) {
-                if (this.threeAssistive[threeID].id === ast.ID) {
-                  threeFlag = false;
-                }
-              }
-              if (threeFlag) {
-                this.threeAssistive.push({
-                  id: ast.ID,
-                  name: ast.Name,
-                  parent: ast.ParentAssistiveDeviceID,
-                  type: ast.Type
-                });
-              }
+            }
+            if (content[ast.Name] != false) {
+              content[ast.Name] = false;
             }
           } else if (ast.ID.toString().length === 9) {
-            this.image = this.imageUrl + ast.PicName;
-
             this.assistiveName.push({
               key: ast.ID,
               value: ast.Name,
               parent: ast.ParentAssistiveDeviceID,
               type: ast.Type,
-              img: this.image,
-              price: ast.Price
+              img: this.imageUrl + ast.PicName,
+              price: ast.Price,
+              comments: ast.Comments
             });
           }
         }
         this.showContent = content;
       }
     },
-    //辅具二级目录
-    changeTwoAssistive(type) {
+    changeAssistives(value) {
       let list = [];
-      for (let i = 0; i < this.twoAssistive.length; i++) {
-        let two = this.twoAssistive[i];
-        if (type === two.type) {
-          list.push({
-            key: two.id,
-            value: two.name,
-            type: two.type
-          });
+      if (typeof value === "string") {
+        for (let i = 0; i < this.twoAssistive.length; i++) {
+          let two = this.twoAssistive[i];
+          if (value === two.type) {
+            list.push({
+              key: two.id,
+              value: two.name,
+              type: two.type
+            });
+          }
+        }
+      } else if (value.toString().length === 5) {
+        for (let i = 0; i < this.threeAssistive.length; i++) {
+          let three = this.threeAssistive[i];
+          if (value === three.parent) {
+            list.push({
+              key: three.id,
+              value: three.name,
+              type: three.type
+            });
+          }
+        }
+      } else if (value.toString().length === 7) {
+        for (let i = 0; i < this.assistiveName.length; i++) {
+          let t = this.assistiveName[i];
+          if (value === t.parent) {
+            list.push({
+              key: t.key,
+              value: t.value,
+              type: t.type,
+              img: t.img,
+              price: t.price,
+              comment: t.comments
+            });
+          }
         }
       }
       return list;
-    },
-    //辅具三级目录
-    changeThreeAssistive(value) {
-      let tlist = [];
-      for (let i = 0; i < this.threeAssistive.length; i++) {
-        let three = this.threeAssistive[i];
-        if (value === three.parent) {
-          tlist.push({
-            key: three.id,
-            value: three.name,
-            type: three.type
-          });
-        }
-      }
-      return tlist;
-    },
-    //辅具列表
-    changeFourAssistive(value) {
-      let fList = [];
-      for (let i = 0; i < this.assistiveName.length; i++) {
-        let t = this.assistiveName[i];
-        if (value === t.parent) {
-          fList.push({
-            key: t.key,
-            value: t.value,
-            type: t.type,
-            img: t.img,
-            price: t.price
-          });
-        }
-      }
-      return fList;
     },
     changeTwoNumber(value) {
       let index = 0;
@@ -753,23 +745,13 @@ export default {
     numberChange(title, jian, number) {
       this.assistNumber.push(number);
       let flag = false;
-      if (this.currentNumber.length > 0) {
-        for (let i = 0; i < this.currentNumber.length; i++) {
-          if (this.currentNumber[i].id == jian) {
-            this.currentNumber[i].number = number;
-            flag = true;
-            break;
-          }
+      for (let i = 0; i < this.currentNumber.length; i++) {
+        if (this.currentNumber[i].id == jian) {
+          this.currentNumber[i].number = number;
+          flag = true;
+          break;
         }
-      } else {
-        this.currentNumber.push({
-          id: jian,
-          name: title,
-          number: number
-        });
-        flag = true;
       }
-
       if (!flag) {
         this.currentNumber.push({
           id: jian,
@@ -844,9 +826,10 @@ export default {
     },
 
     currentValue() {
-      let to = 0;
+      this.total = 0;
+      let assistiveAnswer = [];
       if (this.currentValue.length > 0) {
-        const assistiveAnswer = [];
+        //遍历所有，所选集合
         for (const id of this.currentValue) {
           for (const all of this.assistiveDevices) {
             if (parseInt(id) === all.ID) {
@@ -863,23 +846,51 @@ export default {
             }
           }
         }
-
-        for (let q = 0; q < assistiveAnswer.length; q++) {
-          for (let w = 0; w < this.currentNumber.length; w++) {
-            if (assistiveAnswer[q].ID === this.currentNumber[w].id) {
-              assistiveAnswer[q].Number = this.currentNumber[w].number;
+        //查询数量集合，匹配所选辅具数量和总价
+        if (this.currentNumber.length > 0) {
+          for (let q = 0; q < assistiveAnswer.length; q++) {
+            for (let w = 0; w < this.currentNumber.length; w++) {
+              if (assistiveAnswer[q].ID === this.currentNumber[w].id) {
+                assistiveAnswer[q].Number = this.currentNumber[w].number;
+              }
             }
           }
-        }
 
-        for (let k = 0; k < assistiveAnswer.length; k++) {
-          let price = assistiveAnswer[k].Number * assistiveAnswer[k].price;
-          this.total = to + price;
+          for (let i = 0; i < assistiveAnswer.length; i++) {
+            let price = assistiveAnswer[i].Number * assistiveAnswer[i].price;
+            this.total += price;
+          }
+        }
+      }
+      //所有辅具选择列表
+      this.changeCN = [];
+      for (let q = 0; q < this.currentValue.length; q++) {
+        for (let w = 0; w < assistiveAnswer.length; w++) {
+          if (this.currentValue[q] === assistiveAnswer[w].ID) {
+            this.changeCN.push({
+              ID: assistiveAnswer[w].ID,
+              Name: assistiveAnswer[w].Name,
+              Number: assistiveAnswer[w].Number,
+              Price: assistiveAnswer[w].price,
+              Total: assistiveAnswer[w].Number * assistiveAnswer[w].price
+            });
+          }
+        }
+        this.valueList = [];
+        for (let e = 0; e < this.changeCN.length; e++) {
+          this.valueList.push({
+            label: this.changeCN[e].Name,
+            value:
+              "数量：" +
+              this.changeCN[e].Number +
+              ",总价：" +
+              this.changeCN[e].Total
+          });
         }
       }
     },
     assistNumber() {
-      let to = 0;
+      this.total = 0;
       let assistiveAnswer = [];
       if (this.currentValue.length > 0) {
         for (const id of this.currentValue) {
@@ -898,17 +909,53 @@ export default {
             }
           }
         }
-        for (let q = 0; q < assistiveAnswer.length; q++) {
-          for (let w = 0; w < this.currentNumber.length; w++) {
-            if (assistiveAnswer[q].ID === this.currentNumber[w].id) {
-              assistiveAnswer[q].Number = this.currentNumber[w].number;
+
+        for (let a = 0; a < assistiveAnswer.length; a++) {
+          for (let b = 0; b < this.changeCN.length; b++) {
+            if (assistiveAnswer[a].ID === this.changeCN[b].ID) {
+              assistiveAnswer[a].Number = this.changeCN[b].Number;
+            }
+          }
+        }
+
+        for (let r = 0; r < assistiveAnswer.length; r++) {
+          for (let t = 0; t < this.currentNumber.length; t++) {
+            if (assistiveAnswer[r].ID === this.currentNumber[t].id) {
+              assistiveAnswer[r].Number = this.currentNumber[t].number;
             }
           }
         }
 
         for (let i = 0; i < assistiveAnswer.length; i++) {
           let price = assistiveAnswer[i].Number * assistiveAnswer[i].price;
-          this.total = to + price;
+          this.total += price;
+        }
+
+        //所有辅具选择列表
+        this.changeCN = [];
+        for (let q = 0; q < this.currentValue.length; q++) {
+          for (let w = 0; w < assistiveAnswer.length; w++) {
+            if (this.currentValue[q] === assistiveAnswer[w].ID) {
+              this.changeCN.push({
+                ID: assistiveAnswer[w].ID,
+                Name: assistiveAnswer[w].Name,
+                Number: assistiveAnswer[w].Number,
+                Price: assistiveAnswer[w].price,
+                Total: assistiveAnswer[w].price * assistiveAnswer[w].Number
+              });
+            }
+          }
+        }
+        this.valueList = [];
+        for (let e = 0; e < this.changeCN.length; e++) {
+          this.valueList.push({
+            label: this.changeCN[e].Name,
+            value:
+              "数量：" +
+              this.changeCN[e].Number +
+              ",总价：" +
+              this.changeCN[e].Total
+          });
         }
       }
     }

@@ -44,20 +44,20 @@
               </cell>
               <template v-if="showContent[name]">
                <!-- 二级目录 -->
-                <div v-for="(twoName,assistivet) in  changeTwoAssistive(name)" :key="assistivet" style="padding-left:10px;">
+                <div v-for="(twoName,assistivet) in  changeAssistives(name)" :key="assistivet" style="padding-left:10px;">
                 <cell :title='twoName.value' is-link :border-intent="false" :arrow-direction="showContent[twoName.value] ? 'up' : 'down'" @click.native="showContent[twoName.value] = !showContent[twoName.value]">
                   <badge :text='changeTwoNumber(twoName.key)'></badge>
                 </cell>
                 <template v-if="showContent[twoName.value]">
                   <!-- 三级目录 -->
-                   <div v-for="(threeName,assistivet) in  changeThreeAssistive(twoName.key)" :key="assistivet" style="padding-left:10px;">
+                   <div v-for="(threeName,assistivet) in  changeAssistives(twoName.key)" :key="assistivet" style="padding-left:10px;">
                 <cell :title='threeName.value' is-link :border-intent="false" :arrow-direction="showContent[threeName.value] ? 'up' : 'down'" @click.native="showContent[threeName.value] = !showContent[threeName.value]">
                   <badge :text='changeThreeNumber(threeName.key)'></badge>
                 </cell>
                 <template v-if="showContent[threeName.value]">
                     <div>
                     <div class="weui-cells weui-cells_checkbox">
-                    <div v-for="(item,assistive) in changeFourAssistive(threeName.key)" :key="assistive">
+                    <div v-for="(item,assistive) in changeAssistives(threeName.key)" :key="assistive">
                       <label class="weui-cell weui-check_label">
                           <div class="weui-cell__hd">
                             <input type="checkbox" class="weui-check" :value="item.key" v-model="currentValue" :disabled="IsCheck">
@@ -71,6 +71,9 @@
                           <p v-html="'单价：'+item.price+'元'"></p>
                         </div>
                       </label>
+                       <group title="描述">
+                        <x-textarea readonly :value="item.comment" :autosize="true"></x-textarea>
+                      </group>
                      <app-number :disabledID="disabledID" :state="State" :examID="examID" :item="item" :jian="item.key" :title="item.value" :display="assistiveDisabled" @on-change="numberChange"></app-number>
                   </div>
                 </div>
@@ -88,9 +91,10 @@
 
 
               <div>
-                  <group>
-                     <x-input title="总价" v-model="total"  text-align="center" :disabled="true"></x-input>
-                  </group>
+                   <group>
+                      <cell title="总价" :value="total"></cell>
+                      <cell-form-preview :list="valueList"></cell-form-preview>
+                    </group>
               </div>
 
 
@@ -135,6 +139,8 @@ import {
   Cell,
   CellBox,
   Badge,
+  XTextarea,
+  CellFormPreview,
   Value2nameFilter as value2name
 } from "vux";
 import { userInfo } from "os";
@@ -165,7 +171,9 @@ export default {
     Cell,
     CellBox,
     Badge,
-    AppNumber
+    AppNumber,
+    XTextarea,
+    CellFormPreview
   },
   props: {
     disabledID: String,
@@ -174,6 +182,8 @@ export default {
   },
   data() {
     return {
+      changeCN: [],
+      valueList: [],
       total: 0,
       showNumber: false,
       showContent: {},
@@ -257,7 +267,8 @@ export default {
         this.getDisabled(this.disabled.ID);
       }
       await this.initQuestions();
-
+      //文件当前路径
+      this.imageUrl = await this.$api.getAssistUrl();
       if (this.IsView) {
         await this.loadAssistiveDevices();
         await this.loadCheckAssistive();
@@ -269,8 +280,6 @@ export default {
       if (this.State != "1") {
         this.IsCheck = true;
       }
-      //文件当前路径
-      this.imageUrl = await this.$api.getAssistUrl();
     },
     //地址
     async getDisabled(ID) {
@@ -724,8 +733,7 @@ export default {
       }
 
       if (this.assistiveDevices.length > 0) {
-        let twoFlag = true;
-        let threeFlag = true;
+        let content = this.pure(this.showContent);
         //筛选
         if (this.conditions.length === 0) {
           for (let a in this.assistiveDevices) {
@@ -735,87 +743,51 @@ export default {
             //辅具显示
             const type = aty.Type;
 
-            let content = this.pure(this.showContent);
             if (content[type] != false) {
               content[type] = false;
             }
-            if (aty.ID.toString().length === 9) {
-              let four = await this.$api.getAssistiveDevice(aty.ID);
-              let three = await this.$api.getAssistiveDevice(
-                four.ParentAssistiveDeviceID
-              );
-              let two = await this.$api.getAssistiveDevice(
-                three.ParentAssistiveDeviceID
-              );
-
-              if (this.twoAssistive.length === 0) {
-                this.twoAssistive.push({
-                  id: two.ID,
-                  name: two.Name,
-                  type: two.Type
-                });
-              } else {
-                for (let tz = 0; tz < this.twoAssistive.length; tz++) {
-                  if (this.twoAssistive[tz].id === two.ID) {
-                    twoFlag = false;
-                  } else {
-                    twoFlag = true;
-                  }
-                }
-                if (twoFlag) {
-                  this.twoAssistive.push({
-                    id: two.ID,
-                    name: two.Name,
-                    type: two.Type
-                  });
-                }
-              }
-
-              if (this.threeAssistive.length === 0) {
-                this.threeAssistive.push({
-                  id: three.ID,
-                  parent: three.ParentAssistiveDeviceID,
-                  name: three.Name,
-                  type: three.Type
-                });
-              } else {
-                for (let tx = 0; tx < this.threeAssistive.length; tx++) {
-                  if (this.threeAssistive[tx].id === three.ID) {
-                    threeFlag = false;
-                  } else {
-                    threeFlag = true;
-                  }
-                }
-                if (threeFlag) {
-                  this.threeAssistive.push({
-                    id: three.ID,
-                    parent: three.ParentAssistiveDeviceID,
-                    name: three.Name,
-                    type: three.Type
-                  });
-                }
-              }
-
-              if (content[two.Name] != false) {
-                content[two.Name] = false;
-              }
-
-              if (content[three.Name] != false) {
-                content[three.Name] = false;
-              }
-              this.showContent = content;
-
-              this.image = this.imageUrl + ast.PicName;
-              //辅具名称(用来选择)
-              this.assistiveName.push({
-                key: aty.ID,
-                value: aty.Name,
-                type: aty.Type,
-                img: this.image,
-                price: aty.Price,
-                twoID: two.ID,
-                threeID: three.ID
+            if (aty.ID.toString().length === 5) {
+              let twofy = await this.$api.getAssistiveDevice(aty.ID);
+              content = await this.twoLists(content, twofy);
+              var threefy = await this.$api.getAssistListByFid({
+                id: twofy.ID
               });
+              for (let m = 0; m < threefy.length; m++) {
+                content = await this.threeLists(content, threefy[m]);
+              }
+              for (let n = 0; n < threefy.length; n++) {
+                var fourfy = await this.$api.getAssistListByFid({
+                  id: threefy[m].ID
+                });
+                for (let k = 0; k < fourfy.length; k++) {
+                  await this.fourlists(fourfy[k], threef[n]);
+                }
+              }
+            } else if (aty.ID.toString().length === 7) {
+              let threesy = await this.$api.getAssistiveDevice(aty.ID);
+              let twosy = await this.$api.getAssistiveDevice(
+                threesy.ParentAssistiveDeviceID
+              );
+              content = await this.twoLists(content, twosy);
+              content = await this.threeLists(content, threesy);
+              var foursy = await this.$api.getAssistListByFid({
+                id: threesy.ID
+              });
+              for (let v = 0; v < foursy.length; v++) {
+                await this.fourlists(foursy[v], threesy);
+              }
+            } else if (aty.ID.toString().length === 9) {
+              let fourxy = await this.$api.getAssistiveDevice(aty.ID);
+              let threexy = await this.$api.getAssistiveDevice(
+                fourxy.ParentAssistiveDeviceID
+              );
+              let twoxy = await this.$api.getAssistiveDevice(
+                threexy.ParentAssistiveDeviceID
+              );
+
+              content = await this.twoLists(content, twoxy);
+              content = await this.threeLists(content, threexy);
+              await this.fourlists(fourxy, threexy);
             }
           }
         } else {
@@ -831,19 +803,48 @@ export default {
             const bt = this.conditions[b];
             //table.innerHTML = bt;
             for (let a in this.assistiveDevices) {
-              const at = this.assistiveDevices[a];
-              if (at.Type === bt) {
+              const atx = this.assistiveDevices[a];
+              if (atx.Type === bt) {
                 //辅具所有信息
-                this.assistiveChange.push(at);
+                this.assistiveChange.push(atx);
                 //辅具显示
-                const type = at.Type;
+                const type = atx.Type;
 
-                let content = this.pure(this.showContent);
                 if (content[type] != false) {
                   content[type] = false;
                 }
-                if (at.ID.toString().length === 9) {
-                  let fourx = await this.$api.getAssistiveDevice(at.ID);
+                if (atx.ID.toString().length === 5) {
+                  let twof = await this.$api.getAssistiveDevice(atx.ID);
+                  content = await this.twoLists(content, twof);
+                  var threef = await this.$api.getAssistListByFid({
+                    id: twof.ID
+                  });
+                  for (let m = 0; m < threef.length; m++) {
+                    content = await this.threeLists(content, threef[m]);
+                  }
+                  for (let n = 0; n < threef.length; n++) {
+                    var fourf = await this.$api.getAssistListByFid({
+                      id: threef[m].ID
+                    });
+                    for (let k = 0; k < fourf.length; k++) {
+                      await this.fourlists(fourf[k], threef[n]);
+                    }
+                  }
+                } else if (atx.ID.toString().length === 7) {
+                  let threes = await this.$api.getAssistiveDevice(atx.ID);
+                  let twos = await this.$api.getAssistiveDevice(
+                    threes.ParentAssistiveDeviceID
+                  );
+                  content = await this.twoLists(content, twos);
+                  content = await this.threeLists(content, threes);
+                  var fours = await this.$api.getAssistListByFid({
+                    id: threes.ID
+                  });
+                  for (let v = 0; v < fours.length; v++) {
+                    await this.fourlists(fours[v], threes);
+                  }
+                } else if (atx.ID.toString().length === 9) {
+                  let fourx = await this.$api.getAssistiveDevice(atx.ID);
                   let threex = await this.$api.getAssistiveDevice(
                     fourx.ParentAssistiveDeviceID
                   );
@@ -851,79 +852,83 @@ export default {
                     threex.ParentAssistiveDeviceID
                   );
 
-                  if (this.twoAssistive.length === 0) {
-                    this.twoAssistive.push({
-                      id: twox.ID,
-                      name: twox.Name,
-                      type: twox.Type
-                    });
-                  } else {
-                    for (let z = 0; z < this.twoAssistive.length; z++) {
-                      if (this.twoAssistive[z].id === twox.ID) {
-                        twoFlag = false;
-                      } else {
-                        twoFlag = true;
-                      }
-                    }
-                    if (twoFlag) {
-                      this.twoAssistive.push({
-                        id: twox.ID,
-                        name: twox.Name,
-                        type: twox.Type
-                      });
-                    }
-                  }
-                  //三级
-                  if (this.threeAssistive.length === 0) {
-                    this.threeAssistive.push({
-                      id: threex.ID,
-                      parent: threex.ParentAssistiveDeviceID,
-                      name: threex.Name,
-                      type: threex.Type
-                    });
-                  } else {
-                    for (let x = 0; x < this.threeAssistive.length; x++) {
-                      if (this.threeAssistive[x].id === threex.ID) {
-                        threeFlag = false;
-                      } else {
-                        threeFlag = true;
-                      }
-                    }
-                    if (threeFlag) {
-                      this.threeAssistive.push({
-                        id: threex.ID,
-                        parent: threex.ParentAssistiveDeviceID,
-                        name: threex.Name,
-                        type: threex.Type
-                      });
-                    }
-                  }
-                  if (content[twox.Name] != false) {
-                    content[twox.Name] = false;
-                  }
-                  if (content[threex.Name] != false) {
-                    content[threex.Name] = false;
-                  }
-                  this.showContent = content;
-                  this.image = this.imageUrl + at.PicName;
-                  //辅具名称(用来选择)
-                  //this.assistiveName.push(at.Name);
-                  this.assistiveName.push({
-                    key: at.ID,
-                    value: at.Name,
-                    type: at.Type,
-                    img: this.image,
-                    price: at.Price,
-                    twoID: twox.ID,
-                    threeID: threex.ID
-                  });
+                  content = await this.twoLists(content, twox);
+                  content = await this.threeLists(content, threex);
+                  await this.fourlists(fourx, threex);
                 }
               }
             }
           }
         }
-
+        this.showContent = content;
         this.showAssistiveDevicesTable = true;
+      }
+    },
+    //插入二级
+    twoLists(content, twox) {
+      let twoFlag = true;
+      for (let z = 0; z < this.twoAssistive.length; z++) {
+        if (this.twoAssistive[z].id === twox.ID) {
+          twoFlag = false;
+        } else {
+          twoFlag = true;
+        }
+      }
+      if (twoFlag) {
+        this.twoAssistive.push({
+          id: twox.ID,
+          name: twox.Name,
+          type: twox.Type
+        });
+      }
+      if (content[twox.Name] != false) {
+        content[twox.Name] = false;
+      }
+      return content;
+    },
+    //插入三级
+    threeLists(content, threex) {
+      let threeFlag = true;
+      for (let x = 0; x < this.threeAssistive.length; x++) {
+        if (this.threeAssistive[x].id === threex.ID) {
+          threeFlag = false;
+        } else {
+          threeFlag = true;
+        }
+      }
+      if (threeFlag) {
+        this.threeAssistive.push({
+          id: threex.ID,
+          parent: threex.ParentAssistiveDeviceID,
+          name: threex.Name,
+          type: threex.Type
+        });
+      }
+
+      if (content[threex.Name] != false) {
+        content[threex.Name] = false;
+      }
+      return content;
+    },
+    //插入四级
+    fourlists(atx, three) {
+      let fourFlag = true;
+      for (let y = 0; y < this.assistiveName.length; y++) {
+        if (this.assistiveName[y].key === atx.ID) {
+          fourFlag = false;
+        }
+      }
+      if (fourFlag) {
+        this.assistiveName.push({
+          key: atx.ID,
+          value: atx.Name,
+          type: atx.Type,
+          img: this.imageUrl + atx.PicName,
+          price: atx.Price,
+          comments: atx.Comments,
+          twoID: three.ParentAssistiveDeviceID,
+          threeID: atx.ParentAssistiveDeviceID
+        });
       }
     },
     //查看答案时数组转换
@@ -983,11 +988,53 @@ export default {
         if (option.AssistiveDevices != "") {
           let assistives = option.AssistiveDevices.split(",");
           for (const assistive of assistives) {
-            const assistiveDevice = await this.$api.getAssistiveDevice(
-              parseInt(assistive)
-            );
-            if (this.assistiveDevices.indexOf(assistiveDevice) === -1) {
-              this.assistiveDevices.push(assistiveDevice);
+            let li = [];
+            if (assistive.length === 9) {
+              const assistiveDevice = await this.$api.getAssistiveDevice(
+                parseInt(assistive)
+              );
+              for (let a = 0; a < this.assistiveDevices.length; a++) {
+                li.push(this.assistiveDevices[a].ID);
+              }
+              if (li.indexOf(assistiveDevice.ID) === -1) {
+                this.assistiveDevices.push(assistiveDevice);
+              }
+            } else if (assistive.length === 7) {
+              let threeAssist = await this.$api.getAssistiveDevice(
+                parseInt(assistive)
+              );
+              var fourAssist = await this.$api.getAssistListByFid({
+                id: threeAssist.ID
+              });
+              for (let a = 0; a < this.assistiveDevices.length; a++) {
+                li.push(this.assistiveDevices[a].ID);
+              }
+              for (let fa = 0; fa < fourAssist.length; fa++) {
+                if (li.indexOf(fourAssist[fa].ID) === -1) {
+                  this.assistiveDevices.push(fourAssist[fa]);
+                }
+              }
+            } else if (assistive.length === 5) {
+              let twoAssist = await this.$api.getAssistiveDevice(
+                parseInt(assistive)
+              );
+              var threeByTwo = await this.$api.getAssistListByFid({
+                id: twoAssist.ID
+              });
+              for (let ff = 0; ff < threeByTwo.length; ff++) {
+                var fourByThree = await this.$api.getAssistListByFid({
+                  id: threeByTwo[ff].ID
+                });
+                li = [];
+                for (let fa = 0; fa < this.assistiveDevices.length; fa++) {
+                  li.push(this.assistiveDevices[fa].ID);
+                }
+                for (let ft = 0; ft < fourByThree.length; ft++) {
+                  if (li.indexOf(fourByThree[ft].ID) === -1) {
+                    this.assistiveDevices.push(fourByThree[ft]);
+                  }
+                }
+              }
             }
           }
         }
@@ -1069,14 +1116,32 @@ export default {
         let sqlAssistiveAnswer = await this.$api.getAssistiveAnswers(
           "?ExamID=" + this.examID + "&disabledID=" + this.disabled.ID
         );
-        if (sqlAssistiveAnswer === []) {
+        if (sqlAssistiveAnswer.length === 0) {
           this.currentValue = [];
         } else {
           for (const sql in sqlAssistiveAnswer) {
-            // let options = sqlAssistiveAnswer[sql].OptionIDs.split(",");
-            // this.currentValue = options;
             this.currentValue.push(sqlAssistiveAnswer[sql].ID);
             this.total = this.total + sqlAssistiveAnswer[sql].Total;
+            this.changeCN.push({
+              ID: sqlAssistiveAnswer[sql].ID,
+              Name: sqlAssistiveAnswer[sql].Name,
+              Number: sqlAssistiveAnswer[sql].Number,
+              Total: sqlAssistiveAnswer[sql].Total
+            });
+            this.currentNumber.push({
+              id: sqlAssistiveAnswer[sql].ID,
+              name: sqlAssistiveAnswer[sql].Name,
+              number: sqlAssistiveAnswer[sql].Number
+            });
+
+            this.valueList.push({
+              label: sqlAssistiveAnswer[sql].Name,
+              value:
+                "数量：" +
+                sqlAssistiveAnswer[sql].Number +
+                ",总价：" +
+                sqlAssistiveAnswer[sql].Total
+            });
           }
         }
       } else {
@@ -1095,6 +1160,7 @@ export default {
     //审核修改
     examChange() {
       this.IsCheck = false;
+
       this.showNumber = true;
     },
     //审核未通过
@@ -1111,60 +1177,64 @@ export default {
     },
     //审核通过
     examNext() {
-      let Key = localStorage.getItem("loginUserBaseInfo");
-      let obj = JSON.parse(Key);
-      let uID = obj.I;
-      this.assistiveChange;
-      this.currentValue;
-      let assistive = [];
-      assistive.push({
-        ExamID: this.examID,
-        DisabledID: this.disabled.ID,
-        Auditor: uID
-      });
-      let assistiveAnswer = [];
-      if (this.assistiveChange.length === 0) {
-        assistiveAnswer.push({
-          DisabledID: this.disabledID,
-          ExamID: this.examID
-        });
+      if (this.currentValue.length === 0) {
+        this.$utils.Alert("请选择辅具");
       } else {
-        for (const id of this.currentValue) {
-          for (const all of this.assistiveChange) {
-            if (parseInt(id) === all.ID) {
-              assistiveAnswer.push({
-                ID: all.ID,
-                Name: all.Name,
-                Type: all.Type,
-                DisabledID: this.disabledID,
-                ExamID: this.examID,
-                optionIDs: this.currentValue.join(","),
-                Number: 1,
-                Price: all.Price,
-                Total: 0
-              });
+        let Key = localStorage.getItem("loginUserBaseInfo");
+        let obj = JSON.parse(Key);
+        let uID = obj.I;
+        this.assistiveChange;
+        this.currentValue;
+        let assistive = [];
+        assistive.push({
+          ExamID: this.examID,
+          DisabledID: this.disabled.ID,
+          Auditor: uID
+        });
+        let assistiveAnswer = [];
+        if (this.assistiveChange.length === 0) {
+          assistiveAnswer.push({
+            DisabledID: this.disabledID,
+            ExamID: this.examID
+          });
+        } else {
+          for (const id of this.currentValue) {
+            for (const all of this.assistiveChange) {
+              if (parseInt(id) === all.ID) {
+                assistiveAnswer.push({
+                  ID: all.ID,
+                  Name: all.Name,
+                  Type: all.Type,
+                  DisabledID: this.disabledID,
+                  ExamID: this.examID,
+                  optionIDs: this.currentValue.join(","),
+                  Number: 1,
+                  Price: all.Price,
+                  Total: 0
+                });
+              }
             }
           }
         }
-      }
-      for (let q = 0; q < assistiveAnswer.length; q++) {
-        for (let w = 0; w < this.currentNumber.length; w++) {
-          if (assistiveAnswer[q].ID === this.currentNumber[w].id) {
-            assistiveAnswer[q].Number = this.currentNumber[w].number;
-            assistiveAnswer[q].Total =
-              this.currentNumber[w].number * assistiveAnswer[q].Price;
+        for (let q = 0; q < assistiveAnswer.length; q++) {
+          for (let w = 0; w < this.currentNumber.length; w++) {
+            if (assistiveAnswer[q].ID === this.currentNumber[w].id) {
+              assistiveAnswer[q].Number = this.currentNumber[w].number;
+              assistiveAnswer[q].Total =
+                this.currentNumber[w].number * assistiveAnswer[q].Price;
+            }
           }
         }
-      }
-      this.$http
-        .post("AssistiveAnswers/SaveAnswers", assistiveAnswer)
-        .then(x => {
-          this.$http.put("ExamRecords/Modify", assistive).then(r => {
-            this.$utils.Alert("操作成功", "已通过审核");
-            this.State = "3";
-            this.$router.push("/JiGouPingGuHome");
+        this.$http
+          .post("AssistiveAnswers/SaveAnswers", assistiveAnswer)
+          .then(x => {
+            this.$http.put("ExamRecords/Modify", assistive).then(r => {
+              this.$utils.Alert("操作成功", "已通过审核");
+              this.State = "3";
+              this.$router.push("/JiGouPingGuHome");
+            });
           });
-        });
+      }
     },
     changeNumber(type) {
       let index = 0;
@@ -1191,64 +1261,45 @@ export default {
       return index;
     },
 
-    //辅具二级目录
-    changeTwoAssistive(type) {
+    changeAssistives(value) {
       let list = [];
-      for (let i = 0; i < this.twoAssistive.length; i++) {
-        let two = this.twoAssistive[i];
-        if (type === two.type) {
-          list.push({
-            key: two.id,
-            value: two.name,
-            type: two.type
-          });
+      if (typeof value === "string") {
+        for (let i = 0; i < this.twoAssistive.length; i++) {
+          let two = this.twoAssistive[i];
+          if (value === two.type) {
+            list.push({
+              key: two.id,
+              value: two.name,
+              type: two.type
+            });
+          }
         }
-      }
-      return list;
-    },
-    //辅具三级目录
-    changeThreeAssistive(value) {
-      let list = [];
-      for (let i = 0; i < this.threeAssistive.length; i++) {
-        let three = this.threeAssistive[i];
-        if (value === three.parent) {
-          list.push({
-            key: three.id,
-            value: three.name,
-            type: three.type
-          });
-        }
-      }
-      return list;
-    },
-    changeFourAssistive(value) {
-      let list = [];
-      for (let i = 0; i < this.assistiveName.length; i++) {
-        let t = this.assistiveName[i];
-        if (value === t.threeID) {
-          list.push({
-            key: t.key,
-            value: t.value,
-            type: t.type,
-            img: t.img,
-            price: t.price
-          });
-        }
-      }
-      return list;
-    },
-    changeAssistive(type) {
-      let list = [];
-      for (let i = 0; i < this.assistiveName.length; i++) {
-        let t = this.assistiveName[i];
-        if (type === t.type) {
-          list.push({
-            key: t.key,
-            value: t.value,
-            type: t.type,
-            img: t.img,
-            price: t.price
-          });
+      } else {
+        if (value.toString().length === 5) {
+          for (let i = 0; i < this.threeAssistive.length; i++) {
+            let three = this.threeAssistive[i];
+            if (value === three.parent) {
+              list.push({
+                key: three.id,
+                value: three.name,
+                type: three.type
+              });
+            }
+          }
+        } else if (value.toString().length === 7) {
+          for (let i = 0; i < this.assistiveName.length; i++) {
+            let t = this.assistiveName[i];
+            if (value === t.threeID) {
+              list.push({
+                key: t.key,
+                value: t.value,
+                type: t.type,
+                img: t.img,
+                price: t.price,
+                comment: t.comments
+              });
+            }
+          }
         }
       }
       return list;
@@ -1278,23 +1329,13 @@ export default {
     numberChange(title, jian, number) {
       this.assistNumber.push(number);
       let flag = false;
-      if (this.currentNumber.length > 0) {
-        for (let i = 0; i < this.currentNumber.length; i++) {
-          if (this.currentNumber[i].id == jian) {
-            this.currentNumber[i].number = number;
-            flag = true;
-            break;
-          }
+      for (let i = 0; i < this.currentNumber.length; i++) {
+        if (this.currentNumber[i].id == jian) {
+          this.currentNumber[i].number = number;
+          flag = true;
+          break;
         }
-      } else {
-        this.currentNumber.push({
-          id: jian,
-          name: title,
-          number: number
-        });
-        flag = true;
       }
-
       if (!flag) {
         this.currentNumber.push({
           id: jian,
@@ -1357,72 +1398,139 @@ export default {
       }
     },
     currentValue() {
-      let to = 0;
-      if (this.currentValue.length > 0) {
+      if (this.showNumber === true) {
+        this.total = 0;
         let assistiveAnswer = [];
-        for (const id of this.currentValue) {
-          for (const all of this.assistiveChange) {
-            if (parseInt(id) === all.ID) {
-              assistiveAnswer.push({
-                ID: all.ID,
-                Name: all.Name,
-                Type: all.Type,
-                DisabledID: this.disabledID,
-                ExamID: this.examID,
-                optionIDs: this.currentValue.join(","),
-                Number: 1,
-                price: all.Price
+        if (this.currentValue.length > 0) {
+          //遍历所有，所选集合
+          for (const id of this.currentValue) {
+            for (const all of this.assistiveChange) {
+              if (parseInt(id) === all.ID) {
+                assistiveAnswer.push({
+                  ID: all.ID,
+                  Name: all.Name,
+                  Type: all.Type,
+                  DisabledID: this.disabledID,
+                  ExamID: this.examID,
+                  optionIDs: this.currentValue.join(","),
+                  Number: 1,
+                  price: all.Price
+                });
+              }
+            }
+          }
+          //查询数量集合，匹配所选辅具数量和总价
+          if (this.currentNumber.length > 0) {
+            for (let q = 0; q < assistiveAnswer.length; q++) {
+              for (let w = 0; w < this.currentNumber.length; w++) {
+                if (assistiveAnswer[q].ID === this.currentNumber[w].id) {
+                  assistiveAnswer[q].Number = this.currentNumber[w].number;
+                }
+              }
+            }
+
+            for (let i = 0; i < assistiveAnswer.length; i++) {
+              let price = assistiveAnswer[i].Number * assistiveAnswer[i].price;
+              this.total += price;
+            }
+          }
+        }
+        //所有辅具选择列表
+        this.changeCN = [];
+        for (let q = 0; q < this.currentValue.length; q++) {
+          for (let w = 0; w < assistiveAnswer.length; w++) {
+            if (this.currentValue[q] === assistiveAnswer[w].ID) {
+              this.changeCN.push({
+                ID: assistiveAnswer[w].ID,
+                Name: assistiveAnswer[w].Name,
+                Number: assistiveAnswer[w].Number,
+                Total: assistiveAnswer[w].Number * assistiveAnswer[w].price
               });
             }
           }
         }
-        if (this.currentNumber.length > 0) {
-          for (let q = 0; q < assistiveAnswer.length; q++) {
-            for (let w = 0; w < this.currentNumber.length; w++) {
-              if (assistiveAnswer[q].ID === this.currentNumber[w].id) {
-                assistiveAnswer[q].Number = this.currentNumber[w].number;
+
+        this.valueList = [];
+        for (let e = 0; e < this.changeCN.length; e++) {
+          this.valueList.push({
+            label: this.changeCN[e].Name,
+            value:
+              "数量：" +
+              this.changeCN[e].Number +
+              ",总价：" +
+              this.changeCN[e].Total
+          });
+        }
+      }
+    },
+    assistNumber() {
+      if (this.showNumber === true) {
+        this.total = 0;
+        let assistiveAnswer = [];
+        if (this.currentValue.length > 0) {
+          for (const id of this.currentValue) {
+            for (const all of this.assistiveChange) {
+              if (parseInt(id) === all.ID) {
+                assistiveAnswer.push({
+                  ID: all.ID,
+                  Name: all.Name,
+                  Type: all.Type,
+                  DisabledID: this.disabledID,
+                  ExamID: this.examID,
+                  optionIDs: this.currentValue.join(","),
+                  Number: 1,
+                  price: all.Price
+                });
+              }
+            }
+          }
+
+          for (let a = 0; a < assistiveAnswer.length; a++) {
+            for (let b = 0; b < this.changeCN.length; b++) {
+              if (assistiveAnswer[a].ID === this.changeCN[b].ID) {
+                assistiveAnswer[a].Number = this.changeCN[b].Number;
+              }
+            }
+          }
+
+          for (let r = 0; r < assistiveAnswer.length; r++) {
+            for (let t = 0; t < this.currentNumber.length; t++) {
+              if (assistiveAnswer[r].ID === this.currentNumber[t].id) {
+                assistiveAnswer[r].Number = this.currentNumber[t].number;
               }
             }
           }
 
           for (let i = 0; i < assistiveAnswer.length; i++) {
             let price = assistiveAnswer[i].Number * assistiveAnswer[i].price;
-            this.total = to + price;
+            this.total += price;
           }
-        }
-      }
-    },
-    assistNumber() {
-      let to = 0;
-      let assistiveAnswer = [];
-      if (this.currentValue.length > 0) {
-        for (const id of this.currentValue) {
-          for (const all of this.assistiveChange) {
-            if (parseInt(id) === all.ID) {
-              assistiveAnswer.push({
-                ID: all.ID,
-                Name: all.Name,
-                Type: all.Type,
-                DisabledID: this.disabledID,
-                ExamID: this.examID,
-                optionIDs: this.currentValue.join(","),
-                Number: 1,
-                price: all.Price
-              });
-            }
-          }
-        }
-        for (let q = 0; q < assistiveAnswer.length; q++) {
-          for (let w = 0; w < this.currentNumber.length; w++) {
-            if (assistiveAnswer[q].ID === this.currentNumber[w].id) {
-              assistiveAnswer[q].Number = this.currentNumber[w].number;
-            }
-          }
-        }
 
-        for (let i = 0; i < assistiveAnswer.length; i++) {
-          let price = assistiveAnswer[i].Number * assistiveAnswer[i].price;
-          this.total = to + price;
+          //所有辅具选择列表
+          let changeVal = [];
+          for (let q = 0; q < this.currentValue.length; q++) {
+            for (let w = 0; w < assistiveAnswer.length; w++) {
+              if (this.currentValue[q] === assistiveAnswer[w].ID) {
+                changeVal.push({
+                  ID: assistiveAnswer[w].ID,
+                  Name: assistiveAnswer[w].Name,
+                  Number: assistiveAnswer[w].Number,
+                  Price: assistiveAnswer[w].price
+                });
+              }
+            }
+          }
+          this.valueList = [];
+          for (let e = 0; e < changeVal.length; e++) {
+            this.valueList.push({
+              label: changeVal[e].Name,
+              value:
+                "数量：" +
+                changeVal[e].Number +
+                ",总价：" +
+                changeVal[e].Number * changeVal[e].Price
+            });
+          }
         }
       }
     }
